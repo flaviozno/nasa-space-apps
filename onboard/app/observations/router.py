@@ -17,6 +17,7 @@ from hub_common.dependencies import DatabaseConnection
 from app.config import OnboardSettings
 from app.crew.fixtures import load_contract, require_crew_member
 from app.observations.catalog import load_catalog, require_metric, validate_value
+from app.observations.outbox import enqueue_row_events
 from app.observations.repository import insert_observations, query_observations
 from app.observations.schemas import ObservationBatchIn, ObservationBatchOut, ObservationOut
 
@@ -57,7 +58,8 @@ def create_observations(
     the catalog scale, resolves the unit, and persists idempotently: repeating the
     same (source, sourceRef, metric) counts as a duplicate instead of creating a
     second row. `value: null` is stored as an INVALID reading, never 0. The
-    response lists only the rows that actually persisted.
+    response lists only the rows that actually persisted, and each persisted row
+    is queued to Earth through the Outbox (same transaction).
 
     Example: `POST /v1/observations` with
     `{"observations": [{"crewId": "crew-1", "metric": "heart_rate", "value": 82}]}`.
@@ -85,6 +87,7 @@ def create_observations(
             }
         )
     inserted_rows, duplicates = insert_observations(connection, rows)
+    enqueue_row_events(connection, inserted_rows)
     return ObservationBatchOut(
         accepted=[_to_out(row) for row in inserted_rows],
         duplicates=duplicates,

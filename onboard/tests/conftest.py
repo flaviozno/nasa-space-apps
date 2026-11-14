@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 
-TABLES = ("observations", "questionnaire_responses")
+TABLES = ("observations", "questionnaire_responses", "outbox")
 
 
 @pytest.fixture(scope="session")

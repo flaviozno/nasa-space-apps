@@ -13,8 +13,9 @@ from sqlalchemy.engine import Engine
 
 
 def api(engine: Engine) -> TestClient:
-    """Test client bound to the local onboard-db (same default URL the engine uses)."""
-    return TestClient(create_app(OnboardSettings()))
+    """Test client bound to the local onboard-db; Outbox worker off for determinism."""
+    settings = OnboardSettings(sync_worker_enabled=False)
+    return TestClient(create_app(settings))
 
 
 def test_post_persists_and_is_idempotent(clean_tables: Engine) -> None:
