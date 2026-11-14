@@ -9,11 +9,12 @@ The architecture is designed for an environment in which the link to Earth may b
 ## Architecture at a glance
 
 ```text
-Wearable ── BLE GATT ──> Onboard / Edge Server ── MQTT 5 over TLS/mTLS ──> Ground Server
-   │                         │                                                │
-   │                         ├─ Crew dashboard (own data only)                ├─ PostgreSQL
-   │                         ├─ SQLite outbox and local alerts               ├─ Data reconstruction
-   └─ Non-volatile storage   └─ MQTT broker                                  └─ Ground dashboard
+Wearable ── BLE advertisements / GATT ──> Onboard / Edge Server ── MQTT 5 over TLS/mTLS ──> Ground Server
+   │                                         │                                                │
+   │                                         ├─ Crew dashboard (own data only)                ├─ PostgreSQL
+   │                                         ├─ SQLite outbox and local alerts               ├─ Data reconstruction
+   └─ Non-volatile storage + low-power       └─ MQTT broker                                  └─ Ground dashboard
+      advertisements
 ```
 
 The detailed flow is maintained in [the telemetry diagram](../infra/telemetry.drawio).
@@ -21,6 +22,7 @@ The detailed flow is maintained in [the telemetry diagram](../infra/telemetry.dr
 ## Design principles
 
 - **Store before sending.** A sample is persisted on the wearable before it is transmitted, and is persisted again on the Edge before an acknowledgement is returned.
+- **Pull routine data; push urgency.** The Edge opens scheduled BLE synchronization sessions and requests buffered data. The wearable only advertises an urgent condition outside those windows.
 - **Operate without Earth.** Alerting, rule evaluation, dashboards, and local retention continue while the ground link is offline.
 - **Use at-least-once delivery with idempotent processing.** Messages may be delivered more than once, but never need to be interpreted more than once.
 - **Preserve traceability.** A measurement can be followed from `sampleId` through `eventId` and `batchId` to its acknowledgement.
@@ -40,21 +42,31 @@ Measurements are written to non-volatile storage before BLE transmission. The ta
 
 This choice prevents data loss when the wearable temporarily leaves radio range, the Edge server restarts, or the BLE session fails. The device can resend the same sample identity later, which is essential for safe at-least-once delivery.
 
+#### BLE availability and synchronization
+
+The wearable operates as a BLE peripheral and spends most of its time asleep. It emits a short, low-duty-cycle authenticated advertisement that identifies it as available for the next synchronization window; the interval is configurable according to the mission's latency and battery budget. It does **not** open a connection or transmit routine measurements for every sample.
+
+The Edge acts as the BLE central. On its configured schedule it scans, connects to available wearables, and writes a `SyncRequest` control message with a request ID and the maximum records or bytes to return. The wearable then sends one bounded batch and keeps the records until it receives a durable `ReceiptAck`. The Edge can make a follow-up request when more records remain.
+
+An emergency condition is the exception: the wearable advertises an authenticated urgent flag immediately, allowing the Edge to prioritize its connection and request the alert batch without waiting for the next routine window. It still does not require a permanently open BLE link.
+
+This pull-based routine flow minimizes radio wakeups and connection setup on the wearable. A server cannot retrieve data from a fully sleeping device with no advertising window, so the advertisements remain necessary.
+
 #### BLE payload format
 
 Telemetry uses a compact fixed-layout little-endian binary codec. A transfer header carries the protocol version, message type, device ID, boot ID, transfer ID, and record count. Transfers are limited to 100 records and 64 KiB, and can be fragmented through `fragmentIndex` and `fragmentCount`.
 
-Binary encoding is used here because BLE has constrained payload sizes and the wearable benefits from predictable CPU, memory, bandwidth, and battery use. Protobuf is reserved for BLE acknowledgement and control messages, where evolvability and explicit schemas are more useful than byte-level compactness.
+Binary encoding is used here because BLE has constrained payload sizes and the wearable benefits from predictable CPU, memory, bandwidth, and battery use. Protobuf is reserved for `SyncRequest`, `ReceiptAck`, and other BLE control messages, where evolvability and explicit schemas are more useful than byte-level compactness.
 
 #### Retry behavior
 
-If an acknowledgement is not received, the wearable retries with the **same identity** after a 5-second timeout. Retries use jittered exponential backoff from 1 to 30 seconds. Invalid or rejected payloads are placed in local quarantine rather than retried indefinitely.
+If a `ReceiptAck` is not received, the wearable keeps the batch unchanged. The Edge retries the synchronization session at the next eligible window, using jittered exponential backoff from 1 to 30 seconds when a connection or transfer fails. A later `SyncRequest` can therefore retrieve the same sample identities safely. Invalid or rejected payloads are placed in local quarantine rather than retried indefinitely.
 
-This separates transient communication failures from permanent data-quality or protocol problems and avoids retry storms.
+This separates transient communication failures from permanent data-quality or protocol problems, keeps retry scheduling on the better-powered Edge, and avoids retry storms.
 
 ### 2. Onboard / Edge Server
 
-The Edge server runs **Node.js with TypeScript**. It is the operational center of the onboard system: it receives BLE data, durably records it, evaluates rules locally, maintains a synchronization outbox, and sends data to the broker.
+The Edge server runs **Node.js with TypeScript**. It is the operational center of the onboard system: it schedules and initiates BLE synchronization, durably records received data, evaluates rules locally, maintains a synchronization outbox, and sends data to the broker.
 
 Node.js is appropriate for this role because the workload is primarily I/O-bound: BLE communication, database operations, MQTT sessions, and dashboard APIs. TypeScript provides compile-time contracts around telemetry schemas, message states, and error handling.
 
@@ -66,11 +78,11 @@ The dashboard reads only from the Edge's local SQLite database and applies the d
 
 The Edge may also expose a separate operational view to explicitly authorized onboard personnel, but that is a different role and must not be part of the astronaut self-service interface.
 
-#### BLE GATT ingestion
+#### BLE GATT synchronization
 
-The Edge receives BLE GATT notifications, reassembles fragments with a 30-second expiry, validates message structure, and validates the binding between each device and its assigned crew member.
+The Edge scans for wearable advertisements, prioritizes urgent advertisements, opens the BLE GATT connection as central, and issues `SyncRequest`. It receives the requested GATT telemetry fragments, reassembles them with a 30-second expiry, validates message structure, and validates the binding between each device and its assigned crew member.
 
-Fragment expiry bounds memory use and prevents incomplete transfers from being accepted later. Device-to-crew binding ensures physiological data is associated with the correct person before it enters the clinical or operational record.
+After the local commit, the Edge writes `ReceiptAck` for the transfer. Fragment expiry bounds memory use and prevents incomplete transfers from being accepted later. Device-to-crew binding ensures physiological data is associated with the correct person before it enters the clinical or operational record.
 
 #### Local database: SQLite
 
@@ -82,7 +94,7 @@ The Edge uses **SQLite** with write-ahead logging (WAL) and `synchronous=FULL`. 
 - `audit_log`
 - the outbound synchronization state
 
-The ingestion transaction inserts the sample and its processing job atomically, then sends the BLE acknowledgement. SQLite is chosen because it is embedded, operationally simple, durable on a single Edge node, and does not depend on a separate database service. WAL improves concurrent read/write behavior, while `synchronous=FULL` prioritizes durability over maximum write speed.
+The ingestion transaction inserts the sample and its processing job atomically, then sends the BLE `ReceiptAck`. SQLite is chosen because it is embedded, operationally simple, durable on a single Edge node, and does not depend on a separate database service. WAL improves concurrent read/write behavior, while `synchronous=FULL` prioritizes durability over maximum write speed.
 
 #### Local worker and alerts
 
@@ -181,7 +193,7 @@ The end-to-end guarantee is **at-least-once delivery**, achieved through durable
 ### Integrity and failure handling
 
 - A wearable sample is durable before transmission.
-- An Edge acknowledgement is sent only after the sample and processing job commit together.
+- An Edge `ReceiptAck` is sent only after the sample and processing job commit together.
 - A ground acknowledgement is sent only after durable ground commit.
 - Conflicting reuse of an `eventId` is rejected as an integrity issue.
 - Invalid payloads and unrecoverable messages are quarantined for inspection.
@@ -199,25 +211,27 @@ The system propagates **W3C Trace Context** across the pipeline:
 sampleId → eventId → batchId → ApplicationAck
 ```
 
-Operational metrics should include ingestion rate, BLE fragment expiry, local storage utilization, outbox depth and age, retry counts, MQTT connection state, acknowledgement latency, rejected-event counts, base-request frequency, and the number of stale or missing dashboard records.
+Operational metrics should include BLE advertisement rate, scan-to-connect latency, synchronization-window success rate, urgent-advertisement latency, BLE fragment expiry, wearable and Edge retry counts, local storage utilization, outbox depth and age, MQTT connection state, acknowledgement latency, rejected-event counts, base-request frequency, and the number of stale or missing dashboard records.
 
 ## End-to-end flow
 
 1. The wearable samples sensors and writes the sample to non-volatile storage.
-2. It transmits a compact BLE payload; the Edge reassembles and validates it.
-3. The Edge atomically writes the sample and a processing job to SQLite, then acknowledges the wearable.
-4. The local worker evaluates rules, raises onboard alerts if required, and creates FULL or DELTA events.
-5. Events enter the SQLite outbox and are scheduled automatically by priority; astronaut interaction is never required for transmission.
-6. The MQTT sender publishes a Protobuf `TelemetryBatch` with QoS 1.
-7. The ground consumer validates, deduplicates, and commits the events to PostgreSQL.
-8. The ground server publishes `ApplicationAck`; the Edge marks accepted events as `SYNCED`.
-9. When a DELTA is missing its FULL base, the ground server sends `BaseRequest` and the Edge republishes the requested base.
+2. It remains asleep except for low-duty-cycle BLE advertisements that make it available for the next routine synchronization window; an emergency produces an urgent advertisement immediately.
+3. The Edge scans, connects as BLE central, and writes `SyncRequest` to request a bounded batch.
+4. The wearable sends the requested compact BLE payload; the Edge reassembles and validates it.
+5. The Edge atomically writes the sample and a processing job to SQLite, then returns `ReceiptAck` to release the persisted records.
+6. The local worker evaluates rules, raises onboard alerts if required, and creates FULL or DELTA events.
+7. Events enter the SQLite outbox and are scheduled automatically by priority; astronaut interaction is never required for transmission.
+8. The MQTT sender publishes a Protobuf `TelemetryBatch` with QoS 1.
+9. The ground consumer validates, deduplicates, and commits the events to PostgreSQL.
+10. The ground server publishes `ApplicationAck`; the Edge marks accepted events as `SYNCED`.
+11. When a DELTA is missing its FULL base, the ground server sends `BaseRequest` and the Edge republishes the requested base.
 
 ## Implementation priorities
 
 1. Define and version Protobuf schemas, validation rules, and compatibility policy.
-2. Implement wearable durable queueing, BLE fragmentation, acknowledgements, and retry/quarantine behavior.
-3. Implement Edge SQLite schema, transactional ingestion, outbox state machine, and local worker.
+2. Implement wearable durable queueing, low-power/urgent BLE advertisements, BLE fragmentation, and `ReceiptAck` handling.
+3. Implement the Edge BLE central scheduler, `SyncRequest`/`ReceiptAck`, transactional ingestion, outbox state machine, and local worker.
 4. Configure broker mTLS, ACLs, persistent sessions, and topic provisioning.
 5. Implement ground validation, idempotent PostgreSQL ingestion, reconstruction, acknowledgements, and base requests.
 6. Add dashboards, tracing, metrics, alerting, and fault-injection tests for offline, duplicate, delayed, and conflicting messages.

@@ -43,7 +43,8 @@ observation {
 
 ```mermaid
 flowchart LR
-    SIM["Emulador (Flávio)"] -->|batches| ING["onboard/ingest (Miguel)"]
+    ING["onboard/ingest (Miguel)"] -->|"SyncRequest / ReceiptAck"| SIM["Emulador na Vercel (Flávio)"]
+    SIM -->|TelemetryBatch| ING
     WEB["web: Crew Hub (Wallace)"] -->|questionários, manual| CREW["onboard/crew (Matheus)"]
     ING --> OBS[("observations + alerts")]
     CREW --> OBS
@@ -61,7 +62,7 @@ Cada pessoa é dona de uma pasta. Mudanças na pasta de outra pessoa só com PR 
 | Pessoa | Frente | Pasta | Entregas |
 | --- | --- | --- | --- |
 | Flávio | Emulador de wearable | `simulator/` | 4 dispositivos (1 por tripulante); métricas do catálogo; cenários `NORMAL`, `FEVER`, `HYPOXIA`, `POOR_SLEEP` trocáveis por config |
-| Miguel | Ingestão de bordo | `onboard/app/ingest/` | `POST /v1/telemetry/batches` e cursor (contrato do Flávio); converte samples em `observations`; regras de alerta (limite absoluto + desvio da linha de base); grava eventos no `outbox` |
+| Miguel | Ingestão de bordo | `onboard/app/ingest/` | Agendador de bordo que envia `SyncRequest` ao simulador a cada minuto, grava o `TelemetryBatch` com cursor durável e responde com `ReceiptAck` (contrato do Flávio); converte samples em `observations`; regras de alerta (limite absoluto + desvio da linha de base); grava eventos no `outbox` |
 | Matheus | Crew API | `onboard/app/crew/`, `onboard/app/observations/` | Modelo `observation` (dono do schema); tripulação e linha de base (seed fixo); endpoints de leitura, tendência e z-score; questionários e entrada manual; `POST /v1/observations` genérico |
 | Wallace | Frontend | `web/` | React + Vite + shadcn; rotas `/crew/:id` (hub) e `/earth` (médico de voo); funciona com mock até a API existir |
 | Guilherme | Terra, sync e infra | `earth/`, `onboard/app/sync/`, `infra/` | VPS, docker-compose, proxy HTTPS; outbox worker + alternância do link; Earth service (ingestão idempotente + leitura); coordena pitch e vídeo |
@@ -73,7 +74,7 @@ Arquivos compartilhados, todos com dono:
 | `contracts/metrics.json` (catálogo de métricas) | Matheus | Congelado ao fim da Fase 0; mudanças só por PR avisado no grupo |
 | `contracts/crew.json` (4 tripulantes + linha de base fixa) | Matheus | Idem |
 | OpenAPI do onboard (gerado pelo FastAPI) | Matheus | Wallace gera os tipos TS a partir dele |
-| Contrato simulador → bordo | Flávio | Miguel valida |
+| Contrato de sincronização bordo ↔ simulador (`SyncRequest`, `TelemetryBatch`, `ReceiptAck`) | Flávio | Miguel valida |
 | Contrato bordo → Terra | Guilherme | Miguel grava no outbox nesse formato |
 | `onboard/app/main.py`, `db.py` (montagem dos routers, conexão) | Guilherme | Criados na Fase 0; depois quase não mudam |
 | Migrações SQL | Cada um no próprio arquivo | `001_observations.sql` (Matheus), `002_ingest.sql` (Miguel), `003_sync.sql` (Guilherme) |
