@@ -55,6 +55,64 @@ flowchart LR
     EARTH --> WEB2["web: Earth view (Wallace)"]
 ```
 
+### Elementos da arquitetura
+
+O diagrama tem dois lados: **a bordo** e **na Terra**. Tudo o que importa para a saúde do astronauta acontece a bordo, sem depender da Terra. A Terra recebe uma cópia quando o link permite.
+
+#### A bordo
+
+**Emulador na Vercel (Flávio).** Faz o papel do wearable, já que não há dispositivo físico. Gera leituras sintéticas (FC, SpO₂, temperatura etc.) para os 4 astronautas. É determinístico: os mesmos parâmetros geram os mesmos valores. Tem cenários que forçam anomalias para a demo, como febre e hipóxia. É passivo e só responde quando é chamado.
+
+**onboard/ingest (Miguel).** Porta de entrada dos dados do wearable. A cada minuto:
+
+1. envia um `SyncRequest` ao emulador ("me mande as leituras a partir da posição X");
+2. recebe o `TelemetryBatch` com o lote de leituras;
+3. grava tudo numa única transação e avança o cursor, que marca até onde já recebeu;
+4. responde com um `ReceiptAck` ("recebi e gravei").
+
+Quem pede é o bordo, como aconteceria com um wearable real via Bluetooth. O cursor fica no banco de bordo, então nada se perde nem se duplica se uma chamada falhar. Na mesma transação, o ingest converte as leituras em observações, roda as regras de alerta e grava os eventos no outbox.
+
+**onboard/crew (Matheus).** API usada pelo astronauta, com duas funções:
+
+- **Escrita:** recebe questionários (humor, estresse, sintomas, PHQ-4) e medidas manuais (peso, pressão, água) e os grava como observações.
+- **Leitura:** entrega ao frontend os valores atuais, as tendências e o desvio de cada métrica em relação à linha de base do astronauta (z-score).
+
+As setas `CREW --> OBS` e `OBS --> CREW` representam isso: ela grava e lê o mesmo banco.
+
+**observations + alerts (banco de bordo, SQLite).** Coração da modularidade. Todo dado, venha de onde vier, vira o mesmo registro: tripulante, métrica, valor, unidade, origem e horário. O dashboard não precisa saber se um valor veio do wearable ou de um formulário; uma fonte nova só precisa de um adaptador que grave observações. Os `alerts` são os resultados das regras, como "SpO₂ abaixo de 90%" ou "FC muito acima da linha de base".
+
+**web: Crew Hub (Wallace).** Tela do astronauta, em React + shadcn. Ele escolhe o próprio nome na lista (sem login), vê seus níveis, gráficos de tendência e alertas, e preenche o check-in diário e as medidas manuais. Fala apenas com a API do Matheus.
+
+#### A ponte
+
+**outbox worker (Guilherme).** Fila de saída para a Terra. Os eventos (leituras e alertas) entram no outbox junto com a gravação, e um loop a cada poucos segundos tenta enviá-los. A chave "link on/off" simula a perda de comunicação:
+
+- **Link desligado:** nada é enviado e a fila cresce, mas tudo a bordo continua funcionando.
+- **Link ligado:** a fila é drenada.
+
+Um evento só é marcado como sincronizado depois que a Terra confirma que gravou. Se a confirmação se perder, o worker reenvia, e a Terra ignora a duplicata.
+
+#### Na Terra
+
+**earth (Guilherme).** Serviço da Terra, com banco próprio, separado do de bordo. Recebe os lotes do outbox, descarta duplicatas pelo `eventId`, grava os eventos e devolve o ACK. Também oferece endpoints de leitura para a Earth view.
+
+**web: Earth view (Wallace).** Tela do médico de voo, no mesmo app web, em outra rota. Mostra os dados de toda a tripulação que já chegaram à Terra, os alertas e o estado da sincronização: link ativo ou não, eventos pendentes e horário da última recepção. Na demo, é ela que mostra os dados atrasados chegando quando o link volta.
+
+#### Resumo
+
+| Elemento | Papel | Lado |
+| --- | --- | --- |
+| Emulador | Finge ser o wearable | Fonte |
+| ingest | Busca e grava os dados do wearable, gera alertas | Bordo |
+| crew | API do astronauta: questionários, medidas manuais, tendências | Bordo |
+| observations + alerts | Banco único com todos os dados | Bordo |
+| Crew Hub | Tela do astronauta | Bordo |
+| outbox worker | Envia à Terra quando há link | Ponte |
+| earth | Recebe, deduplica e guarda | Terra |
+| Earth view | Tela do médico de voo | Terra |
+
+O diagrama simplifica um ponto: o outbox recebe os eventos na mesma transação em que o ingest grava as leituras, e não lendo o banco depois. Isso garante que nenhum dado gravado fique sem ser enviado.
+
 ## 3. Donos e fronteiras
 
 Cada pessoa é dona de uma pasta. Mudanças na pasta de outra pessoa só com PR revisado pelo dono.
