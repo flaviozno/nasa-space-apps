@@ -4,21 +4,29 @@ The database schema is managed by Alembic (`alembic upgrade heads`), not at app 
 """
 
 from fastapi import FastAPI
-from hub_common import build_service_app, create_database_engine
+from hub_common import Clock, SystemClock, build_service_app, create_database_engine
 from sqlalchemy import Engine
 
 from app.config import EarthSettings
 from app.ingest.router import router as ingest_router
+from app.views.crew_roster import load_roster
 from app.views.router import router as views_router
 
 ROUTERS = (ingest_router, views_router)
 
 
-def create_app(settings: EarthSettings | None = None, engine: Engine | None = None) -> FastAPI:
+def create_app(
+    settings: EarthSettings | None = None,
+    engine: Engine | None = None,
+    clock: Clock | None = None,
+) -> FastAPI:
     """Build the Earth app. Example: `create_app(EarthSettings(), engine=test_engine)`."""
     resolved = settings or EarthSettings()
     resolved_engine = engine or create_database_engine(resolved.database_url)
-    return build_service_app("earth", resolved, resolved_engine, ROUTERS)
+    app = build_service_app("earth", resolved, resolved_engine, ROUTERS)
+    app.state.clock = clock or SystemClock()
+    app.state.crew_roster = load_roster(resolved.crew_file)
+    return app
 
 
 app = create_app()
