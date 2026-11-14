@@ -1,6 +1,7 @@
-import { ChevronRightIcon, WatchIcon } from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router'
 import { CrewAvatar } from '@/components/crew-avatar'
+import { DeviceChip } from '@/components/device-chip'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { useCrew } from '@/lib/onboard-queries'
 
@@ -38,13 +39,10 @@ export function CrewSelectPage() {
               className="group flex min-h-56 items-center gap-7 rounded-3xl border-2 bg-card px-8 py-7 transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60 active:bg-accent"
             >
               <CrewAvatar name={member.name} className="size-24 text-3xl" />
-              <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="min-w-0 flex-1 space-y-2">
                 <p className="text-3xl font-semibold">{member.name}</p>
                 <p className="text-xl text-muted-foreground">{member.role}</p>
-                <p className="flex items-center gap-1.5 text-base text-muted-foreground">
-                  <WatchIcon className="size-4" aria-hidden="true" />
-                  {member.deviceId}
-                </p>
+                <DeviceChip deviceId={member.deviceId} />
               </div>
               <ChevronRightIcon
                 className="size-9 text-muted-foreground transition-transform group-hover:translate-x-1 group-active:translate-x-1"

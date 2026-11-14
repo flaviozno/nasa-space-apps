@@ -1,6 +1,7 @@
 import { Link, Outlet, useParams } from 'react-router'
 import { CrewAvatar } from '@/components/crew-avatar'
 import { CrewNavRail } from '@/components/crew-nav-rail'
+import { DeviceChip } from '@/components/device-chip'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import type { CrewHubContext } from '@/lib/crew-hub-context'
 import { useNow } from '@/hooks/use-now'
@@ -38,11 +39,12 @@ export function CrewHubPage() {
     <div className="space-y-4">
       <header className="flex flex-wrap items-center gap-4">
         <CrewAvatar name={member.name} className="size-16 text-xl" />
-        <div>
+        <div className="space-y-1">
           <h1 className="text-3xl font-semibold">{member.name}</h1>
-          <p className="text-lg text-muted-foreground">
-            {member.role} · {member.deviceId}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-lg text-muted-foreground">{member.role}</span>
+            <DeviceChip deviceId={member.deviceId} className="py-0.5" />
+          </div>
         </div>
       </header>
       <div className="flex flex-col gap-4 md:flex-row">
