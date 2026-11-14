@@ -2,9 +2,9 @@ import type { RouteObject } from 'react-router'
 import { AppLayout } from '@/components/app-layout'
 import { CrewCheckinPage } from '@/pages/crew-checkin-page'
 import { CrewHubPage } from '@/pages/crew-hub-page'
+import { CrewManualPage } from '@/pages/crew-manual-page'
 import { CrewOverviewPage } from '@/pages/crew-overview-page'
 import { CrewPhq4Page } from '@/pages/crew-phq4-page'
-import { CrewSectionPlaceholder } from '@/pages/crew-section-placeholder'
 import { CrewSelectPage } from '@/pages/crew-select-page'
 import { CrewTeamClimatePage } from '@/pages/crew-team-climate-page'
 import { CrewWeeklyPage } from '@/pages/crew-weekly-page'
@@ -25,7 +25,7 @@ export const routes: RouteObject[] = [
           { path: 'weekly', element: <CrewWeeklyPage /> },
           { path: 'weekly/phq4', element: <CrewPhq4Page /> },
           { path: 'weekly/team-climate', element: <CrewTeamClimatePage /> },
-          { path: 'manual', element: <CrewSectionPlaceholder title="Manual measurements" /> },
+          { path: 'manual', element: <CrewManualPage /> },
         ],
       },
       { path: '/earth', element: <EarthViewPage /> },
