@@ -1,0 +1,2 @@
+-- Owner: Guilherme. Tables: outbox, settings (simulated Earth link).
+-- Runs on every startup: use CREATE TABLE IF NOT EXISTS / CREATE INDEX IF NOT EXISTS.

@@ -1,0 +1,58 @@
+# Local and VPS stack: `docker compose up --build` from this folder.
+# The wearable emulator runs on Vercel (emu/), not here.
+name: health-hub
+
+x-python-healthcheck: &python-healthcheck
+  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+
+services:
+  onboard:
+    build:
+      context: .
+      dockerfile: onboard/Dockerfile
+    environment:
+      ONBOARD_DATABASE_PATH: /data/onboard.db
+      ONBOARD_SIMULATOR_URL: ${SIMULATOR_URL:-}
+      ONBOARD_SIMULATOR_TOKEN: ${SIMULATOR_TOKEN:-}
+      ONBOARD_EARTH_URL: http://earth:8000
+      ONBOARD_EARTH_INGEST_TOKEN: ${EARTH_INGEST_TOKEN:-}
+    volumes:
+      - onboard-data:/data
+    # Bound to localhost only: public traffic goes through the web container.
+    ports:
+      - "127.0.0.1:${ONBOARD_PORT:-8001}:8000"
+    healthcheck: *python-healthcheck
+    restart: unless-stopped
+
+  earth:
+    build:
+      context: .
+      dockerfile: earth/Dockerfile
+    environment:
+      EARTH_DATABASE_PATH: /data/earth.db
+      EARTH_INGEST_TOKEN: ${EARTH_INGEST_TOKEN:-}
+    volumes:
+      - earth-data:/data
+    ports:
+      - "127.0.0.1:${EARTH_PORT:-8002}:8000"
+    healthcheck: *python-healthcheck
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      onboard:
+        condition: service_healthy
+      earth:
+        condition: service_healthy
+    restart: unless-stopped
+
+# Separate volumes keep the onboard and Earth databases apart (readme.md, section 7).
+volumes:
+  onboard-data:
+  earth-data:

@@ -119,7 +119,7 @@ Cada pessoa é dona de uma pasta. Mudanças na pasta de outra pessoa só com PR 
 
 | Pessoa | Frente | Pasta | Entregas |
 | --- | --- | --- | --- |
-| Flávio | Emulador de wearable | `simulator/` | 4 dispositivos (1 por tripulante); métricas do catálogo; cenários `NORMAL`, `FEVER`, `HYPOXIA`, `POOR_SLEEP` trocáveis por config |
+| Flávio | Emulador de wearable | `emu/` | 4 dispositivos (1 por tripulante); métricas do catálogo; cenários `NORMAL`, `FEVER`, `HYPOXIA`, `POOR_SLEEP` trocáveis por config |
 | Miguel | Ingestão de bordo | `onboard/app/ingest/` | Agendador de bordo que envia `SyncRequest` ao simulador a cada minuto, grava o `TelemetryBatch` com cursor durável e responde com `ReceiptAck` (contrato do Flávio); converte samples em `observations`; regras de alerta (limite absoluto + desvio da linha de base); grava eventos no `outbox` |
 | Matheus | Crew API | `onboard/app/crew/`, `onboard/app/observations/` | Modelo `observation` (dono do schema); tripulação e linha de base (seed fixo); endpoints de leitura, tendência e z-score; questionários e entrada manual; `POST /v1/observations` genérico |
 | Wallace | Frontend | `web/` | React + Vite + shadcn; rotas `/crew/:id` (hub) e `/earth` (médico de voo); funciona com mock até a API existir |

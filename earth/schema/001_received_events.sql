@@ -1,0 +1,2 @@
+-- Owner: Guilherme. Tables: received_events (unique eventId, content, Earth reception time).
+-- Runs on every startup: use CREATE TABLE IF NOT EXISTS / CREATE INDEX IF NOT EXISTS.

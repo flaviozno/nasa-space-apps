@@ -1,0 +1,2 @@
+-- Owner: Matheus. Tables: observations, questionnaire_responses.
+-- Runs on every startup: use CREATE TABLE IF NOT EXISTS / CREATE INDEX IF NOT EXISTS.

@@ -78,12 +78,42 @@ PostgreSQL, Redis, MQTT, Kubernetes, login, and a separate worker service are no
 
 | Path | Owner | Contents |
 | --- | --- | --- |
-| `simulator/` | Flávio | Wearable emulator and scenarios (`NORMAL`, `FEVER`, `HYPOXIA`, `POOR_SLEEP`) |
-| `onboard/app/ingest/` | Miguel | Telemetry batch ingestion, cursor, sample → observation conversion, alert rules |
-| `onboard/app/crew/`, `onboard/app/observations/` | Matheus | Observation model, crew and baselines, trends, questionnaires, manual entries |
-| `onboard/app/sync/`, `earth/`, `infra/` | Guilherme | Outbox worker, link toggle, Earth service, Docker Compose, VPS deploy |
+| `emu/` | Flávio | Wearable emulator on Vercel and its scenarios |
+| `onboard/app/ingest/`, `onboard/schema/002_ingest.sql` | Miguel | Sync with the emulator, cursor, sample → observation conversion, alert rules |
+| `onboard/app/crew/`, `onboard/app/observations/`, `onboard/schema/001_observations.sql` | Matheus | Observation model, crew and baselines, trends, questionnaires, manual entries |
+| `onboard/app/sync/`, `onboard/schema/003_sync.sql`, `earth/` | Guilherme | Outbox worker, link toggle, Earth service |
+| `onboard/app/main.py`, `onboard/app/config.py`, `common/`, `docker-compose.yml`, `infra/` | Guilherme | App wiring, shared SQLite/health code, Docker Compose, VPS deploy |
 | `web/` | Wallace | Crew Hub and Earth view |
 | `contracts/` | Matheus (metrics, crew), Flávio (`SyncRequest` / `TelemetryBatch` / `ReceiptAck`), Guilherme (onboard → Earth) | Shared contracts; changed only through an announced PR |
+
+### Running locally
+
+Everything (onboard, Earth, web) with Docker:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+| URL | What |
+| --- | --- |
+| http://localhost:8080 | Web app (Crew Hub at `/crew/:crewId`, Earth view at `/earth`) |
+| http://localhost:8001/docs | Onboard API, direct (bound to 127.0.0.1) |
+| http://localhost:8002/docs | Earth API, direct (bound to 127.0.0.1) |
+
+The web container proxies `/api/onboard/*` to onboard and only `/api/earth/health` and `/api/earth/v1/views/*` to Earth; Earth ingest stays private. `docker compose down -v` deletes both databases.
+
+Developing one piece without Docker:
+
+| Piece | Setup | Run | Test |
+| --- | --- | --- | --- |
+| Python services | `uv sync --all-packages` (once, in this folder) | `cd onboard && uv run uvicorn app.main:app --reload --port 8001` (Earth: `cd earth`, port 8002) | `cd onboard && uv run pytest` (also in `earth/` and `common/`) |
+| Web | `cd web && npm install` | `npm run dev` (proxies `/api/*` to ports 8001/8002) | `npm test`, `npm run typecheck` |
+| Contracts | — | — | `python3 -m unittest discover -s contracts/tests` |
+
+Each service applies every file in its `schema/` folder on startup, in name order. Write them with `CREATE TABLE IF NOT EXISTS`; to change an existing column, reset the database (`docker compose down -v`, or delete `onboard/data/` locally).
+
+Shared Python code lives in `common/` (`hub_common`): `open_database`, `prepare_database`, the `DatabaseConnection` endpoint dependency, and the `/health` router. Format Python with `uv run ruff format`.
 
 ## 4. Step-by-Step Flow
 
