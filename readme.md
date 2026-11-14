@@ -1,7 +1,9 @@
 # Space Health Telemetry — Minimal MVP Flow
 
 **Status:** MVP implementation standard  
-**Scope:** Synthetic telemetry generation, onboard processing, and delivery to a simulated Earth service.
+**Scope:** Astronaut Health Hub for a 4-person crew — synthetic wearable telemetry, manual and questionnaire input, onboard processing and crew dashboard, and delivery to a simulated Earth service with a flight-surgeon view.
+
+> **Team plan:** ownership, phases, and the 30-second demo script are in [docs/plan.md](./docs/plan.md).
 
 > **MVP adaptation and integration baseline:** this document defines the reduced, integrable implementation that will be presented in the MVP. It is adapted from the broader architecture proposed in [../infra/telemetry.drawio](./infra/telemetry.drawio) and detailed in [../docs/telemetry-architecture.md](./docs/telemetry-architecture.md). It preserves the core guarantees—local durable ingestion, onboard processing, an outbox, automatic delivery, and durable acknowledgements—while intentionally replacing production-scale components with simpler MVP equivalents.
 
@@ -11,12 +13,30 @@
 
 Build the smallest working, integrable system that demonstrates this flow:
 
-1. Have the onboard service request synthetic wearable health readings.
-2. Store and process them onboard.
-3. Forward them to an Earth service when the simulated communication link is available.
-4. Confirm durable reception and safely handle retransmission.
+1. Have the onboard service request synthetic wearable health readings for a crew of 4 astronauts.
+2. Store and process them onboard, together with manual entries and questionnaire answers submitted by the astronauts.
+3. Show each astronaut their current levels, trends, and deviations from their personal baseline in the Crew Hub.
+4. Forward events to an Earth service when the simulated communication link is available.
+5. Confirm durable reception, safely handle retransmission, and show the crew's data in the Earth view.
 
-There is no physical wearable in this MVP. The onboard and Earth services run in separate Docker containers on the same VPS. Their separation is logical, not geographic.
+There is no physical wearable and no login in this MVP; the astronaut is picked from a crew list. The onboard and Earth services run in separate Docker containers on the same VPS. Their separation is logical, not geographic.
+
+### Modularity: everything becomes an `observation`
+
+Every data source — wearable, questionnaire, manual entry, or a future integration — is converted into the same record. The Crew Hub and the trend logic read only observations, so adding a source means adding one adapter.
+
+| Field | Purpose |
+| --- | --- |
+| id | Stable observation identity |
+| crewId | `crew-1` … `crew-4` |
+| metric | Metric ID from `contracts/metrics.json` (e.g. `heart_rate`, `mood`) |
+| value | Number, or null for an invalid reading (never 0) |
+| unit | Unit from the metric catalog |
+| source | `wearable`, `manual`, `questionnaire`, or a future source name |
+| sourceRef | Original identity (sample ID, response ID, …) |
+| takenAt | Measurement time, epoch ms |
+
+The metric catalog (`contracts/metrics.json`) and the crew list with fixed baseline values (`contracts/crew.json`) are the shared source of truth for metric IDs, units, and reference ranges.
 
 ## 2. Architecture
 
@@ -26,8 +46,10 @@ flowchart TD
     B -->|"TelemetryBatch response"| A
     A -->|"ReceiptAck after durable commit"| B
     A -->|"persist + process"| C["VPS: onboard service + SQLite"]
+    W["Web: Crew Hub"] -->|"read metrics, submit questionnaires and manual entries"| C
     C -->|"HTTPS: pending events when link is enabled"| D["VPS: Earth service + SQLite"]
     D -->|"ACK after durable commit"| C
+    E["Web: Earth view"] -->|"read synced crew data"| D
 ```
 
 For the initial implementation, **use HTTP for both communication steps**. Do not add an MQTT broker yet. The onboard service initiates the wearable synchronization, just as the Edge does in the proposed BLE architecture; Vercel only emulates the wearable's response. HTTP is an MVP transport substitution for the BLE and MQTT transports proposed in `infra/telemetry.drawio`; durable storage, the receipt acknowledgement, the Outbox, and application ACK preserve the delivery behavior we need to demonstrate without another running component.
@@ -39,16 +61,29 @@ The simulator package implements the Vercel responder and includes a development
 | Component | Runs on | Responsibility |
 | --- | --- | --- |
 | Onboard scheduler | Onboard service container on VPS | Start each wearable synchronization window |
-| Wearable simulator | Vercel, Node.js | Respond to `SyncRequest` with one deterministic bounded batch; validate `ReceiptAck` |
-| Onboard service | VPS, Docker, Node.js | Request readings, persist them, evaluate simple rules, and forward pending events |
-| Onboard database | Dedicated Docker volume, SQLite | Store sessions, readings, alerts, and Outbox records |
-| Earth service | VPS, Docker, Node.js | Deduplicate and persist incoming events, then return an ACK |
+| Wearable simulator | Vercel, Node.js/TypeScript | Respond to `SyncRequest` with one deterministic bounded batch (4 devices, one per astronaut); validate `ReceiptAck` |
+| Onboard service | VPS, Docker, Python/FastAPI | Request readings, convert them to observations, evaluate simple rules, serve the Crew API (trends, baselines, questionnaires, manual entries), and forward pending events |
+| Onboard database | Dedicated Docker volume, SQLite | Store sessions, readings, observations, questionnaire responses, alerts, and Outbox records |
+| Earth service | VPS, Docker, Python/FastAPI | Deduplicate and persist incoming events, return an ACK, and serve read endpoints for the Earth view |
 | Earth database | Separate Docker volume, SQLite | Store received events and reception timestamps |
-| HTTPS entry point | Vercel | Expose authenticated simulator synchronization endpoints to the VPS |
+| Web app | VPS, Docker, React + Vite + shadcn/ui (TypeScript) | Crew Hub (`/crew/:id`) and Earth view (`/earth`); UI in English |
+| Simulator HTTPS endpoint | Vercel | Expose authenticated simulator synchronization endpoints to the VPS |
+| Web HTTPS entry point | Existing VPS proxy or one small reverse proxy | Serve the web app and the read/input APIs it calls |
 
-Use two application containers and their persistent volumes. The onboard service calls the public Vercel endpoint over HTTPS; Earth does not need a public endpoint because onboard can reach it through the private Docker network.
+Use three application containers (onboard, earth, web) and persistent volumes for the two databases. The onboard service calls the public Vercel endpoint over HTTPS. Earth ingestion stays on the private Docker network; only its read endpoints are exposed to the web app.
 
-A frontend, PostgreSQL, Redis, MQTT, Kubernetes, and a separate worker service are not required for the first working version.
+PostgreSQL, Redis, MQTT, Kubernetes, login, and a separate worker service are not required for this MVP.
+
+### Repository layout and ownership
+
+| Path | Owner | Contents |
+| --- | --- | --- |
+| `simulator/` | Flávio | Wearable emulator and scenarios (`NORMAL`, `FEVER`, `HYPOXIA`, `POOR_SLEEP`) |
+| `onboard/app/ingest/` | Miguel | Telemetry batch ingestion, cursor, sample → observation conversion, alert rules |
+| `onboard/app/crew/`, `onboard/app/observations/` | Matheus | Observation model, crew and baselines, trends, questionnaires, manual entries |
+| `onboard/app/sync/`, `earth/`, `infra/` | Guilherme | Outbox worker, link toggle, Earth service, Docker Compose, VPS deploy |
+| `web/` | Wallace | Crew Hub and Earth view |
+| `contracts/` | Matheus (metrics, crew), Flávio (`SyncRequest` / `TelemetryBatch` / `ReceiptAck`), Guilherme (onboard → Earth) | Shared contracts; changed only through an announced PR |
 
 ## 4. Step-by-Step Flow
 
@@ -72,17 +107,17 @@ Initial configuration:
 
 | Setting | Initial value |
 | --- | --- |
-| Simulated devices | 3 |
+| Simulated devices | 4 (one per astronaut, `crew-1` … `crew-4`) |
 | Sampling interval | 1 second per device |
 | Onboard synchronization interval | 1 minute |
 | Maximum simulated seconds per invocation | 60 |
-| Typical full-minute batch | 180 readings |
+| Typical full-minute batch | 240 readings |
 | Scenario | NORMAL |
 | Data source label | SIMULATED |
 
 All readings are generated immediately during the invocation. There is no one-second waiting loop.
 
-Each reading contains a stable sample ID, device ID, boot/session identity, sequence, acquisition timestamp, sensor status, and health metrics. Metrics are heart rate in BPM, SpO₂ in hundredths of a percent, temperature in hundredths of a degree Celsius, and battery voltage in millivolts. Invalid metrics are null, not zero.
+Each reading contains a stable sample ID, device ID, boot/session identity, sequence, acquisition timestamp, sensor status, and health metrics. The base metrics are heart rate in BPM, SpO₂ in hundredths of a percent, temperature in hundredths of a degree Celsius, and battery voltage in millivolts; any additional wearable metrics use the IDs and units of `contracts/metrics.json`. Invalid metrics are null, not zero. Each device is bound to one crew member, and the onboard service converts every valid metric into an observation.
 
 The same seed, session, configuration, device, and sequence produce the same reading. Configuration changes that affect generated data require a new session ID.
 
@@ -184,9 +219,13 @@ If the entire VPS is unavailable, both services stop. Once it returns, the deter
 | --- | --- |
 | simulation_sessions | Immutable configuration hash and contiguous ingestion cursor |
 | samples | Original readings with identity and sequence uniqueness |
+| observations | Normalized values from every source (wearable, manual, questionnaire, future) |
+| questionnaire_responses | Submitted questionnaires (daily check-in, PHQ-4, team climate) with their answers |
 | alerts | Experimental rule results, unique by source sample and rule version |
 | outbox | Stable events, delivery status, attempts, and next retry time |
 | settings | Persisted simulated link state |
+
+Each owner keeps their tables in their own migration file (`001_observations.sql` Matheus, `002_ingest.sql` Miguel, `003_sync.sql` Guilherme). Crew members and baselines are fixed seed values loaded from `contracts/crew.json`.
 
 | Earth table | Purpose |
 | --- | --- |
@@ -202,7 +241,20 @@ Do not delete active session cursors or unsynchronized events. Add cleanup of ol
 
 Implement one configurable experimental threshold rule and explicit invalid-sensor handling. Record the rule identifier/version and supporting sample. This tests local processing without building a clinical decision engine.
 
-Onboard and Earth may provide authenticated read-only status endpoints showing counts and the latest reception time. A terminal/client HTTP view is enough for the first milestone; a dashboard can follow later.
+A second rule type flags deviations from the astronaut's fixed baseline (z-score against the baseline median and spread), for both wearable and manual observations.
+
+### Crew Hub and Earth view
+
+The Crew Hub lets each astronaut pick themselves from the crew list and:
+
+- see current levels, trends, and baseline deviations per metric;
+- see local alerts;
+- answer the daily check-in (mood, stress, fatigue, sleepiness, symptoms) and the weekly questionnaires (PHQ-4, team climate);
+- enter manual measurements that no integration collected (body mass, blood pressure, water intake, grip strength).
+
+An astronaut's view shows only their own data. The Earth view shows the synced data of the whole crew, its alerts, and synchronization status (pending events, last reception time, link state).
+
+Onboard and Earth also provide read-only status endpoints showing counts and the latest reception time.
 
 Onboard processing continues while the Earth link is disabled. However, acquisition is delivered in minute batches, so readings can already be roughly one minute old, plus scheduling and network delay, when they arrive onboard. Do not describe this as second-by-second live monitoring.
 
@@ -241,7 +293,8 @@ With 60 generated seconds per minute, existing backlog does not shrink at steady
 - Geographically separated onboard/Earth deployments and high availability.
 - Automatic diagnosis or medically validated alert thresholds.
 - Continuous second-by-second transmission from Vercel.
-- Advanced tracing infrastructure and dashboards.
+- Login and per-user authentication in the web app.
+- Advanced tracing infrastructure and operational dashboards.
 
 This document defines the reduced implementation scope and the integration standard for the MVP. The proposed architecture in [../infra/telemetry.drawio](../infra/telemetry.drawio), with its supporting [architecture documentation](../docs/telemetry-architecture.md), remains the reference for future hardening; its MQTT/BLE/DELTA and asynchronous-worker requirements are not mandatory for this first milestone.
 
@@ -255,5 +308,8 @@ This document defines the reduced implementation scope and the integration stand
 6. Re-enabling the link drains pending events.
 7. Repeating batches or losing ACKs does not create logical duplicates.
 8. Restarting application containers preserves readings and pending events.
+9. The Crew Hub shows each of the 4 astronauts' metrics, trends, and baseline deviations.
+10. A questionnaire answer and a manual entry submitted in the Crew Hub appear as observations and in the trends.
+11. The Earth view shows synced crew data and the link state, and catches up after the link is re-enabled.
 
 **Success means the basic data path works reliably and can be demonstrated. Additional infrastructure is introduced only when a measured requirement calls for it.**
