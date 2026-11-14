@@ -1,0 +1,185 @@
+"""Fixture data for the Crew API stubs (Phase 0.4).
+
+Everything is derived from contracts/crew.json so the stub responses match the
+real contract: crew members, baselines, and metric units come from the file,
+and values are deterministic stand-ins (median +/- a small offset). The real
+implementation replaces this module with PostgreSQL queries.
+"""
+
+import hashlib
+import json
+import time
+from pathlib import Path
+
+from fastapi import HTTPException
+
+from app.crew.schemas import (
+    AlertOut,
+    BaselineOut,
+    BaselineValueOut,
+    CrewMemberOut,
+    CrewSummaryOut,
+    MetricSummaryOut,
+    MetricTrendOut,
+    ObservationStatus,
+    TrendPointOut,
+)
+
+# Wearable metrics the emulator generates today (contracts/README.md). The other
+# wearable metrics have no data yet and must read as NO_DATA, never as zero.
+EMULATOR_METRICS = frozenset({"heart_rate", "spo2", "body_temp"})
+ALERT_Z = 3.0  # ALERT_Z in contracts/tests/test_crew_baseline.py
+
+
+def load_contract(crew_file: Path) -> dict:
+    """Read contracts/crew.json.
+
+    Example: load_contract(Path("contracts/crew.json"))["crew"][0]["crewId"] == "crew-1".
+    """
+    return json.loads(crew_file.read_text(encoding="utf-8"))
+
+
+def now_ms() -> int:
+    return int(time.time() * 1000)
+
+
+def stable_id(*parts: object) -> str:
+    """Deterministic fixture id: stable across calls so tests never flake.
+
+    Example: stable_id("obs", "crew-1", "heart_rate", 3).
+    """
+    digest = hashlib.sha256("|".join(str(part) for part in parts).encode()).hexdigest()[:12]
+    return f"fixture-{digest}"
+
+
+def crew_members(contract: dict) -> list[CrewMemberOut]:
+    return [
+        CrewMemberOut(
+            crew_id=member["crewId"],
+            name=member["name"],
+            role=member["role"],
+            device_id=member["deviceId"],
+        )
+        for member in contract["crew"]
+    ]
+
+
+def require_crew_member(contract: dict, crew_id: str) -> dict:
+    """Return the crew member or raise 404 with a clear detail.
+
+    Example: require_crew_member(contract, "crew-2")["deviceId"] == "wearable-02".
+    """
+    for member in contract["crew"]:
+        if member["crewId"] == crew_id:
+            return member
+    raise HTTPException(status_code=404, detail=f"unknown crewId: {crew_id}")
+
+
+def require_metric(contract: dict, metric_id: str) -> dict:
+    """Return the metric definition or raise 404.
+
+    Example: require_metric(contract, "heart_rate")["unit"] == "bpm".
+    """
+    metric = contract["metrics"].get(metric_id)
+    if metric is None:
+        raise HTTPException(status_code=404, detail=f"unknown metric: {metric_id}")
+    return metric
+
+
+def metric_label(metric_id: str) -> str:
+    """Human label for the UI. contracts/crew.json has no labels, so stubs derive one.
+
+    Example: metric_label("heart_rate") == "Heart rate".
+    """
+    return metric_id.replace("_", " ").capitalize()
+
+
+def baseline_for(contract: dict, member: dict) -> BaselineOut:
+    return BaselineOut(
+        crew_id=member["crewId"],
+        baselines=[
+            BaselineValueOut(
+                metric=metric_id,
+                unit=contract["metrics"][metric_id]["unit"],
+                median=value["median"],
+                spread=value["spread"],
+            )
+            for metric_id, value in member["baselines"].items()
+        ],
+    )
+
+
+def _stub_value(member: dict, metric_id: str) -> tuple[float, float]:
+    """Deterministic (value, z_score): a small offset from the median, except one
+    deviation so the UI can show a DEVIATION row (mirrors ELEVATED_HEART_RATE)."""
+    baseline = member["baselines"][metric_id]
+    median, spread = baseline["median"], baseline["spread"]
+    offset = 5.0 * spread if (member["crewId"] == "crew-3" and metric_id == "heart_rate") else 0.35 * spread
+    return round(median + offset, 2), round(offset / spread, 2)
+
+
+def summary_for(contract: dict, member: dict) -> CrewSummaryOut:
+    metrics: list[MetricSummaryOut] = []
+    for metric_id, definition in contract["metrics"].items():
+        no_data = definition["source"] == "wearable" and metric_id not in EMULATOR_METRICS
+        value = z_score = taken_at = None
+        status = ObservationStatus.no_data
+        if not no_data:
+            value, z_score = _stub_value(member, metric_id)
+            taken_at = now_ms() - 30_000
+            status = ObservationStatus.deviation if abs(z_score) >= ALERT_Z else ObservationStatus.ok
+        metrics.append(
+            MetricSummaryOut(
+                metric=metric_id,
+                label=metric_label(metric_id),
+                unit=definition["unit"],
+                value=value,
+                taken_at=taken_at,
+                z_score=z_score,
+                status=status,
+            )
+        )
+    return CrewSummaryOut(crew_id=member["crewId"], generated_at=now_ms(), metrics=metrics)
+
+
+def trend_for(contract: dict, member: dict, metric_id: str, window_minutes: int, max_points: int) -> MetricTrendOut:
+    """Deterministic wave around the baseline, oldest point first.
+
+    Example: trend_for(contract, member, "heart_rate", 30, 60).points has <= 60 points.
+    """
+    definition = require_metric(contract, metric_id)
+    baseline = member["baselines"][metric_id]
+    points: list[TrendPointOut] = []
+    if definition["source"] != "wearable" or metric_id in EMULATOR_METRICS:
+        window_ms = window_minutes * 60_000
+        step_ms = max(60_000, window_ms // max_points)
+        count = min(max_points, window_ms // step_ms + 1)
+        points = [
+            TrendPointOut(
+                taken_at=now_ms() - (count - 1 - index) * step_ms,
+                value=round(baseline["median"] + ((index % 7) - 3) * 0.15 * baseline["spread"], 2),
+            )
+            for index in range(count)
+        ]
+    return MetricTrendOut(crew_id=member["crewId"], metric=metric_id, unit=definition["unit"], points=points)
+
+
+def alerts_for(contract: dict, crew_id: str) -> list[AlertOut]:
+    """One fixture alert for crew-3 (ELEVATED_HEART_RATE); everyone else is quiet."""
+    member = require_crew_member(contract, crew_id)
+    if crew_id != "crew-3":
+        return []
+    value, z_score = _stub_value(member, "heart_rate")
+    return [
+        AlertOut(
+            alert_id=stable_id("alert", crew_id, "heart_rate"),
+            crew_id=crew_id,
+            rule_id="single_reading_zscore",
+            rule_version="1",
+            metric="heart_rate",
+            value=value,
+            z_score=z_score,
+            message="ELEVATED_HEART_RATE scenario: heart rate crossed |z| >= 3 of the baseline.",
+            created_at=now_ms() - 120_000,
+        )
+    ]
