@@ -58,5 +58,7 @@ export function describeZ(z: number): string {
 
 /** Units the API writes in a way that reads badly at large sizes. */
 export function displayUnit(unit: string): string {
-  return unit === 'score' ? '' : unit
+  if (unit === 'score') return ''
+  if (unit === 'breaths/min') return 'br/min'
+  return unit
 }

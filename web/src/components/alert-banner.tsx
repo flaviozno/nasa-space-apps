@@ -36,8 +36,8 @@ export function AlertBanner({ alerts, now }: { alerts: Alert[]; now: number }) {
               <SirenIcon className="size-6" aria-hidden="true" />
             </span>
             <div className="min-w-0 space-y-1">
-              <p className="text-lg font-semibold">{alert.message}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xl font-semibold">{alert.message}</p>
+              <p className="text-base text-muted-foreground">
                 {detail} · rule {alert.ruleId} v{alert.ruleVersion}
               </p>
             </div>

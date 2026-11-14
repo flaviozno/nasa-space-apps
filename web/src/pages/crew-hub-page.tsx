@@ -33,10 +33,10 @@ export function CrewHubPage() {
   return (
     <div className="space-y-4">
       <header className="flex flex-wrap items-center gap-4">
-        <CrewAvatar name={member.name} className="size-14 text-lg" />
+        <CrewAvatar name={member.name} className="size-16 text-xl" />
         <div>
-          <h1 className="text-2xl font-semibold">{member.name}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-semibold">{member.name}</h1>
+          <p className="text-lg text-muted-foreground">
             {member.role} · {member.deviceId}
           </p>
         </div>

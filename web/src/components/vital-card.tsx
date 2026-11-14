@@ -29,38 +29,38 @@ export function VitalCard({ summary, selected, onSelect, now }: VitalCardProps) 
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        'flex min-h-44 flex-col gap-3 rounded-2xl border-2 bg-card p-5 text-left transition-colors',
+        'flex min-h-52 flex-col gap-3 rounded-2xl border-2 bg-card p-6 text-left transition-colors',
         'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60 active:bg-accent',
         selected ? 'border-primary bg-accent/60' : status.border,
       )}
     >
       <span className="flex w-full flex-wrap items-center justify-between gap-2">
-        <span className="text-base font-medium whitespace-nowrap text-muted-foreground">{label}</span>
-        <span className={cn('flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold', status.text, status.chip)}>
-          <StatusIcon className="size-4" aria-hidden="true" />
+        <span className="text-xl font-medium whitespace-nowrap text-muted-foreground">{label}</span>
+        <span className={cn('flex items-center gap-1.5 rounded-full px-3 py-1 text-base font-semibold', status.text, status.chip)}>
+          <StatusIcon className="size-5" aria-hidden="true" />
           {status.label}
         </span>
       </span>
 
       <span className="flex items-baseline gap-2">
-        <span className={cn('text-5xl font-semibold tracking-tight tabular-nums', !hasValue && 'text-muted-foreground')}>
+        <span className={cn('text-6xl font-semibold tracking-tight tabular-nums', !hasValue && 'text-muted-foreground')}>
           {formatValue(summary.metric, summary.value)}
         </span>
-        <span className="text-lg text-muted-foreground">{displayUnit(summary.unit)}</span>
+        <span className="text-xl text-muted-foreground">{displayUnit(summary.unit)}</span>
       </span>
 
       {hasValue && z !== null && z !== undefined ? (
         <span className="flex flex-col gap-2">
           <ZGauge z={z} dotClass={summary.status === 'DEVIATION' ? 'bg-status-alert' : 'bg-primary'} />
-          <span className="text-sm text-muted-foreground">{describeZ(z)}</span>
+          <span className="text-base text-muted-foreground">{describeZ(z)}</span>
         </span>
       ) : (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-base text-muted-foreground">
           {summary.status === 'NO_DATA' ? 'Sensor not reporting — not shown as normal' : 'No valid reading in the last batch'}
         </span>
       )}
 
-      <span className="mt-auto text-xs text-muted-foreground">
+      <span className="mt-auto text-sm text-muted-foreground">
         {summary.takenAt ? `Updated ${formatAge(summary.takenAt, now)}` : 'Never received'}
       </span>
     </button>

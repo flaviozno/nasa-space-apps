@@ -18,7 +18,7 @@ const ITEMS: RailItem[] = [
 
 const itemClass = (active: boolean) =>
   cn(
-    'flex min-h-16 min-w-20 flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 text-sm font-medium transition-colors',
+    'flex min-h-20 min-w-24 flex-col items-center justify-center gap-1.5 rounded-2xl px-3 py-2 text-base font-medium transition-colors',
     'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60',
     active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground active:bg-accent',
   )
@@ -35,13 +35,13 @@ export function CrewNavRail() {
     >
       {ITEMS.map(({ to, label, icon: Icon, end }) => (
         <NavLink key={to} to={to} end={end} className={({ isActive }) => itemClass(isActive)}>
-          <Icon className="size-7" aria-hidden="true" />
+          <Icon className="size-8" aria-hidden="true" />
           {label}
         </NavLink>
       ))}
       <div className="hidden flex-1 md:block" />
       <NavLink to="/" className={itemClass(false)}>
-        <UsersIcon className="size-7" aria-hidden="true" />
+        <UsersIcon className="size-8" aria-hidden="true" />
         Switch
       </NavLink>
     </nav>

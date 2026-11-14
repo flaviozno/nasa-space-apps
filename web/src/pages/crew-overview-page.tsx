@@ -23,10 +23,10 @@ export function CrewOverviewPage() {
 
   if (metrics.isPending) {
     return (
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="grid grid-cols-2 gap-4">
           {PRIMARY_VITALS.map((metric) => (
-            <LoadingBlock key={metric} className="h-44" />
+            <LoadingBlock key={metric} className="h-52" />
           ))}
         </div>
         <LoadingBlock className="h-96" />
@@ -49,7 +49,7 @@ export function CrewOverviewPage() {
     <div className="space-y-4">
       {alerts.isSuccess && <AlertBanner alerts={alerts.data} now={now} />}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <section aria-label="Current levels" className="grid grid-cols-2 content-start gap-4">
           {vitals.map((summary) => (
             <VitalCard
@@ -71,8 +71,8 @@ export function CrewOverviewPage() {
 
       {others.length > 0 && (
         <section aria-label="Other metrics" className="space-y-2">
-          <h2 className="text-lg font-semibold">Check-ins and measurements</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+          <h2 className="text-2xl font-semibold">Check-ins and measurements</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
             {others.map((summary) => (
               <MetricTile
                 key={summary.metric}
@@ -99,20 +99,20 @@ function MetricTile({ summary, selected, onSelect, now }: { summary: MetricSumma
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        'flex min-h-20 flex-col gap-1 rounded-xl border-2 bg-card px-4 py-3 text-left transition-colors active:bg-accent',
+        'flex min-h-28 flex-col gap-1.5 rounded-2xl border-2 bg-card px-5 py-4 text-left transition-colors active:bg-accent',
         'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60',
         selected ? 'border-primary' : status.border,
       )}
     >
-      <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+      <span className="flex items-center justify-between gap-2 text-lg text-muted-foreground">
         {metricDisplay(summary.metric, summary.label).label}
-        <StatusIcon className={cn('size-4', status.text)} aria-label={status.label} />
+        <StatusIcon className={cn('size-5', status.text)} aria-label={status.label} />
       </span>
-      <span className="text-2xl font-semibold tabular-nums">
+      <span className="text-4xl font-semibold tabular-nums">
         {formatValue(summary.metric, summary.value)}
-        <span className="ml-1 text-sm font-normal text-muted-foreground">{displayUnit(summary.unit)}</span>
+        <span className="ml-1.5 text-lg font-normal text-muted-foreground">{displayUnit(summary.unit)}</span>
       </span>
-      {summary.takenAt && <span className="text-xs text-muted-foreground">{formatAge(summary.takenAt, now)}</span>}
+      {summary.takenAt && <span className="text-sm text-muted-foreground">{formatAge(summary.takenAt, now)}</span>}
     </button>
   )
 }

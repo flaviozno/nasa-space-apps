@@ -42,11 +42,11 @@ export function TrendChart({ crewId, metric, windowMinutes, onWindowChange }: Tr
     <section className="flex h-full flex-col gap-4 rounded-2xl border bg-card p-5" aria-label={`${label} trend`}>
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-2xl font-semibold">
             {label}
-            {unit && <span className="ml-2 text-base font-normal text-muted-foreground">{unit}</span>}
+            {unit && <span className="ml-2 text-lg font-normal text-muted-foreground">{unit}</span>}
           </h2>
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <p className="flex items-center gap-2 text-base text-muted-foreground">
             <span className="inline-block h-3 w-5 rounded-sm bg-primary/20 ring-1 ring-primary/40" aria-hidden="true" />
             Your normal range (median ± 2σ)
           </p>
@@ -59,7 +59,7 @@ export function TrendChart({ crewId, metric, windowMinutes, onWindowChange }: Tr
               aria-pressed={windowMinutes === option.minutes}
               onClick={() => onWindowChange(option.minutes)}
               className={cn(
-                'h-12 min-w-16 rounded-lg px-4 text-base font-semibold transition-colors',
+                'h-14 min-w-20 rounded-lg px-5 text-lg font-semibold transition-colors',
                 windowMinutes === option.minutes ? 'bg-primary text-primary-foreground' : 'text-muted-foreground active:bg-accent',
               )}
             >
@@ -72,7 +72,7 @@ export function TrendChart({ crewId, metric, windowMinutes, onWindowChange }: Tr
       {trend.isPending && <LoadingBlock className="h-64 flex-1" />}
       {trend.isError && <QueryError error={trend.error} title="Could not load the trend" onRetry={() => trend.refetch()} />}
       {trend.isSuccess && values.length === 0 && (
-        <div className="flex h-64 flex-1 items-center justify-center rounded-xl border border-dashed text-lg text-muted-foreground">
+        <div className="flex h-64 flex-1 items-center justify-center rounded-xl border border-dashed text-xl text-muted-foreground">
           No readings in this window
         </div>
       )}
@@ -99,15 +99,15 @@ export function TrendChart({ crewId, metric, windowMinutes, onWindowChange }: Tr
               tickLine={false}
               axisLine={false}
               minTickGap={48}
-              fontSize={13}
+              fontSize={15}
             />
             <YAxis
               domain={domain}
               tickFormatter={(v: number) => v.toFixed(decimals)}
               tickLine={false}
               axisLine={false}
-              width={44}
-              fontSize={13}
+              width={48}
+              fontSize={15}
             />
             <ChartTooltip
               content={
