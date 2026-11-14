@@ -1,6 +1,15 @@
-"""Ingest endpoints (owner: Miguel). Ingest pulls from the emulator, so this router
-only needs inspection routes, e.g. `GET /v1/ingest/status` (cursor, last sync, counts)."""
+"""Status endpoint for the onboard-to-emulator ingestion worker."""
 
 from fastapi import APIRouter
+from fastapi import Request
+
+from app.config import OnboardSettings
 
 router = APIRouter(prefix="/v1/ingest", tags=["ingest"])
+
+
+@router.get("/status")
+def ingest_status(request: Request) -> dict[str, object]:
+    """Return the durable emulator cursor and latest worker outcome."""
+    settings: OnboardSettings = request.app.state.settings
+    return request.app.state.ingest_store.status(settings.ingest_session_id)
