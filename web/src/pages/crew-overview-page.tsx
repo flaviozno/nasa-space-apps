@@ -1,4 +1,6 @@
+import { ChevronRightIcon, ClipboardCheckIcon } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { AlertBanner } from '@/components/alert-banner'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { TrendChart } from '@/components/trend-chart'
@@ -7,7 +9,8 @@ import { useNow } from '@/hooks/use-now'
 import { useCrewHubMember } from '@/lib/crew-hub-context'
 import { displayUnit, formatValue, metricDisplay, PRIMARY_VITALS } from '@/lib/metric-catalog'
 import { STATUS_STYLES } from '@/lib/metric-status'
-import { useCrewAlerts, useCrewMetrics } from '@/lib/onboard-queries'
+import { useCrewAlerts, useCrewMetrics, useQuestionnaireStatus } from '@/lib/onboard-queries'
+import { isAvailable } from '@/lib/questionnaire-status'
 import type { MetricSummary } from '@/lib/onboard-types'
 import { formatAge } from '@/lib/time'
 import { cn } from '@/lib/utils'
@@ -17,6 +20,7 @@ export function CrewOverviewPage() {
   const member = useCrewHubMember()
   const metrics = useCrewMetrics(member.crewId)
   const alerts = useCrewAlerts(member.crewId)
+  const status = useQuestionnaireStatus(member.crewId)
   const now = useNow()
   const [chosenMetric, setChosenMetric] = useState<string | null>(null)
   const [windowMinutes, setWindowMinutes] = useState(30)
@@ -48,6 +52,23 @@ export function CrewOverviewPage() {
   return (
     <div className="space-y-4">
       {alerts.isSuccess && <AlertBanner alerts={alerts.data} now={now} />}
+
+      {status.isSuccess && isAvailable(status.data.dailyCheckin, now) && (
+        <Link
+          to="checkin"
+          className="flex min-h-20 items-center gap-4 rounded-2xl border-2 border-status-warn/60 bg-status-warn/10 px-5 py-4 transition-colors active:bg-status-warn/20"
+        >
+          <ClipboardCheckIcon className="size-8 shrink-0 text-status-warn" aria-hidden="true" />
+          <span className="flex-1">
+            <span className="block text-xl font-semibold">Daily check-in due</span>
+            <span className="block text-base text-muted-foreground">About 30 seconds — how you feel and any symptoms.</span>
+          </span>
+          <span className="flex items-center gap-1 text-lg font-semibold text-status-warn">
+            Start
+            <ChevronRightIcon className="size-6" aria-hidden="true" />
+          </span>
+        </Link>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section aria-label="Current levels" className="grid grid-cols-2 content-start gap-4">

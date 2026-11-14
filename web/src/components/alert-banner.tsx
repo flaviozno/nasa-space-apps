@@ -1,5 +1,5 @@
 import { SirenIcon } from 'lucide-react'
-import { formatValue, metricDisplay } from '@/lib/metric-catalog'
+import { describeAlert } from '@/lib/alert-text'
 import type { Alert } from '@/lib/onboard-types'
 import { formatAge, formatClock } from '@/lib/time'
 
@@ -14,14 +14,8 @@ export function AlertBanner({ alerts, now }: { alerts: Alert[]; now: number }) {
   return (
     <section role="alert" aria-label="Onboard alerts" className="space-y-2">
       {sorted.map((alert, index) => {
-        const label = alert.metric ? metricDisplay(alert.metric).label : 'Alert'
-        const detail = [
-          alert.metric && alert.value !== null && alert.value !== undefined ? `${label} ${formatValue(alert.metric, alert.value)}` : null,
-          alert.zScore !== null && alert.zScore !== undefined ? `z = ${alert.zScore.toFixed(1)}` : null,
-          `${formatClock(alert.createdAt)} · ${formatAge(alert.createdAt, now)}`,
-        ]
-          .filter(Boolean)
-          .join(' · ')
+        const text = describeAlert(alert)
+        const detail = [text.deviation, formatClock(alert.createdAt), formatAge(alert.createdAt, now)].filter(Boolean).join(' · ')
 
         return (
           <div
@@ -36,9 +30,12 @@ export function AlertBanner({ alerts, now }: { alerts: Alert[]; now: number }) {
               <SirenIcon className="size-6" aria-hidden="true" />
             </span>
             <div className="min-w-0 space-y-1">
-              <p className="text-xl font-semibold">{alert.message}</p>
-              <p className="text-base text-muted-foreground">
-                {detail} · rule {alert.ruleId} v{alert.ruleVersion}
+              <p className="text-xl font-semibold">
+                {text.title}
+                {text.reading && <span className="text-status-alert"> — {text.reading}</span>}
+              </p>
+              <p className="text-base text-muted-foreground" title={`${alert.message} (rule ${alert.ruleId} v${alert.ruleVersion})`}>
+                {detail}
               </p>
             </div>
           </div>

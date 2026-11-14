@@ -37,7 +37,9 @@ describe('Crew Hub overview', () => {
   it('shows onboard alerts and the deviating vital for crew-3', async () => {
     renderAt('/crew/crew-3')
     const alerts = await screen.findByRole('alert', { name: 'Onboard alerts' })
-    expect(alerts).toHaveTextContent('ELEVATED_HEART_RATE')
+    expect(alerts).toHaveTextContent('High heart rate — 125 bpm')
+    expect(alerts).toHaveTextContent('5.0σ above your baseline')
+    expect(alerts).not.toHaveTextContent('_')
     expect(vitals().getByRole('button', { name: /Heart rate/ })).toHaveTextContent('Deviation')
   })
 

@@ -23,6 +23,9 @@ Owner: Wallace. React + Vite + TypeScript + shadcn/ui. UI text in English.
 | `src/lib/onboard-api.ts` | Typed calls to the Crew API; errors become `ApiError` with FastAPI's `detail` as the message |
 | `src/lib/onboard-queries.ts` | TanStack Query hooks (`useCrew`, `useCrewMetrics`, `useMetricTrend`, `useSubmitDailyCheckin`, …) — pages use these, not `fetch` |
 | `src/components/query-state.tsx` | `LoadingBlock` and `QueryError` for loading and error states |
+| `src/lib/earth-contract.ts` | Earth view data shapes: `SyncStatus` from Guilherme's `feat/outbox-sync`, and the **provisional** `/v1/views/*` shapes (Earth does not implement them yet) |
+| `src/lib/earth-api.ts`, `src/lib/earth-queries.ts` | Earth view calls and hooks (5 s polling) |
+| `src/mocks/earth-handlers.ts` | Time-based outbox simulation for `dev:mock`: cut the link and the queue grows, restore it and it drains |
 | `src/test/mock-server.ts` | The MSW mocks as a Node server for tests (`startMockServer()`) |
 
 ### Data fetching
