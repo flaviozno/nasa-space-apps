@@ -25,11 +25,11 @@ describe('manual measurements', () => {
     )
     renderAt('/crew/crew-1/manual')
     await screen.findByRole('group', { name: 'Body mass' })
-    expect(card('Body mass').getByRole('status', { name: 'Body mass' })).toHaveTextContent('61.8')
+    expect(card('Body mass').getByRole('button', { name: 'Type Body mass' })).toHaveTextContent('61.8')
     expect(screen.getByRole('button', { name: 'Include a measurement' })).toBeDisabled()
 
     fireEvent.click(card('Body mass').getByRole('button', { name: 'Body mass +1 kg' }))
-    expect(card('Body mass').getByRole('status', { name: 'Body mass' })).toHaveTextContent('62.8')
+    expect(card('Body mass').getByRole('button', { name: 'Type Body mass' })).toHaveTextContent('62.8')
     expect(card('Body mass').getByRole('button', { name: 'Included' })).toHaveAttribute('aria-pressed', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Save 1 value' }))
@@ -61,5 +61,29 @@ describe('manual measurements', () => {
     for (let i = 0; i < 9; i += 1) fireEvent.click(raiseDiastolic)
     expect(card('Blood pressure').getByRole('alert')).toHaveTextContent('Diastolic must be lower than systolic.')
     expect(screen.getByRole('button', { name: /Save 2 values/ })).toBeDisabled()
+  })
+
+  it('lets the value be typed instead of tapped', async () => {
+    renderAt('/crew/crew-1/manual')
+    await screen.findByRole('group', { name: 'Body mass' })
+    fireEvent.click(card('Body mass').getByRole('button', { name: 'Type Body mass' }))
+    const input = card('Body mass').getByRole('textbox', { name: 'Body mass in kg' })
+    fireEvent.change(input, { target: { value: '63,4' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(card('Body mass').getByRole('button', { name: 'Type Body mass' })).toHaveTextContent('63.4')
+    expect(card('Body mass').getByRole('button', { name: 'Included' })).toBeInTheDocument()
+  })
+
+  it('rejects a typed value outside the range and keeps the field open', async () => {
+    renderAt('/crew/crew-1/manual')
+    await screen.findByRole('group', { name: 'Water intake' })
+    fireEvent.click(card('Water intake').getByRole('button', { name: 'Type Water intake' }))
+    const input = card('Water intake').getByRole('textbox', { name: 'Water intake in L/day' })
+    fireEvent.change(input, { target: { value: '25' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(card('Water intake').getByRole('alert')).toHaveTextContent('Enter a number from 0 to 10 L/day.')
+    expect(card('Water intake').getByRole('textbox')).toBeInTheDocument()
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(card('Water intake').getByRole('button', { name: 'Type Water intake' })).toHaveTextContent('2.4')
   })
 })

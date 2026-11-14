@@ -53,6 +53,18 @@ export function stepValue(definition: ManualMetric, value: number, delta: number
   return Math.min(definition.max, Math.max(definition.min, next))
 }
 
+/**
+ * A typed value, or null when it is not a number or outside the metric's range.
+ * Accepts a comma or a dot as decimal separator: "63,4" → 63.4; rounds to the metric's precision.
+ */
+export function parseTypedValue(definition: ManualMetric, text: string): number | null {
+  const normalized = text.trim().replace(',', '.')
+  if (!/^\d+(\.\d+)?$/.test(normalized)) return null
+  const factor = 10 ** definition.decimals
+  const value = Math.round(Number(normalized) * factor) / factor
+  return value >= definition.min && value <= definition.max ? value : null
+}
+
 /** A plausibility check the API does not do: diastolic must be below systolic. */
 export function bloodPressureError(systolic: number, diastolic: number): string | null {
   return diastolic >= systolic ? 'Diastolic must be lower than systolic.' : null
