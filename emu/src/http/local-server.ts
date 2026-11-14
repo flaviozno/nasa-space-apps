@@ -5,7 +5,7 @@ import {
 } from "node:http";
 import health from "../../api/health.ts";
 import docs from "../../api/docs.ts";
-import openapi from "../../api/openapi.ts";
+import openapi from "../../api/openapi.json.ts";
 import receiptAcks from "../../api/receipt-acks.ts";
 import sync from "../../api/sync.ts";
 import { json } from "./response.ts";
@@ -16,6 +16,7 @@ type Handler = (
 ) => void | Promise<void>;
 
 const routes: Readonly<Record<string, Handler>> = {
+  "/": docs,
   "/api/docs": docs,
   "/api/health": health,
   "/api/openapi.json": openapi,

@@ -26,7 +26,7 @@ The VPS must persist a batch before advancing its cursor. For each device and bo
 
 ## Requirements
 
-- Node.js 22.x
+- Node.js 24.x
 - npm
 
 ## Install and validate
@@ -65,7 +65,7 @@ PORT=4000 HOST=0.0.0.0 npm run dev
 
 ## API documentation
 
-Swagger UI is available at `http://127.0.0.1:3000/api/docs`, and the OpenAPI 3.0.3 document is available at `http://127.0.0.1:3000/api/openapi.json`.
+Swagger UI is available at `http://127.0.0.1:3000/` and `http://127.0.0.1:3000/api/docs`, and the OpenAPI 3.0.3 document is available at `http://127.0.0.1:3000/api/openapi.json`.
 
 Use the same paths after the Vercel deployment domain. Swagger UI loads its frontend assets from the Swagger UI CDN; the JSON contract remains directly available at `/api/openapi.json`.
 
@@ -73,6 +73,7 @@ Use the same paths after the Vercel deployment domain. Swagger UI loads its fron
 
 | Method | Route | Authentication | Description |
 | --- | --- | --- | --- |
+| `GET` | `/` | None | Swagger UI shortcut. |
 | `GET` | `/api/docs` | None | Interactive Swagger UI. |
 | `GET` | `/api/openapi.json` | None | OpenAPI 3.0.3 JSON contract. |
 | `GET` | `/api/health` | None | Returns emulator availability. |
@@ -200,7 +201,7 @@ The handler checks method first, then configuration and authentication, then req
 ## Deploy to Vercel
 
 1. Import the `emu` directory as a Vercel project, or run `npx vercel` from this directory.
-2. Use the **Other** preset, no build command, no output directory, and Node.js 22.x. In the monorepo, set `emu` as the Root Directory.
+2. Use the **Other** preset, no build command, no output directory, and Node.js 24.x. In the monorepo, set `emu` as the Root Directory.
 3. Configure the four variables from `.env.example` for the required Preview and Production environments. Replace `change-me` with a strong private token.
 4. Validate `/api/health`, `/api/docs`, and a protected endpoint on the deployment URL.
 
