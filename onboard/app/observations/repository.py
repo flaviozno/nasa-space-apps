@@ -128,3 +128,20 @@ def range_observations(
         ),
         {"crew_id": crew_id, "metric": metric, "from_ms": from_ms, "to_ms": to_ms, "limit": limit},
     ).mappings().fetchall()
+
+
+INSERT_RESPONSE_SQL = text(
+    """
+    INSERT INTO questionnaire_responses (id, crew_id, questionnaire, submitted_at, answers_json)
+    VALUES (:id, :crew_id, :questionnaire, :submitted_at, CAST(:answers_json AS jsonb))
+    """
+)
+
+
+def insert_questionnaire_response(connection: Connection, response: dict) -> None:
+    """Store the envelope of one submitted form (raw answers for audit).
+
+    The answers themselves become observations keyed by the response id
+    (source_ref); this table only records who answered what questionnaire, when.
+    """
+    connection.execute(INSERT_RESPONSE_SQL, response)
