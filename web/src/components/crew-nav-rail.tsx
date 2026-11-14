@@ -8,13 +8,13 @@ interface RailItem {
   icon: LucideIcon
   end?: boolean
   /** Which `due` flag puts a "Due" badge on this item. */
-  dueKey?: 'checkin'
+  dueKey?: 'checkin' | 'weekly'
 }
 
 const ITEMS: RailItem[] = [
   { to: '.', label: 'Overview', icon: GaugeIcon, end: true },
   { to: 'checkin', label: 'Check-in', icon: ClipboardCheckIcon, dueKey: 'checkin' },
-  { to: 'weekly', label: 'Weekly', icon: CalendarCheckIcon },
+  { to: 'weekly', label: 'Weekly', icon: CalendarCheckIcon, dueKey: 'weekly' },
   { to: 'manual', label: 'Manual', icon: RulerIcon },
 ]
 
@@ -29,7 +29,7 @@ const itemClass = (active: boolean) =>
  * Crew Hub sections as big always-visible touch targets, like a car's infotainment rail:
  * a vertical rail on landscape tablets, a horizontal bar on narrow screens.
  */
-export function CrewNavRail({ due = {} }: { due?: { checkin?: boolean } }) {
+export function CrewNavRail({ due = {} }: { due?: { checkin?: boolean; weekly?: boolean } }) {
   return (
     <nav
       aria-label="Crew Hub sections"

@@ -85,7 +85,7 @@ describe('daily check-in', () => {
     expect(screen.queryByText('Daily check-in due')).not.toBeInTheDocument()
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Crew Hub sections' })).getByRole('link', { name: /Check-in/ }))
     expect(await screen.findByRole('heading', { name: 'Check-in done for today' })).toBeInTheDocument()
-    expect(screen.getByText(/The next check-in opens at 00:00 GMT/)).toBeInTheDocument()
+    expect(screen.getByText(/It opens again at 00:00 GMT/)).toBeInTheDocument()
   })
 
   it('asks for the check-in on the overview while it is due', async () => {

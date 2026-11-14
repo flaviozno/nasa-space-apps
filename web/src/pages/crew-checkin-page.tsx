@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { CalendarCheckIcon, CheckCircle2Icon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
+import { CheckCircle2Icon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
+import { QuestionnaireClosed } from '@/components/questionnaire-closed'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { ScalePicker } from '@/components/scale-picker'
 import { useCrewHubMember } from '@/lib/crew-hub-context'
@@ -16,7 +17,8 @@ import {
 import { useNow } from '@/hooks/use-now'
 import { ApiError } from '@/lib/onboard-api'
 import { onboardKeys, useQuestionnaireStatus, useSubmitDailyCheckin } from '@/lib/onboard-queries'
-import { formatCountdown, formatGmtClock, isAvailable } from '@/lib/questionnaire-status'
+import { isAvailable } from '@/lib/questionnaire-status'
+import { bigButton } from '@/lib/touch-styles'
 import { formatClock } from '@/lib/time'
 import { cn } from '@/lib/utils'
 
@@ -24,9 +26,6 @@ const SYMPTOMS_STEP = FEELING_QUESTIONS.length
 const REVIEW_STEP = SYMPTOMS_STEP + 1
 const STEP_COUNT = REVIEW_STEP + 1
 const ADVANCE_DELAY_MS = 250
-
-const bigButton =
-  'inline-flex h-16 items-center justify-center gap-2 rounded-2xl px-8 text-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60 disabled:opacity-40'
 
 /**
  * `/crew/:crewId/checkin` — daily check-in, one question per screen like a car display:
@@ -89,18 +88,11 @@ export function CrewCheckinPage() {
   const daily = status.data.dailyCheckin
   if (!isAvailable(daily, now)) {
     return (
-      <section className="flex min-h-96 flex-col items-center justify-center gap-5 rounded-3xl border bg-card p-8 text-center">
-        <CalendarCheckIcon className="size-20 text-status-ok" aria-hidden="true" />
-        <h2 className="text-4xl font-semibold">Check-in done for today</h2>
-        <p className="max-w-2xl text-xl text-muted-foreground">
-          {daily.lastSubmittedAt !== null && <>Submitted at {formatGmtClock(daily.lastSubmittedAt)}. </>}
-          The next check-in opens at {formatGmtClock(daily.availableAgainAt!)} — in{' '}
-          {formatCountdown(daily.availableAgainAt!, now)}.
-        </p>
+      <QuestionnaireClosed title="Check-in done for today" window={daily} now={now}>
         <Link to={`/crew/${member.crewId}`} className={cn(bigButton, 'bg-primary text-primary-foreground')}>
           Back to overview
         </Link>
-      </section>
+      </QuestionnaireClosed>
     )
   }
 

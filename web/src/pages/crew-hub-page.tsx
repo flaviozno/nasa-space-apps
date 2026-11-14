@@ -46,7 +46,12 @@ export function CrewHubPage() {
         </div>
       </header>
       <div className="flex flex-col gap-4 md:flex-row">
-        <CrewNavRail due={{ checkin: status.isSuccess && isAvailable(status.data.dailyCheckin, now) }} />
+        <CrewNavRail
+          due={{
+            checkin: status.isSuccess && isAvailable(status.data.dailyCheckin, now),
+            weekly: status.isSuccess && (isAvailable(status.data.phq4, now) || isAvailable(status.data.teamClimate, now)),
+          }}
+        />
         <div className="min-w-0 flex-1">
           <Outlet context={context} />
         </div>

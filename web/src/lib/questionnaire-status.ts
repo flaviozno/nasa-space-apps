@@ -53,6 +53,16 @@ export function formatGmtClock(timestamp: number): string {
   return `${new Date(timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} GMT`
 }
 
+/**
+ * When a questionnaire reopens, in GMT: "at 00:00 GMT" within the next 24 h,
+ * otherwise with the date, "on Fri 21 Nov at 10:00 GMT".
+ */
+export function formatReopening(target: number, now: number): string {
+  if (target - now < 24 * 60 * 60 * 1000) return `at ${formatGmtClock(target)}`
+  const date = new Date(target).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
+  return `on ${date.replace(',', '')} at ${formatGmtClock(target)}`
+}
+
 /** Time left until `target`: "5 h 12 min", "8 min", "less than a minute". */
 export function formatCountdown(target: number, now: number): string {
   const minutes = Math.ceil((target - now) / 60_000)
