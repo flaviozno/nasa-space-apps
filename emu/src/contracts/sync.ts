@@ -1,4 +1,4 @@
-export type Scenario = "NORMAL" | "ELEVATED_HEART_RATE" | "LOW_SPO2";
+export type Scenario = "NORMAL" | "ELEVATED_HEART_RATE" | "LOW_SPO2" | "NASA_EXERCISE_REPLAY";
 export interface SyncRequest {
   version: 1;
   requestId: string;
