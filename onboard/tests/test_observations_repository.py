@@ -40,14 +40,16 @@ def make_obs(index: int, **overrides: object) -> dict:
 
 def test_insert_counts_inserted_and_duplicates(clean_tables: Engine) -> None:
     with clean_tables.begin() as connection:
-        inserted, duplicates = insert_observations(connection, [make_obs(i) for i in range(3)])
-        assert (inserted, duplicates) == (3, 0)
+        inserted_rows, duplicates = insert_observations(connection, [make_obs(i) for i in range(3)])
+        assert [row["id"] for row in inserted_rows] == ["obs-0000", "obs-0001", "obs-0002"]
+        assert duplicates == 0
 
         # Same identity (source, source_ref, metric): skipped, not re-inserted.
         repeated = [make_obs(i) for i in range(3)]
         fresh = [make_obs(3, metric="spo2", unit="%")]
-        inserted, duplicates = insert_observations(connection, repeated + fresh)
-        assert (inserted, duplicates) == (1, 3)
+        inserted_rows, duplicates = insert_observations(connection, repeated + fresh)
+        assert [row["id"] for row in inserted_rows] == ["obs-0003"]
+        assert duplicates == 3
 
 
 def test_query_applies_filters_and_oldest_first_order(clean_tables: Engine) -> None:

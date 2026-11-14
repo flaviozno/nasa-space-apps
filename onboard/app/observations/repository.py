@@ -26,27 +26,29 @@ RETURNING id
 """
 
 
-def insert_observations(connection: Connection, observations: list[dict]) -> tuple[int, int]:
+def insert_observations(connection: Connection, observations: list[dict]) -> tuple[list[dict], int]:
     """Insert rows, skipping identities that already exist.
 
-    Returns (inserted, duplicates). RETURNING gives back the id only when the row
-    was actually inserted; a conflict returns no row, which is how you tell
-    inserted from duplicate. Rows with NULL source_ref always insert (no identity
-    to conflict on).
+    Returns (inserted_rows, duplicates): the rows that actually persisted, in
+    input order, plus how many were skipped. RETURNING gives back the id only
+    when the row was inserted; a conflict returns no row, which is how you tell
+    one from the other. Rows with NULL source_ref always insert (no identity to
+    conflict on).
     """
-    inserted = duplicates = 0
+    inserted_rows: list[dict] = []
+    duplicates = 0
     for row in observations:
         result = connection.execute(text(INSERT_SQL), row)
         if result.first() is None:
             duplicates += 1
         else:
-            inserted += 1
-    return inserted, duplicates
+            inserted_rows.append(row)
+    return inserted_rows, duplicates
 
 
 def query_observations(
     connection: Connection,
-    crew_id: str,
+    crew_id: str | None,
     *,
     metric: str | None = None,
     source: str | None = None,
@@ -57,12 +59,16 @@ def query_observations(
 ) -> list:
     """Filtered observation history, oldest first (then by id as a tie-break).
 
-    The WHERE clause is built from the filters that are not None; values are
-    always bound parameters, never interpolated into the SQL string. The time
-    window is inclusive on both ends.
+    crew_id is optional: None lists every crew member. The WHERE clause is built
+    from the filters that are not None; values are always bound parameters,
+    never interpolated into the SQL string. The time window is inclusive on
+    both ends.
     """
-    conditions = ["crew_id = :crew_id"]
-    params: dict[str, object] = {"crew_id": crew_id, "limit": limit, "offset": offset}
+    conditions: list[str] = []
+    params: dict[str, object] = {"limit": limit, "offset": offset}
+    if crew_id is not None:
+        conditions.append("crew_id = :crew_id")
+        params["crew_id"] = crew_id
     if metric is not None:
         conditions.append("metric = :metric")
         params["metric"] = metric

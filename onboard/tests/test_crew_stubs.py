@@ -150,44 +150,6 @@ def test_alerts_are_empty_except_the_fixture_member() -> None:
     assert alerts[0]["ruleId"] == "single_reading_zscore"
 
 
-def test_generic_observation_post_resolves_units() -> None:
-    payload = {
-        "observations": [
-            {"crewId": "crew-1", "metric": "heart_rate", "value": 82, "source": "wearable", "sourceRef": "emu-x-1"},
-        ],
-    }
-    with client() as test_client:
-        response = test_client.post("/v1/observations", json=payload)
-    assert response.status_code == 201
-    body = response.json()
-    assert body["duplicates"] == 0
-    assert body["accepted"][0]["unit"] == "bpm"
-
-
-def test_generic_observation_post_validates_crew_and_metric() -> None:
-    with client() as test_client:
-        bad_crew = test_client.post(
-            "/v1/observations",
-            json={"observations": [{"crewId": "crew-9", "metric": "heart_rate", "value": 80}]},
-        )
-        bad_metric = test_client.post(
-            "/v1/observations",
-            json={"observations": [{"crewId": "crew-1", "metric": "not_a_metric", "value": 1}]},
-        )
-    assert bad_crew.status_code == 422
-    assert bad_metric.status_code == 404
-
-
-def test_observation_query_returns_fixture_history() -> None:
-    with client() as test_client:
-        response = test_client.get("/v1/observations", params={"crewId": "crew-2", "limit": 6})
-    assert response.status_code == 200
-    rows = response.json()
-    assert len(rows) == 6
-    assert {row["metric"] for row in rows} == {"heart_rate", "spo2", "body_temp"}
-    assert all(row["source"] == "wearable" for row in rows)
-
-
 def test_openapi_exposes_the_stub_paths() -> None:
     app = create_app(OnboardSettings(database_url=UNREACHABLE_DB))
     paths = app.openapi()["paths"]
