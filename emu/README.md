@@ -1,6 +1,6 @@
 # Wearable Telemetry Emulator
 
-A standalone, deterministic TypeScript mock of a wearable device. It exposes HTTP endpoints that a spacecraft VPS can use to request simulated telemetry and acknowledge received batches.
+A standalone TypeScript wearable emulator. It exposes HTTP endpoints that a spacecraft VPS can use to request simulated telemetry and acknowledge received batches.
 
 The emulator runs either as a native Node.js HTTP server or as Vercel Functions. Vercel represents the wearable only; the VPS always initiates synchronization.
 
@@ -20,7 +20,7 @@ VPS (onboard)                    Wearable emulator
   | <--- 204 No Content -----------|
 ```
 
-The emulator is stateless: it does not use a database, Redis, files, queues, cron jobs, external calls, stored cursors, or stored acknowledgements. Retrying the same request produces the same telemetry batch.
+The emulator is stateless: it does not use a database, Redis, files, queues, cron jobs, external calls, stored cursors, or stored acknowledgements. Telemetry readings are deterministic, while each sync response returns randomized baseline profiles around the values in `contracts/crew.json` for every requested, known wearable, indexed by `deviceId` in `baselines`.
 
 The VPS must persist a batch before advancing its cursor. For each device and boot, advance it to the largest accepted `sequenceNumber + 1`. If no reading was received, keep the cursor unchanged. Retrying an ACK is safe and has no additional effect.
 
@@ -77,7 +77,7 @@ Use the same paths after the Vercel deployment domain. Swagger UI loads its fron
 | `GET` | `/api/docs` | None | Interactive Swagger UI. |
 | `GET` | `/api/openapi.json` | None | OpenAPI 3.0.3 JSON contract. |
 | `GET` | `/api/health` | None | Returns emulator availability. |
-| `POST` | `/api/sync` | Bearer token | Generates a deterministic telemetry batch. |
+| `POST` | `/api/sync` | Bearer token | Generates deterministic telemetry plus randomized baseline profiles for known devices. |
 | `POST` | `/api/receipt-acks` | Bearer token | Accepts a receipt acknowledgement. |
 
 Unknown routes return `404`. Each implemented route only accepts the HTTP method listed above.

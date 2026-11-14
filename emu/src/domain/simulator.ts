@@ -3,6 +3,7 @@ import type {
   TelemetryBatch,
   TelemetryReading,
 } from "../contracts/telemetry.ts";
+import { randomizedBaselinesForDevices } from "../contracts/baselines.ts";
 import { hash } from "../utils/hash.ts";
 import { acquisitionTime, MAX_SEQUENCE } from "../utils/time.ts";
 import { generateReading } from "./deterministic-generator.ts";
@@ -42,6 +43,7 @@ export function simulate(request: SyncRequest): TelemetryBatch {
     sessionId: request.sessionId,
     generatedAtMs: request.requestedAtMs,
     hasMore: eligible().length > 0,
+    baselines: randomizedBaselinesForDevices(request.devices.map((device) => device.deviceId)),
     readings,
   };
   return {
