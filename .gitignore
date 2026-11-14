@@ -1,3 +1,20 @@
 *pdf
 .vercel
 .env*
+!.env.example
+.DS_Store
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+# Local SQLite databases (Docker uses named volumes instead)
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Web
+node_modules/
+dist/

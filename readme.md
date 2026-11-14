@@ -7,7 +7,7 @@
 
 > **MVP adaptation and integration baseline:** this document defines the reduced, integrable implementation that will be presented in the MVP. It is adapted from the broader architecture proposed in [../infra/telemetry.drawio](./infra/telemetry.drawio) and detailed in [../docs/telemetry-architecture.md](./docs/telemetry-architecture.md). It preserves the core guarantees—local durable ingestion, onboard processing, an outbox, automatic delivery, and durable acknowledgements—while intentionally replacing production-scale components with simpler MVP equivalents.
 
-> The MVP is therefore **not** a replacement for the proposed telemetry architecture. It is a demonstrable integration path that validates its most important behaviors now and can evolve toward BLE, MQTT, Protobuf, PostgreSQL, DELTA/FULL reconstruction, and the other capabilities described in the infrastructure plan.
+> The MVP is therefore **not** a replacement for the proposed telemetry architecture. It is a demonstrable integration path that validates its most important behaviors now and can evolve toward BLE, MQTT, Protobuf, DELTA/FULL reconstruction, and the other capabilities described in the infrastructure plan.
 
 ## 1. Goal
 
@@ -45,9 +45,9 @@ flowchart TD
     A["VPS: onboard scheduler"] -->|"HTTPS SyncRequest once per minute"| B["Vercel: wearable simulator"]
     B -->|"TelemetryBatch response"| A
     A -->|"ReceiptAck after durable commit"| B
-    A -->|"persist + process"| C["VPS: onboard service + SQLite"]
+    A -->|"persist + process"| C["VPS: onboard service + PostgreSQL"]
     W["Web: Crew Hub"] -->|"read metrics, submit questionnaires and manual entries"| C
-    C -->|"HTTPS: pending events when link is enabled"| D["VPS: Earth service + SQLite"]
+    C -->|"HTTPS: pending events when link is enabled"| D["VPS: Earth service + PostgreSQL"]
     D -->|"ACK after durable commit"| C
     E["Web: Earth view"] -->|"read synced crew data"| D
 ```
@@ -63,27 +63,67 @@ The simulator package implements the Vercel responder and includes a development
 | Onboard scheduler | Onboard service container on VPS | Start each wearable synchronization window |
 | Wearable simulator | Vercel, Node.js/TypeScript | Respond to `SyncRequest` with one deterministic bounded batch (4 devices, one per astronaut); validate `ReceiptAck` |
 | Onboard service | VPS, Docker, Python/FastAPI | Request readings, convert them to observations, evaluate simple rules, serve the Crew API (trends, baselines, questionnaires, manual entries), and forward pending events |
-| Onboard database | Dedicated Docker volume, SQLite | Store sessions, readings, observations, questionnaire responses, alerts, and Outbox records |
+| Onboard database | PostgreSQL 17 container (`onboard-db`) with its own volume; schema by Alembic | Store sessions, readings, observations, questionnaire responses, alerts, and Outbox records |
 | Earth service | VPS, Docker, Python/FastAPI | Deduplicate and persist incoming events, return an ACK, and serve read endpoints for the Earth view |
-| Earth database | Separate Docker volume, SQLite | Store received events and reception timestamps |
+| Earth database | Separate PostgreSQL 17 container (`earth-db`) with its own volume; schema by Alembic | Store received events and reception timestamps |
 | Web app | VPS, Docker, React + Vite + shadcn/ui (TypeScript) | Crew Hub (`/crew/:id`) and Earth view (`/earth`); UI in English |
 | Simulator HTTPS endpoint | Vercel | Expose authenticated simulator synchronization endpoints to the VPS |
 | Web HTTPS entry point | Existing VPS proxy or one small reverse proxy | Serve the web app and the read/input APIs it calls |
 
 Use three application containers (onboard, earth, web) and persistent volumes for the two databases. The onboard service calls the public Vercel endpoint over HTTPS. Earth ingestion stays on the private Docker network; only its read endpoints are exposed to the web app.
 
-PostgreSQL, Redis, MQTT, Kubernetes, login, and a separate worker service are not required for this MVP.
+Redis, MQTT, Kubernetes, login, and a separate worker service are not required for this MVP.
 
 ### Repository layout and ownership
 
 | Path | Owner | Contents |
 | --- | --- | --- |
-| `simulator/` | Flávio | Wearable emulator and scenarios (`NORMAL`, `FEVER`, `HYPOXIA`, `POOR_SLEEP`) |
-| `onboard/app/ingest/` | Miguel | Telemetry batch ingestion, cursor, sample → observation conversion, alert rules |
-| `onboard/app/crew/`, `onboard/app/observations/` | Matheus | Observation model, crew and baselines, trends, questionnaires, manual entries |
-| `onboard/app/sync/`, `earth/`, `infra/` | Guilherme | Outbox worker, link toggle, Earth service, Docker Compose, VPS deploy |
+| `emu/` | Flávio | Wearable emulator on Vercel and its scenarios |
+| `onboard/app/ingest/`, `onboard/migrations/versions/ingest/` | Miguel | Sync with the emulator, cursor, sample → observation conversion, alert rules |
+| `onboard/app/crew/`, `onboard/app/observations/`, `onboard/migrations/versions/observations/` | Matheus | Observation model, crew and baselines, trends, questionnaires, manual entries |
+| `onboard/app/sync/`, `onboard/migrations/versions/sync/`, `earth/` | Guilherme | Outbox worker, link toggle, Earth service and its migrations |
+| `onboard/app/main.py`, `onboard/app/config.py`, `onboard/alembic.ini`, `common/`, `docker-compose.yml`, `infra/` | Guilherme | App wiring, shared database/migration/health code, Docker Compose, VPS deploy |
 | `web/` | Wallace | Crew Hub and Earth view |
 | `contracts/` | Matheus (metrics, crew), Flávio (`SyncRequest` / `TelemetryBatch` / `ReceiptAck`), Guilherme (onboard → Earth) | Shared contracts; changed only through an announced PR |
+
+### Running locally
+
+Everything (onboard, Earth, web) with Docker:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+| URL | What |
+| --- | --- |
+| http://localhost:8080 | Web app (Crew Hub at `/crew/:crewId`, Earth view at `/earth`) |
+| http://localhost:8001/docs | Onboard API, direct (bound to 127.0.0.1) |
+| http://localhost:8002/docs | Earth API, direct (bound to 127.0.0.1) |
+| `localhost:5433` / `localhost:5434` | Onboard / Earth PostgreSQL (bound to 127.0.0.1; users `onboard` / `earth`) |
+
+The web container proxies `/api/onboard/*` to onboard and only `/api/earth/health` and `/api/earth/v1/views/*` to Earth; Earth ingest stays private. `docker compose down -v` deletes both databases.
+
+Developing one piece without Docker:
+
+| Piece | Setup | Run | Test |
+| --- | --- | --- | --- |
+| Python services | `uv sync --all-packages` (once, in this folder) and `docker compose up -d onboard-db earth-db` | `cd onboard && uv run alembic upgrade heads && uv run uvicorn app.main:app --reload --port 8001` (Earth: `cd earth`, port 8002) | `cd onboard && uv run pytest` (also in `earth/` and `common/`; no database needed) |
+| Web | `cd web && npm install` | `npm run dev` (proxies `/api/*` to ports 8001/8002) | `npm test`, `npm run typecheck` |
+| Contracts | — | — | `python3 -m unittest discover -s contracts/tests` |
+
+### Databases and migrations
+
+Onboard and Earth each have their own PostgreSQL. Their schema changes only through Alembic migrations; the containers run `alembic upgrade heads` before starting the API.
+
+| Service | Migrations | Branches |
+| --- | --- | --- |
+| onboard | `onboard/migrations/versions/<branch>/` | One per owner: `observations` (Matheus), `ingest` (Miguel), `sync` (Guilherme) |
+| earth | `earth/migrations/versions/` | Single linear branch (Guilherme) |
+
+Onboard's per-owner branches let three people add migrations at the same time without conflicting heads. How to create one, apply them, and depend on another branch's tables: [onboard/migrations/README.md](onboard/migrations/README.md).
+
+Shared Python code lives in `common/` (`hub_common`): `create_database_engine`, the `DatabaseConnection` endpoint dependency (one transaction per request), `build_service_app`, the Alembic environment, and the `/health` router. Format Python with `uv run ruff format`.
 
 ## 4. Step-by-Step Flow
 
@@ -225,13 +265,13 @@ If the entire VPS is unavailable, both services stop. Once it returns, the deter
 | outbox | Stable events, delivery status, attempts, and next retry time |
 | settings | Persisted simulated link state |
 
-Each owner keeps their tables in their own migration file (`001_observations.sql` Matheus, `002_ingest.sql` Miguel, `003_sync.sql` Guilherme). Crew members and baselines are fixed seed values loaded from `contracts/crew.json`.
+Each owner creates their tables in their own Alembic branch (`observations` Matheus, `ingest` Miguel, `sync` Guilherme; see "Databases and migrations"). Crew members and baselines are fixed seed values loaded from `contracts/crew.json`.
 
 | Earth table | Purpose |
 | --- | --- |
 | received_events | Unique event IDs, original content, and Earth reception timestamps |
 
-SQLite files must live on separate persistent Docker volumes, not container writable layers. Use transactions, WAL, and synchronous=FULL; verify durability against the actual host storage. Container restarts must preserve data.
+Each PostgreSQL instance keeps its data on its own named Docker volume, not in the container's writable layer, so container restarts preserve data. Write each batch in one transaction and keep PostgreSQL's default `synchronous_commit = on`, so a commit is durable before the ACK is sent.
 
 Start with PENDING and SYNCED delivery states. A single worker can safely retry PENDING events after a crash if Earth deduplicates. Add leases and IN_FLIGHT state when introducing concurrent workers, rather than adding them before they are needed.
 
@@ -289,7 +329,7 @@ With 60 generated seconds per minute, existing backlog does not shrink at steady
 - MQTT broker and other transport infrastructure.
 - Delta compression, Protobuf, and base synchronization.
 - Dedicated job queues, Redis, and separate worker containers.
-- PostgreSQL/time-series infrastructure and database replication.
+- Time-series infrastructure and database replication.
 - Geographically separated onboard/Earth deployments and high availability.
 - Automatic diagnosis or medically validated alert thresholds.
 - Continuous second-by-second transmission from Vercel.

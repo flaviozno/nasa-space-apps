@@ -56,7 +56,9 @@ class CrewStructureTest(unittest.TestCase):
 
     def test_every_member_has_a_baseline_for_every_metric(self) -> None:
         for member in self.crew:
-            self.assertEqual(set(member["baselines"]), set(self.metrics), f"crewId={member['crewId']}")
+            self.assertEqual(
+                set(member["baselines"]), set(self.metrics), f"crewId={member['crewId']}"
+            )
 
 
 class BaselineValuesTest(unittest.TestCase):
@@ -72,7 +74,9 @@ class BaselineValuesTest(unittest.TestCase):
     def test_spread_is_positive_and_finite(self) -> None:
         for crew_id, metric_id, baseline in self.pairs:
             spread = baseline["spread"]
-            self.assertTrue(math.isfinite(spread) and spread > 0, f"{crew_id}/{metric_id}: spread={spread}")
+            self.assertTrue(
+                math.isfinite(spread) and spread > 0, f"{crew_id}/{metric_id}: spread={spread}"
+            )
 
     def test_median_is_inside_the_metric_scale(self) -> None:
         for crew_id, metric_id, baseline in self.pairs:
@@ -80,7 +84,10 @@ class BaselineValuesTest(unittest.TestCase):
             if scale is None:
                 continue
             low, high = scale
-            self.assertTrue(low <= baseline["median"] <= high, f"{crew_id}/{metric_id}: median={baseline['median']}, scale={scale}")
+            self.assertTrue(
+                low <= baseline["median"] <= high,
+                f"{crew_id}/{metric_id}: median={baseline['median']}, scale={scale}",
+            )
 
 
 class EmulatorCalibrationTest(unittest.TestCase):
@@ -98,7 +105,13 @@ class EmulatorCalibrationTest(unittest.TestCase):
                 z_low, z_high = z_score(low, baseline), z_score(high, baseline)
                 # A range that straddles the median reaches |z| = 0.
                 smallest = 0.0 if z_low <= 0 <= z_high else min(abs(z_low), abs(z_high))
-                bounds.append((f"{scenario} {member['crewId']}/{metric_id}", smallest, max(abs(z_low), abs(z_high))))
+                bounds.append(
+                    (
+                        f"{scenario} {member['crewId']}/{metric_id}",
+                        smallest,
+                        max(abs(z_low), abs(z_high)),
+                    )
+                )
         return bounds
 
     def test_normal_scenario_stays_below_alert_threshold(self) -> None:
