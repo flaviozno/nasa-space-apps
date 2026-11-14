@@ -1,5 +1,3 @@
-import type { BaselinesByDevice } from "./baselines.ts";
-
 export interface TelemetryBatch {
   version: 1;
   transferId: string;
@@ -7,7 +5,6 @@ export interface TelemetryBatch {
   sessionId: string;
   generatedAtMs: number;
   hasMore: boolean;
-  baselines: BaselinesByDevice;
   readings: TelemetryReading[];
 }
 export interface TelemetryReading {

@@ -20,7 +20,7 @@ VPS (onboard)                    Wearable emulator
   | <--- 204 No Content -----------|
 ```
 
-The emulator is stateless: it does not use a database, Redis, files, queues, cron jobs, external calls, stored cursors, or stored acknowledgements. Telemetry readings are deterministic, while each sync response returns randomized baseline profiles around the values in `contracts/crew.json` for every requested, known wearable, indexed by `deviceId` in `baselines`.
+The emulator is stateless: it does not use a database, Redis, files, queues, cron jobs, external calls, stored cursors, or stored acknowledgements. Retrying the same request produces the same telemetry batch. Baseline profiles are owned by another system and are not returned by this API.
 
 The VPS must persist a batch before advancing its cursor. For each device and boot, advance it to the largest accepted `sequenceNumber + 1`. If no reading was received, keep the cursor unchanged. Retrying an ACK is safe and has no additional effect.
 
@@ -67,6 +67,8 @@ PORT=4000 HOST=0.0.0.0 npm run dev
 
 Swagger UI is available at `http://127.0.0.1:3000/` and `http://127.0.0.1:3000/api/docs`, and the OpenAPI 3.0.3 document is available at `http://127.0.0.1:3000/api/openapi.json`.
 
+The integration guide appears immediately below the title in Swagger and in the OpenAPI `info.description` field for tools that consume the JSON directly. It covers the call order, Bearer authentication, cursor updates, ACKs, units, and error handling.
+
 Use the same paths after the Vercel deployment domain. Swagger UI loads its frontend assets from the Swagger UI CDN; the JSON contract remains directly available at `/api/openapi.json`.
 
 ## Routes
@@ -77,7 +79,7 @@ Use the same paths after the Vercel deployment domain. Swagger UI loads its fron
 | `GET` | `/api/docs` | None | Interactive Swagger UI. |
 | `GET` | `/api/openapi.json` | None | OpenAPI 3.0.3 JSON contract. |
 | `GET` | `/api/health` | None | Returns emulator availability. |
-| `POST` | `/api/sync` | Bearer token | Generates deterministic telemetry plus randomized baseline profiles for known devices. |
+| `POST` | `/api/sync` | Bearer token | Generates a deterministic telemetry batch for the requested devices. |
 | `POST` | `/api/receipt-acks` | Bearer token | Accepts a receipt acknowledgement. |
 
 Unknown routes return `404`. Each implemented route only accepts the HTTP method listed above.
@@ -116,19 +118,46 @@ curl -X POST "$BASE_URL/api/sync" \
   -H 'Content-Type: application/json' \
   --data '{
     "version": 1,
-    "requestId": "req-1",
-    "sessionId": "session-1",
+    "requestId": "req-demo-1",
+    "sessionId": "session-demo-1",
     "requestedAtMs": 1767225660000,
     "scenario": "NORMAL",
     "devices": [
-      { "deviceId": "wearable-1", "bootId": "boot-1", "fromSequence": 0 }
+      { "deviceId": "wearable-01", "bootId": "boot-demo-1", "fromSequence": 0 }
     ],
-    "maxRecords": 100,
+    "maxRecords": 1,
     "untilAcquiredAtMs": 1767225660000
   }'
 ```
 
-The response includes `transferId`, `requestId`, `sessionId`, `generatedAtMs`, `hasMore`, and `readings`. Repeating the identical request returns identical JSON.
+Expected `200` response for the payload above:
+
+```json
+{
+  "version": 1,
+  "transferId": "transfer_67fbe50849e77af9bb4fdea8812827d719661f326ccde156b847ec348afd8d46",
+  "requestId": "req-demo-1",
+  "sessionId": "session-demo-1",
+  "generatedAtMs": 1767225660000,
+  "hasMore": true,
+  "readings": [{
+    "sampleId": "sample_36bf3162a6d99bbce118de6a9a3f7e20d4c31c78c036d668c2952427dd14707a",
+    "deviceId": "wearable-01",
+    "bootId": "boot-demo-1",
+    "sequenceNumber": 0,
+    "acquiredAtMs": 1767225600000,
+    "validityMask": 15,
+    "sensorStatus": "VALID",
+    "heartRateBpm": 63,
+    "spo2HundredthsPercent": 9753,
+    "temperatureHundredthsCelsius": 3677,
+    "batteryMillivolts": 3911,
+    "dataSource": "SIMULATED"
+  }]
+}
+```
+
+Repeating the identical request returns the same JSON. The Swagger request and response examples use these same valid values.
 
 To acknowledge a batch, send its actual `transferId` and sample IDs:
 
