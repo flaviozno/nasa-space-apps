@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "dataSource": "SIMULATED",
+  "baselineMethod": {"median": "Median of the valid pre-flight collection days", "spread": "Robust standard deviation: 1.4826 × MAD of the same days; floor of 1 scale point for questionnaire metrics", "zScore": "(value - median) / spread"},
+  "metrics": {
+    "heart_rate": {"unit": "bpm", "source": "wearable"},
+    "hrv_rmssd": {"unit": "ms", "source": "wearable"},
+    "spo2": {
+      "unit": "%",
+      "source": "wearable",
+      "scale": [0, 100]
+    },
+    "resp_rate": {"unit": "breaths/min", "source": "wearable"},
+    "body_temp": {"unit": "°C", "source": "wearable"},
+    "sleep_duration": {
+      "unit": "h",
+      "source": "wearable",
+      "scale": [0, 24]
+    },
+    "exercise_duration": {
+      "unit": "min/day",
+      "source": "wearable",
+      "scale": [0, 1440]
+    },
+    "body_mass": {"unit": "kg", "source": "manual"},
+    "blood_pressure_systolic": {"unit": "mmHg", "source": "manual"},
+    "blood_pressure_diastolic": {"unit": "mmHg", "source": "manual"},
+    "water_intake": {"unit": "L/day", "source": "manual"},
+    "grip_strength": {"unit": "kg", "source": "manual"},
+    "mood": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [1, 10]
+    },
+    "stress": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [1, 10]
+    },
+    "fatigue": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [1, 10]
+    },
+    "sleepiness": {
+      "unit": "KSS",
+      "source": "questionnaire",
+      "scale": [1, 9]
+    },
+    "symptom_headache": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [0, 10]
+    },
+    "symptom_back_pain": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [0, 10]
+    },
+    "symptom_congestion": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [0, 10]
+    },
+    "symptom_eye_irritation": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [0, 10]
+    },
+    "symptom_skin": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [0, 10]
+    },
+    "symptom_nausea": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [0, 10]
+    },
+    "phq4": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [0, 12]
+    },
+    "team_climate": {
+      "unit": "score",
+      "source": "questionnaire",
+      "scale": [1, 10]
+    }
+  },
+  "crew": [
+    {
+      "crewId": "crew-1",
+      "name": "Ana Ribeiro",
+      "role": "Commander",
+      "sex": "F",
+      "age": 44,
+      "deviceId": "wearable-01",
+      "baselines": {
+        "heart_rate": {"median": 76, "spread": 10},
+        "hrv_rmssd": {"median": 52, "spread": 12},
+        "spo2": {"median": 98.0, "spread": 1.1},
+        "resp_rate": {"median": 14, "spread": 2},
+        "body_temp": {"median": 36.75, "spread": 0.45},
+        "sleep_duration": {"median": 7.1, "spread": 0.6},
+        "exercise_duration": {"median": 115, "spread": 20},
+        "body_mass": {"median": 61.5, "spread": 0.8},
+        "blood_pressure_systolic": {"median": 112, "spread": 7},
+        "blood_pressure_diastolic": {"median": 71, "spread": 5},
+        "water_intake": {"median": 2.3, "spread": 0.4},
+        "grip_strength": {"median": 30, "spread": 2.5},
+        "mood": {"median": 7, "spread": 1},
+        "stress": {"median": 4, "spread": 1},
+        "fatigue": {"median": 3, "spread": 1},
+        "sleepiness": {"median": 3, "spread": 1},
+        "symptom_headache": {"median": 0, "spread": 1},
+        "symptom_back_pain": {"median": 0, "spread": 1},
+        "symptom_congestion": {"median": 0, "spread": 1},
+        "symptom_eye_irritation": {"median": 0, "spread": 1},
+        "symptom_skin": {"median": 0, "spread": 1},
+        "symptom_nausea": {"median": 0, "spread": 1},
+        "phq4": {"median": 1, "spread": 1},
+        "team_climate": {"median": 8, "spread": 1}
+      }
+    },
+    {
+      "crewId": "crew-2",
+      "name": "Kenji Mori",
+      "role": "Pilot",
+      "sex": "M",
+      "age": 38,
+      "deviceId": "wearable-02",
+      "baselines": {
+        "heart_rate": {"median": 78, "spread": 10},
+        "hrv_rmssd": {"median": 61, "spread": 14},
+        "spo2": {"median": 98.2, "spread": 1.1},
+        "resp_rate": {"median": 13, "spread": 2},
+        "body_temp": {"median": 36.7, "spread": 0.45},
+        "sleep_duration": {"median": 6.8, "spread": 0.7},
+        "exercise_duration": {"median": 130, "spread": 20},
+        "body_mass": {"median": 74.2, "spread": 1.0},
+        "blood_pressure_systolic": {"median": 118, "spread": 7},
+        "blood_pressure_diastolic": {"median": 76, "spread": 5},
+        "water_intake": {"median": 2.8, "spread": 0.5},
+        "grip_strength": {"median": 46, "spread": 3},
+        "mood": {"median": 7, "spread": 1},
+        "stress": {"median": 3, "spread": 1},
+        "fatigue": {"median": 3, "spread": 1},
+        "sleepiness": {"median": 4, "spread": 1},
+        "symptom_headache": {"median": 0, "spread": 1},
+        "symptom_back_pain": {"median": 0, "spread": 1},
+        "symptom_congestion": {"median": 0, "spread": 1},
+        "symptom_eye_irritation": {"median": 0, "spread": 1},
+        "symptom_skin": {"median": 0, "spread": 1},
+        "symptom_nausea": {"median": 0, "spread": 1},
+        "phq4": {"median": 1, "spread": 1},
+        "team_climate": {"median": 8, "spread": 1}
+      }
+    },
+    {
+      "crewId": "crew-3",
+      "name": "Lucas Ferreira",
+      "role": "Mission Specialist",
+      "sex": "M",
+      "age": 35,
+      "deviceId": "wearable-03",
+      "baselines": {
+        "heart_rate": {"median": 75, "spread": 10},
+        "hrv_rmssd": {"median": 68, "spread": 15},
+        "spo2": {"median": 98.0, "spread": 1.1},
+        "resp_rate": {"median": 15, "spread": 2},
+        "body_temp": {"median": 36.8, "spread": 0.45},
+        "sleep_duration": {"median": 7.4, "spread": 0.5},
+        "exercise_duration": {"median": 125, "spread": 20},
+        "body_mass": {"median": 79.8, "spread": 1.0},
+        "blood_pressure_systolic": {"median": 121, "spread": 8},
+        "blood_pressure_diastolic": {"median": 78, "spread": 6},
+        "water_intake": {"median": 3.0, "spread": 0.5},
+        "grip_strength": {"median": 49, "spread": 3},
+        "mood": {"median": 8, "spread": 1},
+        "stress": {"median": 3, "spread": 1},
+        "fatigue": {"median": 2, "spread": 1},
+        "sleepiness": {"median": 3, "spread": 1},
+        "symptom_headache": {"median": 0, "spread": 1},
+        "symptom_back_pain": {"median": 0, "spread": 1},
+        "symptom_congestion": {"median": 0, "spread": 1},
+        "symptom_eye_irritation": {"median": 0, "spread": 1},
+        "symptom_skin": {"median": 0, "spread": 1},
+        "symptom_nausea": {"median": 0, "spread": 1},
+        "phq4": {"median": 0, "spread": 1},
+        "team_climate": {"median": 9, "spread": 1}
+      }
+    },
+    {
+      "crewId": "crew-4",
+      "name": "Amara Okafor",
+      "role": "Flight Engineer",
+      "sex": "F",
+      "age": 40,
+      "deviceId": "wearable-04",
+      "baselines": {
+        "heart_rate": {"median": 80, "spread": 10},
+        "hrv_rmssd": {"median": 47, "spread": 11},
+        "spo2": {"median": 97.9, "spread": 1.1},
+        "resp_rate": {"median": 14, "spread": 2},
+        "body_temp": {"median": 36.75, "spread": 0.45},
+        "sleep_duration": {"median": 7.0, "spread": 0.6},
+        "exercise_duration": {"median": 110, "spread": 20},
+        "body_mass": {"median": 66.3, "spread": 0.9},
+        "blood_pressure_systolic": {"median": 109, "spread": 6},
+        "blood_pressure_diastolic": {"median": 70, "spread": 5},
+        "water_intake": {"median": 2.5, "spread": 0.4},
+        "grip_strength": {"median": 32, "spread": 2.5},
+        "mood": {"median": 7, "spread": 1},
+        "stress": {"median": 4, "spread": 1},
+        "fatigue": {"median": 3, "spread": 1},
+        "sleepiness": {"median": 4, "spread": 1},
+        "symptom_headache": {"median": 0, "spread": 1},
+        "symptom_back_pain": {"median": 0, "spread": 1},
+        "symptom_congestion": {"median": 0, "spread": 1},
+        "symptom_eye_irritation": {"median": 0, "spread": 1},
+        "symptom_skin": {"median": 0, "spread": 1},
+        "symptom_nausea": {"median": 0, "spread": 1},
+        "phq4": {"median": 2, "spread": 1},
+        "team_climate": {"median": 8, "spread": 1}
+      }
+    }
+  ]
+}
