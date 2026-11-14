@@ -1,31 +1,12 @@
-import { QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { createMemoryRouter, RouterProvider } from 'react-router'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { createQueryClient } from '@/lib/query-client'
-import { routes } from '@/routes'
+import { describe, expect, it } from 'vitest'
 import { mockServer, startMockServer } from '@/test/mock-server'
+import { renderAt } from '@/test/render-app'
 
 startMockServer()
 
-function renderAt(path: string) {
-  render(
-    <QueryClientProvider client={createQueryClient({ retry: false })}>
-      <RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />
-    </QueryClientProvider>,
-  )
-}
-
 describe('routes', () => {
-  beforeEach(() => {
-    // The layout checks both backends on every page.
-    mockServer.use(
-      http.get('*/api/onboard/health', () => HttpResponse.json({ service: 'onboard', status: 'ok' })),
-      http.get('*/api/earth/health', () => new HttpResponse(null, { status: 503 })),
-    )
-  })
-
   it('lists the 4 crew members from the Crew API on /', async () => {
     renderAt('/')
     expect(await screen.findAllByRole('link', { name: /Commander|Pilot|Specialist|Engineer/ })).toHaveLength(4)

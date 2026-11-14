@@ -17,7 +17,8 @@ export function AppLayout() {
           <ServiceStatus label="Earth" baseUrl={EARTH_API} />
         </div>
       </header>
-      <main className="mx-auto max-w-5xl p-4">
+      {/* Wide enough for a landscape iPad (1180–1366 px), with touch-friendly side padding. */}
+      <main className="mx-auto max-w-7xl p-4 md:p-6">
         <Outlet />
       </main>
     </div>
