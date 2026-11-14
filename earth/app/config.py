@@ -1,16 +1,12 @@
 """Earth settings, read from EARTH_* environment variables (see .env.example)."""
 
-from pathlib import Path
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-SERVICE_DIR = Path(__file__).resolve().parents[1]
 
 
 class EarthSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="EARTH_")
 
-    database_path: Path = SERVICE_DIR / "data" / "earth.db"
-    schema_dir: Path = SERVICE_DIR / "schema"
+    # Default: the earth-db container from docker-compose.yml, published on localhost:5434.
+    database_url: str = "postgresql+psycopg://earth:earth@localhost:5434/earth"
     # Bearer token onboard must send to the ingest endpoint.
     ingest_token: str = ""

@@ -13,4 +13,5 @@ RUN uv sync --frozen --no-dev --package earth
 
 WORKDIR /workspace/earth
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Apply every migration branch, then serve. Re-running is safe: Alembic skips applied revisions.
+CMD ["sh", "-c", "alembic upgrade heads && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]

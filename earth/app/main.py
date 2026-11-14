@@ -1,30 +1,24 @@
-"""Earth service entry point."""
+"""Earth service entry point.
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+The database schema is managed by Alembic (`alembic upgrade heads`), not at app startup.
+"""
 
 from fastapi import FastAPI
-from hub_common import build_health_router, prepare_database
+from hub_common import build_service_app, create_database_engine
+from sqlalchemy import Engine
 
 from app.config import EarthSettings
 from app.ingest.router import router as ingest_router
 from app.views.router import router as views_router
 
+ROUTERS = (ingest_router, views_router)
 
-def create_app(settings: EarthSettings | None = None) -> FastAPI:
-    """Build the Earth app. Example: `create_app(EarthSettings(database_path=tmp))`."""
+
+def create_app(settings: EarthSettings | None = None, engine: Engine | None = None) -> FastAPI:
+    """Build the Earth app. Example: `create_app(EarthSettings(), engine=test_engine)`."""
     resolved = settings or EarthSettings()
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        prepare_database(resolved.database_path, resolved.schema_dir)
-        yield
-
-    app = FastAPI(title="Earth service", version="0.1.0", lifespan=lifespan)
-    app.state.settings = resolved
-    for router in (build_health_router("earth"), ingest_router, views_router):
-        app.include_router(router)
-    return app
+    resolved_engine = engine or create_database_engine(resolved.database_url)
+    return build_service_app("earth", resolved, resolved_engine, ROUTERS)
 
 
 app = create_app()

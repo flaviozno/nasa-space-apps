@@ -1,32 +1,27 @@
 """FastAPI dependencies shared by the services."""
 
-import sqlite3
 from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import Depends, Request
+from sqlalchemy import Connection
 
-from hub_common.sqlite_store import open_database
 
+def get_connection(request: Request) -> Iterator[Connection]:
+    """One connection and transaction per request: commit on success, rollback on error.
 
-def get_connection(request: Request) -> Iterator[sqlite3.Connection]:
-    """One SQLite connection per request, closed afterwards.
-
-    Reads `app.state.settings.database_path`, which each service sets in create_app.
-    A connection per request avoids sharing one SQLite connection across the
-    threadpool that runs sync endpoints. Endpoints use it through DatabaseConnection.
+    Uses `app.state.engine`, which each service sets in create_app. Endpoints use it
+    through DatabaseConnection.
     """
-    connection = open_database(request.app.state.settings.database_path)
-    try:
+    with request.app.state.engine.begin() as connection:
         yield connection
-    finally:
-        connection.close()
 
 
-DatabaseConnection = Annotated[sqlite3.Connection, Depends(get_connection)]
-"""Endpoint parameter type for a per-request connection.
+DatabaseConnection = Annotated[Connection, Depends(get_connection)]
+"""Endpoint parameter type for a per-request transactional connection.
 
 Example:
     @router.get("/x")
-    def read_x(connection: DatabaseConnection) -> ...
+    def read_x(connection: DatabaseConnection) -> ...:
+        connection.execute(text("SELECT 1"))
 """

@@ -11,8 +11,8 @@ WORKSPACE_DIR = SERVICE_DIR.parent
 class OnboardSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ONBOARD_")
 
-    database_path: Path = SERVICE_DIR / "data" / "onboard.db"
-    schema_dir: Path = SERVICE_DIR / "schema"
+    # Default: the onboard-db container from docker-compose.yml, published on localhost:5433.
+    database_url: str = "postgresql+psycopg://onboard:onboard@localhost:5433/onboard"
     crew_file: Path = WORKSPACE_DIR / "contracts" / "crew.json"
     # Wearable emulator on Vercel (SyncRequest / ReceiptAck).
     simulator_url: str = ""

@@ -79,7 +79,7 @@ Quem pede é o bordo, como aconteceria com um wearable real via Bluetooth. O cur
 
 As setas `CREW --> OBS` e `OBS --> CREW` representam isso: ela grava e lê o mesmo banco.
 
-**observations + alerts (banco de bordo, SQLite).** Coração da modularidade. Todo dado, venha de onde vier, vira o mesmo registro: tripulante, métrica, valor, unidade, origem e horário. O dashboard não precisa saber se um valor veio do wearable ou de um formulário; uma fonte nova só precisa de um adaptador que grave observações. Os `alerts` são os resultados das regras, como "SpO₂ abaixo de 90%" ou "FC muito acima da linha de base".
+**observations + alerts (banco de bordo, PostgreSQL).** Coração da modularidade. Todo dado, venha de onde vier, vira o mesmo registro: tripulante, métrica, valor, unidade, origem e horário. O dashboard não precisa saber se um valor veio do wearable ou de um formulário; uma fonte nova só precisa de um adaptador que grave observações. Os `alerts` são os resultados das regras, como "SpO₂ abaixo de 90%" ou "FC muito acima da linha de base".
 
 **web: Crew Hub (Wallace).** Tela do astronauta, em React + shadcn. Ele escolhe o próprio nome na lista (sem login), vê seus níveis, gráficos de tendência e alertas, e preenche o check-in diário e as medidas manuais. Fala apenas com a API do Matheus.
 
@@ -135,7 +135,7 @@ Arquivos compartilhados, todos com dono:
 | Contrato de sincronização bordo ↔ simulador (`SyncRequest`, `TelemetryBatch`, `ReceiptAck`) | Flávio | Miguel valida |
 | Contrato bordo → Terra | Guilherme | Miguel grava no outbox nesse formato |
 | `onboard/app/main.py`, `db.py` (montagem dos routers, conexão) | Guilherme | Criados na Fase 0; depois quase não mudam |
-| Migrações SQL | Cada um no próprio arquivo | `001_observations.sql` (Matheus), `002_ingest.sql` (Miguel), `003_sync.sql` (Guilherme) |
+| Migrations Alembic do onboard | Cada um na própria branch e pasta | `versions/observations/` (Matheus), `versions/ingest/` (Miguel), `versions/sync/` (Guilherme); ver `onboard/migrations/README.md` |
 
 ## 4. Fluxo de trabalho
 
@@ -181,4 +181,5 @@ Cada um na sua pasta, contra mocks e fixtures. PRs pequenos e frequentes na `mai
 - **4 dispositivos**, um por tripulante, em vez de 3.
 - Frontend **entra** no escopo (hub + Earth view).
 - Novo modelo genérico `observations` e endpoints de questionário e entrada manual.
-- Fora do escopo, como já estava: BLE, MQTT, Protobuf, DELTA, PostgreSQL, login.
+- Bancos em **PostgreSQL** (um container para bordo, outro para a Terra), com migrations Alembic.
+- Fora do escopo, como já estava: BLE, MQTT, Protobuf, DELTA, login.

@@ -8,19 +8,54 @@ x-python-healthcheck: &python-healthcheck
   timeout: 3s
   retries: 5
 
+x-postgres: &postgres
+  image: postgres:17-alpine
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+  restart: unless-stopped
+
 services:
+  # Separate PostgreSQL instances keep onboard and Earth data apart (readme.md, section 7):
+  # data reaches Earth only through the Outbox.
+  onboard-db:
+    <<: *postgres
+    environment:
+      POSTGRES_USER: onboard
+      POSTGRES_PASSWORD: ${ONBOARD_DB_PASSWORD:-onboard}
+      POSTGRES_DB: onboard
+    volumes:
+      - onboard-pgdata:/var/lib/postgresql/data
+    # Published on localhost only, for running the service or Alembic outside Docker.
+    ports:
+      - "127.0.0.1:${ONBOARD_DB_PORT:-5433}:5432"
+
+  earth-db:
+    <<: *postgres
+    environment:
+      POSTGRES_USER: earth
+      POSTGRES_PASSWORD: ${EARTH_DB_PASSWORD:-earth}
+      POSTGRES_DB: earth
+    volumes:
+      - earth-pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${EARTH_DB_PORT:-5434}:5432"
+
   onboard:
     build:
       context: .
       dockerfile: onboard/Dockerfile
     environment:
-      ONBOARD_DATABASE_PATH: /data/onboard.db
+      ONBOARD_DATABASE_URL: postgresql+psycopg://onboard:${ONBOARD_DB_PASSWORD:-onboard}@onboard-db:5432/onboard
       ONBOARD_SIMULATOR_URL: ${SIMULATOR_URL:-}
       ONBOARD_SIMULATOR_TOKEN: ${SIMULATOR_TOKEN:-}
       ONBOARD_EARTH_URL: http://earth:8000
       ONBOARD_EARTH_INGEST_TOKEN: ${EARTH_INGEST_TOKEN:-}
-    volumes:
-      - onboard-data:/data
+    depends_on:
+      onboard-db:
+        condition: service_healthy
     # Bound to localhost only: public traffic goes through the web container.
     ports:
       - "127.0.0.1:${ONBOARD_PORT:-8001}:8000"
@@ -32,10 +67,11 @@ services:
       context: .
       dockerfile: earth/Dockerfile
     environment:
-      EARTH_DATABASE_PATH: /data/earth.db
+      EARTH_DATABASE_URL: postgresql+psycopg://earth:${EARTH_DB_PASSWORD:-earth}@earth-db:5432/earth
       EARTH_INGEST_TOKEN: ${EARTH_INGEST_TOKEN:-}
-    volumes:
-      - earth-data:/data
+    depends_on:
+      earth-db:
+        condition: service_healthy
     ports:
       - "127.0.0.1:${EARTH_PORT:-8002}:8000"
     healthcheck: *python-healthcheck
@@ -52,7 +88,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-# Separate volumes keep the onboard and Earth databases apart (readme.md, section 7).
 volumes:
-  onboard-data:
-  earth-data:
+  onboard-pgdata:
+  earth-pgdata:

@@ -1,14 +1,14 @@
 """Code shared by the onboard and Earth services."""
 
+from hub_common.app_factory import build_service_app
+from hub_common.database import create_database_engine
 from hub_common.dependencies import DatabaseConnection, get_connection
 from hub_common.health import build_health_router
-from hub_common.sqlite_store import apply_schema, open_database, prepare_database
 
 __all__ = [
     "DatabaseConnection",
-    "apply_schema",
     "build_health_router",
+    "build_service_app",
+    "create_database_engine",
     "get_connection",
-    "open_database",
-    "prepare_database",
 ]

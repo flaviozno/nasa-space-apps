@@ -1,2 +1,0 @@
--- Owner: Miguel. Tables: simulation_sessions, samples, alerts.
--- Runs on every startup: use CREATE TABLE IF NOT EXISTS / CREATE INDEX IF NOT EXISTS.

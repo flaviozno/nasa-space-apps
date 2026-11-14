@@ -1,9 +1,14 @@
 [project]
 name = "hub-common"
 version = "0.1.0"
-description = "Code shared by the onboard and Earth services: SQLite setup and the health endpoint."
+description = "Code shared by the onboard and Earth services: PostgreSQL engine, Alembic env and the health endpoint."
 requires-python = ">=3.12"
-dependencies = ["fastapi>=0.115"]
+dependencies = [
+    "fastapi>=0.115",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
+]
 
 [build-system]
 requires = ["uv_build>=0.9,<0.14"]
