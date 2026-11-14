@@ -102,7 +102,8 @@ export function CrewManualPage() {
         </p>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-2">
+      {/* Blood pressure (two values) spans the full width; the single-value cards share a row. */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {MEASUREMENT_GROUPS.map((group) => {
           const isIncluded = included.has(group.id)
           return (
@@ -110,7 +111,11 @@ export function CrewManualPage() {
               key={group.id}
               role="group"
               aria-label={group.title}
-              className={cn('space-y-4 rounded-3xl border-2 bg-card p-5 transition-colors', isIncluded ? 'border-primary' : 'border-border')}
+              className={cn(
+                'space-y-4 rounded-3xl border-2 bg-card p-5 transition-colors',
+                isIncluded ? 'border-primary' : 'border-border',
+                group.metrics.length > 1 && 'md:col-span-2 xl:col-span-3',
+              )}
             >
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-2xl font-semibold">{group.title}</h3>
@@ -127,19 +132,21 @@ export function CrewManualPage() {
                   {isIncluded ? 'Included' : 'Include'}
                 </button>
               </div>
-              {group.metrics.map((id) => (
-                <div key={id} className="space-y-1">
-                  {group.metrics.length > 1 && <p className="text-lg text-muted-foreground">{MANUAL_METRICS[id].label}</p>}
-                  <ValueStepper
-                    definition={MANUAL_METRICS[id]}
-                    value={valueOf(id)}
-                    onChange={(value) => {
-                      setEdited((current) => ({ ...current, [id]: value }))
-                      setIncluded((current) => new Set(current).add(group.id))
-                    }}
-                  />
-                </div>
-              ))}
+              <div className={cn('grid gap-4', group.metrics.length > 1 && 'md:grid-cols-2')}>
+                {group.metrics.map((id) => (
+                  <div key={id} className="space-y-1">
+                    {group.metrics.length > 1 && <p className="text-lg text-muted-foreground">{MANUAL_METRICS[id].label}</p>}
+                    <ValueStepper
+                      definition={MANUAL_METRICS[id]}
+                      value={valueOf(id)}
+                      onChange={(value) => {
+                        setEdited((current) => ({ ...current, [id]: value }))
+                        setIncluded((current) => new Set(current).add(group.id))
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
               {group.id === 'blood_pressure' && bpError && (
                 <p role="alert" className="text-lg font-semibold text-status-alert">{bpError}</p>
               )}

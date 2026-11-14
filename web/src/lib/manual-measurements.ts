@@ -40,8 +40,8 @@ export type ManualMetricId = keyof typeof MANUAL_METRICS
 
 /** The measurements as the astronaut sees them: blood pressure is one card with two values. */
 export const MEASUREMENT_GROUPS: { id: string; title: string; metrics: ManualMetricId[] }[] = [
-  { id: 'body_mass', title: 'Body mass', metrics: ['body_mass'] },
   { id: 'blood_pressure', title: 'Blood pressure', metrics: ['blood_pressure_systolic', 'blood_pressure_diastolic'] },
+  { id: 'body_mass', title: 'Body mass', metrics: ['body_mass'] },
   { id: 'water_intake', title: 'Water intake', metrics: ['water_intake'] },
   { id: 'grip_strength', title: 'Grip strength', metrics: ['grip_strength'] },
 ]
