@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router'
 import { AppLayout } from '@/components/app-layout'
+import { CrewCheckinPage } from '@/pages/crew-checkin-page'
 import { CrewHubPage } from '@/pages/crew-hub-page'
 import { CrewOverviewPage } from '@/pages/crew-overview-page'
 import { CrewSectionPlaceholder } from '@/pages/crew-section-placeholder'
@@ -17,7 +18,7 @@ export const routes: RouteObject[] = [
         element: <CrewHubPage />,
         children: [
           { index: true, element: <CrewOverviewPage /> },
-          { path: 'checkin', element: <CrewSectionPlaceholder title="Daily check-in" /> },
+          { path: 'checkin', element: <CrewCheckinPage /> },
           { path: 'weekly', element: <CrewSectionPlaceholder title="Weekly questionnaires" /> },
           { path: 'manual', element: <CrewSectionPlaceholder title="Manual measurements" /> },
         ],
