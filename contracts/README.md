@@ -5,12 +5,13 @@ Shared data contracts between the emulator, onboard, Earth, and web. Changes go 
 | File | Owner | Contents |
 | --- | --- | --- |
 | [crew.json](./crew.json) | Matheus | The 4 crew members, their wearable binding, and fixed baselines per metric |
+| [metrics.json](./metrics.json) | Matheus | The metric catalog: IDs, UI labels, observation units, sources, scales, and questionnaire grouping |
 
 ## crew.json
 
 All values are **simulated**. They are not clinical reference values.
 
-- `metrics`: the metric IDs used everywhere (observations, alerts, API, UI), with their observation unit, source, and bounded `scale` when there is one. This list stands in for the metric catalog until `contracts/metrics.json` exists; when it does, the IDs and units must match.
+- `metrics`: the metric IDs used everywhere (observations, alerts, API, UI), with their observation unit, source, and bounded `scale` when there is one. The authoritative catalog is [metrics.json](./metrics.json); the dictionary here mirrors it, and the two must stay in sync (same IDs, units, and scales).
 - `crew[]`: `crewId`, display data, `deviceId` (the ID onboard sends in each `SyncRequest`), and `baselines`.
 - `baselines[metricId]`: `median` and `spread` in the metric's unit.
 
