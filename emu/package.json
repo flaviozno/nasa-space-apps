@@ -1,0 +1,19 @@
+{
+  "name": "vercel-wearable-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev": "npm run dev:local",
+    "dev:local": "node --env-file-if-exists=.env.local --experimental-strip-types src/http/local-server.ts",
+    "dev:vercel": "vercel dev"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}
