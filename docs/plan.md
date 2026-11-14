@@ -141,8 +141,8 @@ Arquivos compartilhados, todos com dono:
 
 ### Fase 0 — contratos (primeiras ~2 h, todos juntos)
 1. Fechar o catálogo de métricas (subconjunto do doc de linha de base):
-   - Wearable: `heart_rate`, `spo2`, `body_temp`; o wearable também envia a telemetria do seu sensor de radiação.
-   - Entrada manual pela UI: `hrv_rmssd`, `resp_rate`, `sleep_duration`, `exercise_duration`, `body_mass`, `blood_pressure_systolic`, `blood_pressure_diastolic`, `water_intake`, `grip_strength`.
+   - Wearable: `heart_rate`, `hrv_rmssd`, `spo2`, `resp_rate`, `body_temp`, `sleep_duration`, `exercise_duration`; o wearable também envia a telemetria do seu sensor de radiação.
+   - Entrada pela UI no MVP: `hrv_rmssd`, `resp_rate`, `sleep_duration`, `exercise_duration` (classificadas como wearable, mas ainda não emitidas pelo emulador), além de `body_mass`, `blood_pressure_systolic`, `blood_pressure_diastolic`, `water_intake` e `grip_strength` (manuais).
    - Questionário diário: `mood`, `stress`, `fatigue`, `sleepiness`, sintomas 0–10 (`symptom_headache`, `symptom_back_pain`, `symptom_congestion`, `symptom_eye_irritation`, `symptom_skin`, `symptom_nausea`).
    - Questionário semanal: `phq4`, `team_climate`.
    - IDs, unidades e escalas estão em [`contracts/crew.json`](../contracts/crew.json) até o `metrics.json` existir.

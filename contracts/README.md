@@ -33,7 +33,7 @@ Observations use human units, not the emulator's integer encodings. Onboard inge
 | `spo2HundredthsPercent` | `spo2` (%) | ÷ 100 |
 | `temperatureHundredthsCelsius` | `body_temp` (°C) | ÷ 100 |
 
-The Crew Hub UI is the planned input path for `hrv_rmssd`, `resp_rate`, `sleep_duration`, and `exercise_duration`. These become `manual` observations; they are not wearable samples. `sleep_duration` in particular is the crew member's current self-report, distinct from the historical NASA sleep context included by the emulator.
+`hrv_rmssd`, `resp_rate`, `sleep_duration`, and `exercise_duration` remain classified as `wearable` metrics in both shared catalogs. In this MVP, the Crew Hub UI is their input path because the emulator does not emit these fields yet; UI-submitted observations retain `source=manual` until device telemetry supplies them. `sleep_duration` is the crew member's current self-report, distinct from the historical NASA sleep context included by the emulator.
 
 The target wearable includes an onboard radiation sensor. Its radiation channel travels with the wearable telemetry so onboard can associate it with the crew member and sample time. In this MVP, the emulator uses historical ISS DosTel records as demonstration data; those records are environmental references, not a personal radiation dose. `batteryMillivolts` and radiation sensor data are device telemetry and are not currently part of the crew-health metric catalog.
 

@@ -74,7 +74,7 @@ The returned reading deliberately combines NASA evidence with mock wearable fiel
 
 All telemetry is therefore demo data, even when some fields are based on NASA source records. NASA data is historical and is not a live feed from the crew or the ISS. The emulator is an MVP integration component, not a production wearable, a clinical monitor, or a medically validated data source. See [`emu/README.md`](./emu/README.md) for the API contract, source links, fallback behavior, and field-level provenance.
 
-The Crew Hub UI is the planned input path for `hrv_rmssd`, `resp_rate`, `sleep_duration`, and `exercise_duration`; these are `manual` observations, not wearable samples. Onboard aligns them with wearable batches by crew identity and timestamp, creating a richer chronological per-crew trace.
+`hrv_rmssd`, `resp_rate`, `sleep_duration`, and `exercise_duration` remain classified as wearable metrics in the shared catalogs. The Crew Hub UI is their input path in this MVP because the emulator does not emit them yet; UI-submitted observations retain `source=manual` until device telemetry supplies them. Onboard aligns those UI entries with wearable batches by crew identity and timestamp, creating a richer chronological per-crew trace.
 
 ## 3. Minimum Components
 
