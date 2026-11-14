@@ -1,4 +1,4 @@
-import { MinusIcon, PencilIcon, PlusIcon } from 'lucide-react'
+import { KeyboardIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { parseTypedValue, stepValue, type ManualMetric } from '@/lib/manual-measurements'
 
@@ -9,10 +9,10 @@ interface ValueStepperProps {
 }
 
 const stepButton =
-  'flex h-16 min-w-20 flex-col items-center justify-center rounded-2xl border-2 bg-background text-lg font-semibold tabular-nums transition-colors active:bg-accent disabled:opacity-30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60'
+  'flex h-16 flex-col items-center justify-center rounded-2xl border-2 bg-background text-lg font-semibold tabular-nums transition-colors active:bg-accent disabled:opacity-30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60'
 
 /**
- * Large − / + buttons around a value, with a fine and a coarse step (e.g. ±0.1 and ±1 kg).
+ * A value with large − / + buttons under it, in a fine and a coarse step (e.g. ±0.1 and ±1 kg).
  * Tapping the value switches to typing it (numeric keyboard on tablets; comma or dot both work).
  */
 export function ValueStepper({ definition, value, onChange }: ValueStepperProps) {
@@ -59,45 +59,54 @@ export function ValueStepper({ definition, value, onChange }: ValueStepperProps)
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      {/* Row 1: the value. The whole box is the touch target for typing. */}
+      {draft === null ? (
+        <button
+          type="button"
+          onClick={startTyping}
+          aria-label={`Type ${definition.label}`}
+          className="flex h-20 w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-primary/40 bg-background/60 px-4 transition-colors active:border-primary active:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60"
+        >
+          <span className="flex items-baseline gap-2 whitespace-nowrap">
+            <span className="text-5xl font-semibold tabular-nums">{value.toFixed(definition.decimals)}</span>
+            <span className="text-xl text-muted-foreground">{definition.unit}</span>
+          </span>
+          <span className="flex items-center gap-1.5 text-base font-medium text-primary">
+            <KeyboardIcon className="size-7" aria-hidden="true" />
+            Type
+          </span>
+        </button>
+      ) : (
+        <div className="flex h-20 w-full items-center justify-center gap-2">
+          <input
+            autoFocus
+            type="text"
+            inputMode="decimal"
+            enterKeyHint="done"
+            aria-label={`${definition.label} in ${definition.unit}`}
+            aria-invalid={error !== null}
+            value={draft}
+            onFocus={(event) => event.currentTarget.select()}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') commitTyping()
+              if (event.key === 'Escape') cancelTyping()
+            }}
+            onBlur={commitTyping}
+            className="h-20 w-48 rounded-2xl border-2 border-primary bg-background px-3 text-center text-5xl font-semibold tabular-nums outline-none aria-invalid:border-status-alert"
+          />
+          <span className="text-xl whitespace-nowrap text-muted-foreground">{definition.unit}</span>
+        </div>
+      )}
+
+      {/* Row 2: coarse and fine steps down and up. */}
+      <div className="grid grid-cols-4 gap-2">
         {button(-coarse)}
         {button(-fine)}
-        {draft === null ? (
-          <button
-            type="button"
-            onClick={startTyping}
-            aria-label={`Type ${definition.label}`}
-            className="group flex min-w-32 flex-1 items-baseline justify-center gap-1.5 rounded-2xl py-2 transition-colors active:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60"
-          >
-            <span className="text-5xl font-semibold tabular-nums">{value.toFixed(definition.decimals)}</span>
-            <span className="text-lg text-muted-foreground">{definition.unit}</span>
-            <PencilIcon className="size-4 self-center text-muted-foreground" aria-hidden="true" />
-          </button>
-        ) : (
-          <span className="flex min-w-32 flex-1 items-baseline justify-center gap-1.5">
-            <input
-              autoFocus
-              type="text"
-              inputMode="decimal"
-              enterKeyHint="done"
-              aria-label={`${definition.label} in ${definition.unit}`}
-              aria-invalid={error !== null}
-              value={draft}
-              onFocus={(event) => event.currentTarget.select()}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') commitTyping()
-                if (event.key === 'Escape') cancelTyping()
-              }}
-              onBlur={commitTyping}
-              className="w-36 rounded-xl border-2 border-primary bg-background px-2 py-1 text-center text-5xl font-semibold tabular-nums outline-none aria-invalid:border-status-alert"
-            />
-            <span className="text-lg text-muted-foreground">{definition.unit}</span>
-          </span>
-        )}
         {button(fine)}
         {button(coarse)}
       </div>
+
       {error && (
         <p role="alert" className="text-center text-lg font-semibold text-status-alert">
           {error}

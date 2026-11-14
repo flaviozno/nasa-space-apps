@@ -102,7 +102,7 @@ export function CrewManualPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid items-start gap-4 xl:grid-cols-2">
         {MEASUREMENT_GROUPS.map((group) => {
           const isIncluded = included.has(group.id)
           return (
