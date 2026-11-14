@@ -11,11 +11,10 @@
 
 Build the smallest working, integrable system that demonstrates this flow:
 
-1. Generate synthetic wearable health readings.
-2. Send them to an onboard service.
-3. Store and process them onboard.
-4. Forward them to an Earth service when the simulated communication link is available.
-5. Confirm durable reception and safely handle retransmission.
+1. Have the onboard service request synthetic wearable health readings.
+2. Store and process them onboard.
+3. Forward them to an Earth service when the simulated communication link is available.
+4. Confirm durable reception and safely handle retransmission.
 
 There is no physical wearable in this MVP. The onboard and Earth services run in separate Docker containers on the same VPS. Their separation is logical, not geographic.
 
@@ -23,61 +22,51 @@ There is no physical wearable in this MVP. The onboard and Earth services run in
 
 ```mermaid
 flowchart TD
-    A["cron-job.org"] -->|"POST once per minute"| B["Vercel: wearable simulator"]
-    B -->|"HTTPS: full readings in batches"| C["VPS: onboard service + SQLite"]
+    A["VPS: onboard scheduler"] -->|"HTTPS SyncRequest once per minute"| B["Vercel: wearable simulator"]
+    B -->|"TelemetryBatch response"| A
+    A -->|"ReceiptAck after durable commit"| B
+    A -->|"persist + process"| C["VPS: onboard service + SQLite"]
     C -->|"HTTPS: pending events when link is enabled"| D["VPS: Earth service + SQLite"]
     D -->|"ACK after durable commit"| C
 ```
 
-For the initial implementation, **use HTTP for both communication steps**. Do not add an MQTT broker yet. HTTP is an MVP transport substitution for the MQTT 5/mTLS transport proposed in `infra/telemetry.drawio`; the Outbox and application ACK preserve the delivery behavior we need to demonstrate without another running component.
+For the initial implementation, **use HTTP for both communication steps**. Do not add an MQTT broker yet. The onboard service initiates the wearable synchronization, just as the Edge does in the proposed BLE architecture; Vercel only emulates the wearable's response. HTTP is an MVP transport substitution for the BLE and MQTT transports proposed in `infra/telemetry.drawio`; durable storage, the receipt acknowledgement, the Outbox, and application ACK preserve the delivery behavior we need to demonstrate without another running component.
 
-The simulator package already implements the Vercel sender and includes a development-only onboard mock. The production onboard and Earth services described here still need to be implemented.
+The simulator package implements the Vercel responder and includes a development-only onboard mock. The production onboard and Earth services described here still need to be implemented.
 
 ## 3. Minimum Components
 
 | Component | Runs on | Responsibility |
 | --- | --- | --- |
-| External scheduler | cron-job.org | Call the simulator endpoint once per minute |
-| Wearable simulator | Vercel, Node.js | Generate deterministic synthetic readings and deliver one bounded batch |
-| Onboard service | VPS, Docker, Node.js | Receive readings, persist them, evaluate simple rules, and forward pending events |
+| Onboard scheduler | Onboard service container on VPS | Start each wearable synchronization window |
+| Wearable simulator | Vercel, Node.js | Respond to `SyncRequest` with one deterministic bounded batch; validate `ReceiptAck` |
+| Onboard service | VPS, Docker, Node.js | Request readings, persist them, evaluate simple rules, and forward pending events |
 | Onboard database | Dedicated Docker volume, SQLite | Store sessions, readings, alerts, and Outbox records |
 | Earth service | VPS, Docker, Node.js | Deduplicate and persist incoming events, then return an ACK |
 | Earth database | Separate Docker volume, SQLite | Store received events and reception timestamps |
-| HTTPS entry point | Existing VPS proxy or one small reverse proxy | Expose authenticated onboard endpoints to Vercel |
+| HTTPS entry point | Vercel | Expose authenticated simulator synchronization endpoints to the VPS |
 
-Use two application containers and their persistent volumes. Reuse an existing HTTPS proxy if available. Earth does not need a public endpoint; onboard can reach it through the private Docker network.
+Use two application containers and their persistent volumes. The onboard service calls the public Vercel endpoint over HTTPS; Earth does not need a public endpoint because onboard can reach it through the private Docker network.
 
 A frontend, PostgreSQL, Redis, MQTT, Kubernetes, and a separate worker service are not required for the first working version.
 
 ## 4. Step-by-Step Flow
 
-### Step 1 — Trigger the simulator
+### Step 1 — Start a wearable synchronization window
 
-cron-job.org calls:
-
-```http
-POST https://<vercel-domain>/api/tick
-Authorization: Bearer <CRON_SECRET>
-```
-
-The request has no body. Configuration comes from Vercel environment variables. The simulator rejects unauthorized requests and performs no generation when disabled.
-
-### Step 2 — Read the onboard cursor
-
-The simulator queries:
+The lightweight scheduler inside the onboard service runs once per minute and calls:
 
 ```http
-GET https://<onboard-domain>/v1/simulations/{sessionId}/cursor
-Authorization: Bearer <ONBOARD_TOKEN>
+POST https://<vercel-domain>/api/sync
+Authorization: Bearer <SIMULATOR_TOKEN>
+Content-Type: application/json
 ```
 
-The cursor identifies the next sequence that has not yet been durably received for all devices in the session. The VPS is the source of truth; Vercel stores no persistent session state.
+The `SyncRequest` identifies the simulation session, the next requested sequence (or cursor) for each device, a bounded maximum batch size, and the simulated time boundary. The onboard scheduler derives these values from its durable session state. The simulator rejects unauthorized or invalid requests and performs no generation when disabled.
 
-An unknown session returns 404 and starts at sequence zero. A storage failure must return an error, not 404.
+### Step 2 — Generate and return a bounded batch
 
-### Step 3 — Generate a bounded batch
-
-The simulator generates readings from the persisted cursor up to the eligible simulation time, subject to the configured batch limit.
+The simulator generates readings deterministically from the `SyncRequest` cursor and time boundary, subject to the configured batch limit, and returns a `TelemetryBatch` in the HTTP response. Vercel stores no persistent session state and does not call the VPS. The onboard database is the source of truth for cursor advancement.
 
 Initial configuration:
 
@@ -85,7 +74,7 @@ Initial configuration:
 | --- | --- |
 | Simulated devices | 3 |
 | Sampling interval | 1 second per device |
-| Scheduler interval | 1 minute |
+| Onboard synchronization interval | 1 minute |
 | Maximum simulated seconds per invocation | 60 |
 | Typical full-minute batch | 180 readings |
 | Scenario | NORMAL |
@@ -97,40 +86,36 @@ Each reading contains a stable sample ID, device ID, boot/session identity, sequ
 
 The same seed, session, configuration, device, and sequence produce the same reading. Configuration changes that affect generated data require a new session ID.
 
-### Step 4 — Persist onboard and acknowledge
-
-The simulator sends:
-
-```http
-POST https://<onboard-domain>/v1/telemetry/batches
-Authorization: Bearer <ONBOARD_TOKEN>
-Content-Type: application/json
-Idempotency-Key: <batchId>
-```
+### Step 3 — Persist onboard and acknowledge
 
 The onboard service:
 
-1. Authenticates the sender and validates the contract and sequence range.
+1. Validates the simulator response contract and requested sequence range.
 2. Checks that the session configuration matches the stored configuration.
 3. Opens a database transaction with appropriate session serialization.
 4. Inserts new readings, evaluates the initial simple rules, records any alerts, and creates Outbox events.
 5. Advances the contiguous cursor.
-6. Commits the transaction durably.
-7. Returns the agreed ACK containing every accepted sample ID, including identical duplicates.
+6. Commits the transaction durably before acknowledging the simulator.
 
 For this small MVP, rule evaluation is deterministic and lightweight and runs inside this bounded transaction. No separate processing queue is required. If asynchronous jobs are introduced later, they must be persisted in the same transaction before ACK.
 
-The simulator ingestion contract is **all or nothing per batch**. A conflicting or invalid batch is rejected without partially advancing the cursor. Repeated identical samples do not create additional readings or alerts.
+The simulator-response contract is **all or nothing per batch**. A conflicting or invalid batch is rejected without partially advancing the cursor. Repeated identical samples do not create additional readings or alerts.
 
-### Step 5 — Return a short response to the scheduler
+### Step 4 — Send `ReceiptAck`
 
-After validating the onboard ACK, Vercel returns a small execution summary, such as delivered count and remaining backlog. It does not return the health readings.
+After the commit, the onboard service calls the simulator's acknowledgement endpoint with the transfer ID and accepted sample IDs:
 
-The current sender uses an 18-second shared upstream timeout and a 25-second Function duration limit. It does not continue work in the background after returning a response.
+```http
+POST https://<vercel-domain>/api/receipt-acks
+Authorization: Bearer <SIMULATOR_TOKEN>
+Content-Type: application/json
+```
 
-If delivery fails, the invocation returns an error. The next scheduled invocation reads the cursor again and regenerates the outstanding synthetic readings.
+The acknowledgement makes the HTTP simulation mirror the BLE contract. Since the simulator is stateless, it only validates the acknowledgement; the durable cursor remains onboard. If this request fails, a retry is harmless, and the next `SyncRequest` starts from the advanced onboard cursor.
 
-### Step 6 — Process the onboard Outbox
+The Vercel Function returns the requested telemetry directly and does not continue work in the background or make calls to the VPS.
+
+### Step 5 — Process the onboard Outbox
 
 A single lightweight worker loop inside the onboard container checks for pending events. Start with a configurable five-second interval and one batch in flight.
 
@@ -145,7 +130,7 @@ The loop:
 
 Use a bounded request timeout and persist retry scheduling. Failed attempts use backoff with jitter. The first version runs one onboard container/worker; do not scale it horizontally without adding durable work claiming.
 
-### Step 7 — Persist on Earth and acknowledge
+### Step 6 — Persist on Earth and acknowledge
 
 The Earth service exposes an internal ingestion endpoint, for example:
 
@@ -161,7 +146,7 @@ Use an atomic batch ACK for this first version as well. The onboard worker only 
 
 ## 5. Minimal Event Contract
 
-The Vercel sender's OpenAPI and JSON Schemas are the source of truth for simulator-to-onboard traffic. Reuse them rather than redefining those payloads in prose.
+The Vercel simulator's OpenAPI and JSON Schemas are the source of truth for onboard-to-simulator `SyncRequest`, `TelemetryBatch` response, and `ReceiptAck` traffic. Reuse them rather than redefining those payloads in prose.
 
 For onboard-to-Earth traffic, define one small versioned JSON contract before implementation. The first version needs only:
 
@@ -182,7 +167,7 @@ The minimal MVP sends **complete readings**. Delta encoding, Protobuf, base reco
 
 ## 6. Simulated Disconnection
 
-Simulate loss of the onboard-to-Earth link while keeping simulator-to-onboard communication available.
+Simulate loss of the onboard-to-Earth link while keeping VPS-to-simulator synchronization available.
 
 A single persisted boolean setting, controlled through an authenticated administration endpoint, is enough initially:
 
@@ -223,10 +208,10 @@ Onboard processing continues while the Earth link is disabled. However, acquisit
 
 ## 9. Security Basics
 
-- Use HTTPS for Vercel-to-VPS communication and validate certificates.
-- Use distinct secrets for scheduler-to-Vercel, simulator-to-onboard, and onboard-to-Earth.
+- Use HTTPS for VPS-to-Vercel communication and validate certificates.
+- Use distinct secrets for onboard-to-simulator and onboard-to-Earth communication.
 - Keep secrets in environment configuration and out of source control.
-- Expose only the required onboard HTTPS routes publicly; keep Earth and database files private.
+- Expose only the required simulator HTTPS routes publicly; keep onboard, Earth, and database files private.
 - Authenticate control and status endpoints as well as ingestion.
 - Validate payload size, shape, identity, and sequence relationships before processing.
 - Avoid logging tokens and complete health payloads.
@@ -235,16 +220,16 @@ Onboard processing continues while the Earth link is disabled. However, acquisit
 
 | Failure | Expected behavior |
 | --- | --- |
-| Scheduler is delayed | Next invocation generates eligible readings from the onboard cursor |
-| Simulator request fails before onboard commit | Cursor stays unchanged; readings are regenerated next time |
-| Onboard commits but its ACK is lost | Next invocation sees the advanced cursor; no logical duplication |
+| Scheduler is delayed | The next onboard synchronization request covers the eligible interval from its durable cursor |
+| Vercel request fails before onboard commit | Cursor stays unchanged; the next request receives the same deterministic readings |
+| Onboard commits but `ReceiptAck` is lost | Cursor is already advanced; retrying the acknowledgement is harmless |
 | Two simulator calls overlap | Onboard transaction and uniqueness constraints prevent duplication or cursor gaps |
 | Earth link is disabled | Local ingestion/processing continues; Outbox retains events |
 | Earth commits but its ACK is lost | Onboard retries; Earth deduplicates and confirms again |
 | Application container restarts | Database survives on its volume; worker resumes pending delivery |
 | Persistent storage is lost or full | Report failure; no claim of unlimited retention or zero data loss |
 
-With 60 generated seconds per minute, existing backlog does not shrink at steady state. Set MAX_SECONDS_PER_TICK to 120 when catch-up is required. Likewise, onboard-to-Earth throughput must exceed incoming event generation to drain its backlog.
+With 60 generated seconds per minute, existing backlog does not shrink at steady state. Set `MAX_SECONDS_PER_SYNC` to 120 when catch-up is required. Likewise, onboard-to-Earth throughput must exceed incoming event generation to drain its backlog.
 
 ## 11. What We Intentionally Defer
 
@@ -262,7 +247,7 @@ This document defines the reduced implementation scope and the integration stand
 
 ## 12. First Milestone — Definition of Done
 
-1. An authenticated cron invocation triggers the Vercel simulator.
+1. The onboard scheduler sends an authenticated `SyncRequest` to the Vercel simulator.
 2. A batch of synthetic readings is durably received onboard.
 3. At least one configured scenario produces an experimental local alert.
 4. Readings and alert events reach the Earth service and receive durable ACKs.
