@@ -141,10 +141,11 @@ Arquivos compartilhados, todos com dono:
 
 ### Fase 0 — contratos (primeiras ~2 h, todos juntos)
 1. Fechar o catálogo de métricas (subconjunto do doc de linha de base):
-   - Wearable: `heart_rate`, `hrv_rmssd`, `spo2`, `resp_rate`, `skin_temp`, `sleep_duration`, `steps/activity`.
-   - Manual: `body_mass`, `blood_pressure_sys/dia`, `water_intake`, `grip_strength`.
-   - Questionário diário: `mood`, `stress`, `fatigue`, `sleepiness`, sintomas 0–10.
+   - Wearable: `heart_rate`, `hrv_rmssd`, `spo2`, `resp_rate`, `body_temp`, `sleep_duration`, `exercise_duration`.
+   - Manual: `body_mass`, `blood_pressure_systolic`, `blood_pressure_diastolic`, `water_intake`, `grip_strength`.
+   - Questionário diário: `mood`, `stress`, `fatigue`, `sleepiness`, sintomas 0–10 (`symptom_headache`, `symptom_back_pain`, `symptom_congestion`, `symptom_eye_irritation`, `symptom_skin`, `symptom_nausea`).
    - Questionário semanal: `phq4`, `team_climate`.
+   - IDs, unidades e escalas estão em [`contracts/crew.json`](../contracts/crew.json) até o `metrics.json` existir.
 2. Fixar a linha de base dos 4 tripulantes (mediana e dispersão por métrica) em `contracts/crew.json`.
 3. Guilherme sobe o esqueleto do repo: `docker-compose` com `onboard`, `earth`, `web`; FastAPI com routers vazios; README atualizado.
 4. Matheus publica os modelos Pydantic e endpoints *stub* que devolvem fixtures. O OpenAPI sai automaticamente.
