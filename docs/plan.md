@@ -61,7 +61,7 @@ O diagrama tem dois lados: **a bordo** e **na Terra**. Tudo o que importa para a
 
 #### A bordo
 
-**Emulador na Vercel (Flávio).** Faz o papel do wearable, já que não há dispositivo físico. Gera leituras sintéticas (FC, SpO₂, temperatura etc.) para os 4 astronautas. É determinístico: os mesmos parâmetros geram os mesmos valores. Tem cenários que forçam anomalias para a demo, como febre e hipóxia. É passivo e só responde quando é chamado.
+**Emulador na Vercel (Flávio).** Faz o papel do wearable, já que não há dispositivo físico. Gera leituras sintéticas (FC, SpO₂, temperatura e canal do dosímetro de radiação integrado) para os 4 astronautas. É determinístico: os mesmos parâmetros geram os mesmos valores. Os valores de radiação da demo usam registros históricos do DosTel da ISS como referência ambiental, não como dose pessoal medida. Tem cenários que forçam anomalias para a demo. É passivo e só responde quando é chamado.
 
 **onboard/ingest (Miguel).** Porta de entrada dos dados do wearable. A cada minuto:
 
@@ -74,7 +74,7 @@ Quem pede é o bordo, como aconteceria com um wearable real via Bluetooth. O cur
 
 **onboard/crew (Matheus).** API usada pelo astronauta, com duas funções:
 
-- **Escrita:** recebe questionários (humor, estresse, sintomas, PHQ-4) e medidas manuais (peso, pressão, água) e os grava como observações.
+- **Escrita:** recebe questionários e entradas da UI para HRV, respiração, sono, exercício, peso, pressão e água; grava cada uma como observação com origem e horário.
 - **Leitura:** entrega ao frontend os valores atuais, as tendências e o desvio de cada métrica em relação à linha de base do astronauta (z-score).
 
 As setas `CREW --> OBS` e `OBS --> CREW` representam isso: ela grava e lê o mesmo banco.
@@ -119,7 +119,7 @@ Cada pessoa é dona de uma pasta. Mudanças na pasta de outra pessoa só com PR 
 
 | Pessoa | Frente | Pasta | Entregas |
 | --- | --- | --- | --- |
-| Flávio | Emulador de wearable | `emu/` | 4 dispositivos (1 por tripulante); métricas do catálogo; cenários `NORMAL`, `FEVER`, `HYPOXIA`, `POOR_SLEEP` trocáveis por config |
+| Flávio | Emulador de wearable | `emu/` | 4 dispositivos (1 por tripulante); FC, SpO₂, temperatura e canal de radiação integrado ao wearable; cenários de demo trocáveis por config |
 | Miguel | Ingestão de bordo | `onboard/app/ingest/` | Agendador de bordo que envia `SyncRequest` ao simulador a cada minuto, grava o `TelemetryBatch` com cursor durável e responde com `ReceiptAck` (contrato do Flávio); converte samples em `observations`; regras de alerta (limite absoluto + desvio da linha de base); grava eventos no `outbox` |
 | Matheus | Crew API | `onboard/app/crew/`, `onboard/app/observations/` | Modelo `observation` (dono do schema); tripulação e linha de base (seed fixo); endpoints de leitura, tendência e z-score; questionários e entrada manual; `POST /v1/observations` genérico |
 | Wallace | Frontend | `web/` | React + Vite + shadcn; rotas `/crew/:id` (hub) e `/earth` (médico de voo); funciona com mock até a API existir |
@@ -141,8 +141,8 @@ Arquivos compartilhados, todos com dono:
 
 ### Fase 0 — contratos (primeiras ~2 h, todos juntos)
 1. Fechar o catálogo de métricas (subconjunto do doc de linha de base):
-   - Wearable: `heart_rate`, `hrv_rmssd`, `spo2`, `resp_rate`, `body_temp`, `sleep_duration`, `exercise_duration`.
-   - Manual: `body_mass`, `blood_pressure_systolic`, `blood_pressure_diastolic`, `water_intake`, `grip_strength`.
+   - Wearable: `heart_rate`, `spo2`, `body_temp`; o wearable também envia a telemetria do seu sensor de radiação.
+   - Entrada manual pela UI: `hrv_rmssd`, `resp_rate`, `sleep_duration`, `exercise_duration`, `body_mass`, `blood_pressure_systolic`, `blood_pressure_diastolic`, `water_intake`, `grip_strength`.
    - Questionário diário: `mood`, `stress`, `fatigue`, `sleepiness`, sintomas 0–10 (`symptom_headache`, `symptom_back_pain`, `symptom_congestion`, `symptom_eye_irritation`, `symptom_skin`, `symptom_nausea`).
    - Questionário semanal: `phq4`, `team_climate`.
    - IDs, unidades e escalas estão em [`contracts/crew.json`](../contracts/crew.json) até o `metrics.json` existir.

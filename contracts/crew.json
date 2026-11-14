@@ -4,22 +4,22 @@
   "baselineMethod": {"median": "Median of the valid pre-flight collection days", "spread": "Robust standard deviation: 1.4826 × MAD of the same days; floor of 1 scale point for questionnaire metrics", "zScore": "(value - median) / spread"},
   "metrics": {
     "heart_rate": {"unit": "bpm", "source": "wearable"},
-    "hrv_rmssd": {"unit": "ms", "source": "wearable"},
+    "hrv_rmssd": {"unit": "ms", "source": "manual"},
     "spo2": {
       "unit": "%",
       "source": "wearable",
       "scale": [0, 100]
     },
-    "resp_rate": {"unit": "breaths/min", "source": "wearable"},
+    "resp_rate": {"unit": "breaths/min", "source": "manual"},
     "body_temp": {"unit": "°C", "source": "wearable"},
     "sleep_duration": {
       "unit": "h",
-      "source": "wearable",
+      "source": "manual",
       "scale": [0, 24]
     },
     "exercise_duration": {
       "unit": "min/day",
-      "source": "wearable",
+      "source": "manual",
       "scale": [0, 1440]
     },
     "body_mass": {"unit": "kg", "source": "manual"},
