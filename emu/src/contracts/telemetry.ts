@@ -5,13 +5,6 @@ export interface TelemetryBatch {
   sessionId: string;
   generatedAtMs: number;
   hasMore: boolean;
-  nasaSources: {
-    revision: string;
-    actigraphyUrl: string;
-    radiationUrl: string;
-    exerciseRestUrl: string;
-    exercisePeakUrl: string;
-  };
   readings: TelemetryReading[];
 }
 export interface TelemetryReading {
@@ -28,41 +21,39 @@ export interface TelemetryReading {
   temperatureHundredthsCelsius: number | null;
   batteryMillivolts: number | null;
   dataSource: "SIMULATED";
-  nasaReplay: {
-    sleep: {
-      sourceRecordId: number;
-      subjectCode: string;
-      phase: string;
-      sourceDate: string;
-      bedRestDay: number;
-      latencyMinutes: number | null;
-      durationMinutes: number;
-      efficiencyPercent: number | null;
-      note: string | null;
-    };
-    radiation: {
-      sourceTimestamp: string;
-      instrumentId: string;
-      absorbedDoseRateMicroGyPerHour: number;
-      latitudeDegrees: number | null;
-      longitudeDegrees: number | null;
-      altitudeKilometers: number | null;
-      particleFluxPerCm2SrSecond: number | null;
-    };
-    exercise: null | {
-      sourceDate: string;
-      subjectCode: string;
-      phase: "EXERCISE" | "SIMULATED_RECOVERY";
-      elapsedSeconds: number;
-      fromStage: string;
-      toStage: string;
-      fromSourceHeartRateBpm: number;
-      toSourceHeartRateBpm: number;
-      fromSourceRecordId: number;
-      toSourceRecordId: number;
-      fromSourceFileKey: "SUBMAX_SUMMARY" | "PEAK_SUMMARY";
-      toSourceFileKey: "SUBMAX_SUMMARY" | "PEAK_SUMMARY";
-      simulatedWorkloadWatts: number;
-    };
+  sleep: {
+    sourceRecordId: number;
+    subjectCode: string;
+    phase: string;
+    sourceDate: string;
+    bedRestDay: number;
+    latencyMinutes: number | null;
+    durationMinutes: number;
+    efficiencyPercent: number | null;
+    note: string | null;
+  };
+  radiation: {
+    sourceTimestamp: string;
+    instrumentId: string;
+    absorbedDoseRateMicroGyPerHour: number;
+    latitudeDegrees: number | null;
+    longitudeDegrees: number | null;
+    altitudeKilometers: number | null;
+    particleFluxPerCm2SrSecond: number | null;
+  };
+  exercise: null | {
+    sourceDate: string;
+    subjectCode: string;
+    phase: "EXERCISE" | "SIMULATED_RECOVERY";
+    elapsedSeconds: number;
+    fromStage: string;
+    toStage: string;
+    fromSourceHeartRateBpm: number;
+    toSourceHeartRateBpm: number;
+    fromSourceRecordId: number;
+    toSourceRecordId: number;
+    fromSourceFileKey: "SUBMAX_SUMMARY" | "PEAK_SUMMARY";
+    toSourceFileKey: "SUBMAX_SUMMARY" | "PEAK_SUMMARY";
+    simulatedWorkloadWatts: number;
   };
 }

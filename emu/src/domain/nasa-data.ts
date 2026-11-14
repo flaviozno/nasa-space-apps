@@ -1,6 +1,5 @@
 import type { ActigraphyTuple, ExerciseTuple, RadiationTuple } from "../reference/nasa-snapshots.ts";
 import { actigraphyRows, exerciseRows, radiationRows } from "../reference/nasa-snapshots.ts";
-import { hash } from "../utils/hash.ts";
 
 export const ACTIGRAPHY_URL = "https://nlsp.nasa.gov/api/v1/files/972badfb-238d-5dd5-81f2-8efc729a4452/download";
 export const RADIATION_URL = "https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&instrument=DosTel&timestamp%3E=2022-04-01T23%3A00&timestamp%3C2022-04-02T01%3A05&absorbed_dose_rate&latitude&longitude&altitude&flux&format=json";
@@ -11,7 +10,6 @@ export interface NasaData {
   actigraphy: ReadonlyArray<ActigraphyTuple>;
   radiation: ReadonlyArray<RadiationTuple>;
   exercise: ReadonlyArray<ExerciseTuple>;
-  revision: string;
   actigraphyMode: "LIVE" | "BUNDLED_SNAPSHOT";
   radiationMode: "LIVE" | "BUNDLED_SNAPSHOT";
   exerciseMode: "LIVE" | "BUNDLED_SNAPSHOT";
@@ -166,7 +164,6 @@ export async function loadNasaData(fetcher: typeof fetch = fetch): Promise<NasaD
     actigraphy,
     radiation: doseRates,
     exercise: exerciseStages,
-    revision: hash([actigraphy, doseRates, exerciseStages]),
     actigraphyMode: sleep.status === "fulfilled" ? "LIVE" : "BUNDLED_SNAPSHOT",
     radiationMode: radiation.status === "fulfilled" ? "LIVE" : "BUNDLED_SNAPSHOT",
     exerciseMode: exercise.status === "fulfilled" ? "LIVE" : "BUNDLED_SNAPSHOT",

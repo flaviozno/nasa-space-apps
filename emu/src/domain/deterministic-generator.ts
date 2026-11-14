@@ -108,28 +108,26 @@ export function generateReading(
       ? null
       : seededInteger(seed, "battery", 3500, 4200),
     dataSource: "SIMULATED",
-    nasaReplay: {
-      sleep: {
-        sourceRecordId: sleep[0],
-        subjectCode: sleep[1],
-        phase: sleep[2],
-        sourceDate: sleep[4],
-        bedRestDay: sleep[3],
-        latencyMinutes: sleep[5],
-        durationMinutes: sleep[6]!,
-        efficiencyPercent: sleep[7],
-        note: sleep[8],
-      },
-      radiation: {
-        sourceTimestamp: radiation[0],
-        instrumentId: radiation[1],
-        absorbedDoseRateMicroGyPerHour: radiation[2],
-        latitudeDegrees: radiation[3],
-        longitudeDegrees: radiation[4],
-        altitudeKilometers: radiation[5],
-        particleFluxPerCm2SrSecond: radiation[6],
-      },
-      exercise: exercise?.evidence ?? null,
+    sleep: {
+      sourceRecordId: sleep[0],
+      subjectCode: sleep[1],
+      phase: sleep[2],
+      sourceDate: sleep[4],
+      bedRestDay: sleep[3],
+      latencyMinutes: sleep[5],
+      durationMinutes: sleep[6]!,
+      efficiencyPercent: sleep[7],
+      note: sleep[8],
     },
+    radiation: {
+      sourceTimestamp: radiation[0],
+      instrumentId: radiation[1],
+      absorbedDoseRateMicroGyPerHour: radiation[2],
+      latitudeDegrees: radiation[3],
+      longitudeDegrees: radiation[4],
+      altitudeKilometers: radiation[5],
+      particleFluxPerCm2SrSecond: radiation[6],
+    },
+    exercise: exercise?.evidence ?? null,
   };
 }

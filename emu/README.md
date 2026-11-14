@@ -86,27 +86,29 @@ Unknown routes return `404`. Each implemented route only accepts the HTTP method
 
 ## NASA data in `/api/sync`
 
-Each sync request fetches four public NASA files concurrently: the [2004 actigraphy CSV](https://nlsp.nasa.gov/api/v1/files/972badfb-238d-5dd5-81f2-8efc729a4452/download), two [2005 exercise summaries](https://nlsp.nasa.gov/view/lsdapub/lsda_experiment/07f12dd0-6725-582c-a4d2-618ed8b8c452) ([seated rest and stages](https://nlsp.nasa.gov/api/v1/files/c2794054-7a25-5891-9e77-5a4f4a2eca9e/download), [stage times and workload](https://nlsp.nasa.gov/api/v1/files/f1d341e1-ccc0-57ed-8249-6dbc045b5c22/download)), and a fixed [2022 ISS DosTel RadLab query](https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&instrument=DosTel&timestamp%3E=2022-04-01T23%3A00&timestamp%3C2022-04-02T01%3A05&absorbed_dose_rate&latitude&longitude&altitude&flux&format=json). Each request has a 4-second timeout. If any source fails, its collection uses the NASA snapshot checked into `src/reference/` on 2026-11-14.
+Each sync request concurrently queries four public NASA data sources: the [2004 actigraphy CSV](https://nlsp.nasa.gov/api/v1/files/972badfb-238d-5dd5-81f2-8efc729a4452/download), two [2005 exercise summaries](https://nlsp.nasa.gov/view/lsdapub/lsda_experiment/07f12dd0-6725-582c-a4d2-618ed8b8c452) ([seated rest and stages](https://nlsp.nasa.gov/api/v1/files/c2794054-7a25-5891-9e77-5a4f4a2eca9e/download), [stage times and workload](https://nlsp.nasa.gov/api/v1/files/f1d341e1-ccc0-57ed-8249-6dbc045b5c22/download)), and a fixed [2022 ISS DosTel RadLab query](https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&instrument=DosTel&timestamp%3E=2022-04-01T23%3A00&timestamp%3C2022-04-02T01%3A05&absorbed_dose_rate&latitude&longitude&altitude&flux&format=json). Each request has a 4-second timeout. If any source fails, its collection uses the NASA snapshot checked into `src/reference/` on 2026-11-14.
 
-`X-NASA-Actigraphy-Source`, `X-NASA-Exercise-Source`, and `X-NASA-Radiation-Source` each report `LIVE` or `BUNDLED_SNAPSHOT`. `nasaSources` lists the exact source URLs, and `nasaSources.revision` is a SHA-256 hash of the parsed rows used in the batch. A live response and its identical snapshot produce the same JSON.
+`X-NASA-Actigraphy-Source`, `X-NASA-Exercise-Source`, and `X-NASA-Radiation-Source` each report `LIVE` or `BUNDLED_SNAPSHOT`. The NASA source URLs and snapshot provenance are documented here instead of being repeated in the telemetry payload. The response headers still report whether each source was live or used its bundled snapshot.
 
 ### Sleep
 
-`nasaReplay.sleep` includes the source participant, phase, date, bed-rest day, duration in minutes, latency in minutes, efficiency in percent, and the original note. One participant is assigned deterministically per device/boot. Each 86,400 emulator sequences advance to the next available dated observation from that participant; source rows without a duration are skipped. The [actigraphy study](https://nlsp.nasa.gov/search/data/details/e26501eb-7d7a-5012-8c8e-c5bdb3eecaf6?dataType=DATASETS) has 207 rows, including 190 with a duration. These are Earth bed-rest observations, not an astronaut's current sleep.
+`sleep` includes the source participant, phase, date, bed-rest day, duration in minutes, latency in minutes, efficiency in percent, and the original note. One participant is assigned deterministically per device/boot. Each 86,400 emulator sequences advance to the next available dated observation from that participant; source rows without a duration are skipped. The [actigraphy study](https://nlsp.nasa.gov/search/data/details/e26501eb-7d7a-5012-8c8e-c5bdb3eecaf6?dataType=DATASETS) has 207 rows, including 190 with a duration. These are Earth bed-rest observations, not an astronaut's current sleep.
 
 ### Exercise heart rate
 
-The new `NASA_EXERCISE_REPLAY` scenario derives `heartRateBpm` from one participant's [NASA cycle-ergometry test](https://nlsp.nasa.gov/api/v1/files/f1d341e1-ccc0-57ed-8249-6dbc045b5c22/download). Source checkpoints are 49 bpm at seated rest, then 92, 123, 161, 177, and 180 bpm through 10 minutes of exercise. The emulator interpolates between the recorded checkpoints at its one-second cadence and then models a clearly labeled five-minute recovery back toward rest. The 15-minute pattern repeats. `heartRateOrigin` is `NASA_ANALOG_INTERPOLATED` during exercise and `NASA_ANALOG_DERIVED_RECOVERY` during recovery. `nasaReplay.exercise` exposes the original date, subject, source record IDs and file keys (`SUBMAX_SUMMARY` or `PEAK_SUMMARY`), adjacent checkpoints, stage, and simulated workload. The intermediate one-second values and recovery are emulator calculations, not direct NASA measurements.
+The new `NASA_EXERCISE_REPLAY` scenario derives `heartRateBpm` from one participant's [NASA cycle-ergometry test](https://nlsp.nasa.gov/api/v1/files/f1d341e1-ccc0-57ed-8249-6dbc045b5c22/download). Source checkpoints are 49 bpm at seated rest, then 92, 123, 161, 177, and 180 bpm through 10 minutes of exercise. The emulator interpolates between the recorded checkpoints at its one-second cadence and then models a clearly labeled five-minute recovery back toward rest. The 15-minute pattern repeats. `heartRateOrigin` is `NASA_ANALOG_INTERPOLATED` during exercise and `NASA_ANALOG_DERIVED_RECOVERY` during recovery. `exercise` exposes the original date, subject, source record IDs and file keys (`SUBMAX_SUMMARY` or `PEAK_SUMMARY`), adjacent checkpoints, stage, and simulated workload. The intermediate one-second values and recovery are emulator calculations, not direct NASA measurements.
 
-The existing `NORMAL`, `ELEVATED_HEART_RATE`, and `LOW_SPO2` scenarios keep their previous heart-rate behavior and return `heartRateOrigin: "SIMULATED"` with `nasaReplay.exercise: null`. SpO₂, body temperature, and battery remain simulated in every scenario.
+The existing `NORMAL`, `ELEVATED_HEART_RATE`, and `LOW_SPO2` scenarios keep their previous heart-rate behavior and return `heartRateOrigin: "SIMULATED"` with `exercise: null`. SpO₂, body temperature, and battery remain simulated in every scenario.
 
 ### ISS radiation context
 
-`nasaReplay.radiation` includes a real DosTel absorbed dose rate in μGy/hour, its original source timestamp, instrument, ISS latitude/longitude in degrees, altitude in kilometers, and particle flux in cm⁻² sr⁻¹ s⁻¹ where available. The [RadLab API](https://visualization.osdr.nasa.gov/radlab/gui/data-api/) supplies 180 observations in the fixed historical window, replayed in source order across emulator sequences. These are ISS environmental measurements, not a personal radiation dose.
+The target wearable includes an onboard radiation sensor, and the wearable telemetry carries its radiation readings with the crew member's other samples. In this MVP, `radiation` is populated from the historical ISS DosTel records described below to exercise that channel; these are environmental reference measurements, not personal dose measurements from a crew-worn detector.
 
-`acquiredAtMs` is always the emulator's synthetic timeline; the NASA fields retain their historical dates. `dataSource: "SIMULATED"` describes the emulated device sample; inspect `heartRateOrigin` and `nasaReplay` for precise provenance. Treat `nasaReplay.sleep.durationMinutes` as historical context, not as a current wearable `sleep_duration` observation; radiation is likewise environmental context rather than a crew health metric. `sensorStatus: "INVALID"` nulls the four device metrics but leaves source evidence intact. Baselines come from another system.
+`radiation` includes a DosTel absorbed dose rate in μGy/hour, its original source timestamp, instrument, ISS latitude/longitude in degrees, altitude in kilometers, and particle flux in cm⁻² sr⁻¹ s⁻¹ where available. The [RadLab API](https://visualization.osdr.nasa.gov/radlab/gui/data-api/) supplies 180 observations in the fixed historical window, replayed in source order across emulator sequences.
 
-If NASA revises any public source, a later request can have a different `nasaSources.revision` and `transferId` even with the same payload. Deduplicate stored readings by `sampleId`. The onboard server still initiates `POST /api/sync`, persists the batch, advances cursors, and acknowledges it through `POST /api/receipt-acks`; no NASA request from the onboard server or extra emulator route is required.
+`acquiredAtMs` is always the emulator's synthetic timeline; the NASA fields retain their historical dates. `dataSource: "SIMULATED"` describes the emulated device sample; inspect `heartRateOrigin` and the top-level `sleep`, `radiation`, and `exercise` fields for precise provenance. Treat `sleep.durationMinutes` as historical context, not as a current wearable `sleep_duration` observation; radiation is likewise environmental context rather than a crew health metric. `sensorStatus: "INVALID"` nulls the four device metrics but leaves source evidence intact. Baselines come from another system.
+
+If NASA revises a public source, the source-derived reading values and `transferId` may change. Deduplicate stored readings by `sampleId`. The onboard server still initiates `POST /api/sync`, persists the batch, advances cursors, and acknowledges it through `POST /api/receipt-acks`; no NASA request from the onboard server or extra emulator route is required.
 
 ## Configuration
 
@@ -163,13 +165,6 @@ Expected `200` response for the payload above (bundled NASA snapshot):
   "sessionId": "session-demo-1",
   "generatedAtMs": 1767225660000,
   "hasMore": true,
-  "nasaSources": {
-    "revision": "5cdfddba724014e64a4be65618d6a375c6c132fda58dab3b56958fe02361c198",
-    "actigraphyUrl": "https://nlsp.nasa.gov/api/v1/files/972badfb-238d-5dd5-81f2-8efc729a4452/download",
-    "radiationUrl": "https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&instrument=DosTel&timestamp%3E=2022-04-01T23%3A00&timestamp%3C2022-04-02T01%3A05&absorbed_dose_rate&latitude&longitude&altitude&flux&format=json",
-    "exerciseRestUrl": "https://nlsp.nasa.gov/api/v1/files/c2794054-7a25-5891-9e77-5a4f4a2eca9e/download",
-    "exercisePeakUrl": "https://nlsp.nasa.gov/api/v1/files/f1d341e1-ccc0-57ed-8249-6dbc045b5c22/download"
-  },
   "readings": [
     {
       "sampleId": "sample_36bf3162a6d99bbce118de6a9a3f7e20d4c31c78c036d668c2952427dd14707a",
@@ -185,32 +180,30 @@ Expected `200` response for the payload above (bundled NASA snapshot):
       "temperatureHundredthsCelsius": 3677,
       "batteryMillivolts": 3911,
       "dataSource": "SIMULATED",
-      "nasaReplay": {
-        "sleep": {
-          "sourceRecordId": 149,
-          "subjectCode": "C1G0003",
-          "phase": "IN_TEST",
-          "sourceDate": "2004-09-17",
-          "bedRestDay": 9,
-          "latencyMinutes": 16,
-          "durationMinutes": 454,
-          "efficiencyPercent": 77.5,
-          "note": null
-        },
-        "radiation": {
-          "sourceTimestamp": "2022-04-01T23:00:00",
-          "instrumentId": "DosTel2",
-          "absorbedDoseRateMicroGyPerHour": 10.2160856666667,
-          "latitudeDegrees": -43.160972,
-          "longitudeDegrees": 131.30666,
-          "altitudeKilometers": 429.252563,
-          "particleFluxPerCm2SrSecond": 0.5317479314
-        },
-        "exercise": null
-      }
+      "sleep": {
+        "sourceRecordId": 149,
+        "subjectCode": "C1G0003",
+        "phase": "IN_TEST",
+        "sourceDate": "2004-09-17",
+        "bedRestDay": 9,
+        "latencyMinutes": 16,
+        "durationMinutes": 454,
+        "efficiencyPercent": 77.5,
+        "note": null
+      },
+      "radiation": {
+        "sourceTimestamp": "2022-04-01T23:00:00",
+        "instrumentId": "DosTel2",
+        "absorbedDoseRateMicroGyPerHour": 10.2160856666667,
+        "latitudeDegrees": -43.160972,
+        "longitudeDegrees": 131.30666,
+        "altitudeKilometers": 429.252563,
+        "particleFluxPerCm2SrSecond": 0.5317479314
+      },
+      "exercise": null
     }
   ],
-  "transferId": "transfer_e5f4bdb959f20932dc275edba65719bdbdd9a86e865bd996327519e26d4c22c3"
+  "transferId": "transfer_1494b9859262a764f895a8ae7863a13ffe4e4826ec03e772c71b93e97242ba34"
 }
 ```
 
@@ -246,13 +239,6 @@ Expected `200` response for that payload (bundled NASA snapshot):
   "sessionId": "session-demo-1",
   "generatedAtMs": 1767226200000,
   "hasMore": true,
-  "nasaSources": {
-    "revision": "5cdfddba724014e64a4be65618d6a375c6c132fda58dab3b56958fe02361c198",
-    "actigraphyUrl": "https://nlsp.nasa.gov/api/v1/files/972badfb-238d-5dd5-81f2-8efc729a4452/download",
-    "radiationUrl": "https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&instrument=DosTel&timestamp%3E=2022-04-01T23%3A00&timestamp%3C2022-04-02T01%3A05&absorbed_dose_rate&latitude&longitude&altitude&flux&format=json",
-    "exerciseRestUrl": "https://nlsp.nasa.gov/api/v1/files/c2794054-7a25-5891-9e77-5a4f4a2eca9e/download",
-    "exercisePeakUrl": "https://nlsp.nasa.gov/api/v1/files/f1d341e1-ccc0-57ed-8249-6dbc045b5c22/download"
-  },
   "readings": [
     {
       "sampleId": "sample_4f3950dfec15172b1f6c9de34f5627fb5b7b9d05dc0d732cb8d95e8aa69616e1",
@@ -268,46 +254,44 @@ Expected `200` response for that payload (bundled NASA snapshot):
       "temperatureHundredthsCelsius": 3675,
       "batteryMillivolts": 3560,
       "dataSource": "SIMULATED",
-      "nasaReplay": {
-        "sleep": {
-          "sourceRecordId": 149,
-          "subjectCode": "C1G0003",
-          "phase": "IN_TEST",
-          "sourceDate": "2004-09-17",
-          "bedRestDay": 9,
-          "latencyMinutes": 16,
-          "durationMinutes": 454,
-          "efficiencyPercent": 77.5,
-          "note": null
-        },
-        "radiation": {
-          "sourceTimestamp": "2022-04-01T23:00:00",
-          "instrumentId": "DosTel2",
-          "absorbedDoseRateMicroGyPerHour": 10.2160856666667,
-          "latitudeDegrees": -43.160972,
-          "longitudeDegrees": 131.30666,
-          "altitudeKilometers": 429.252563,
-          "particleFluxPerCm2SrSecond": 0.5317479314
-        },
-        "exercise": {
-          "sourceDate": "2005-07-24",
-          "subjectCode": "4023",
-          "phase": "EXERCISE",
-          "elapsedSeconds": 540,
-          "fromStage": "2",
-          "toStage": "3",
-          "fromSourceHeartRateBpm": 123,
-          "toSourceHeartRateBpm": 161,
-          "fromSourceRecordId": 2,
-          "toSourceRecordId": 3,
-          "fromSourceFileKey": "PEAK_SUMMARY",
-          "toSourceFileKey": "PEAK_SUMMARY",
-          "simulatedWorkloadWatts": 150
-        }
+      "sleep": {
+        "sourceRecordId": 149,
+        "subjectCode": "C1G0003",
+        "phase": "IN_TEST",
+        "sourceDate": "2004-09-17",
+        "bedRestDay": 9,
+        "latencyMinutes": 16,
+        "durationMinutes": 454,
+        "efficiencyPercent": 77.5,
+        "note": null
+      },
+      "radiation": {
+        "sourceTimestamp": "2022-04-01T23:00:00",
+        "instrumentId": "DosTel2",
+        "absorbedDoseRateMicroGyPerHour": 10.2160856666667,
+        "latitudeDegrees": -43.160972,
+        "longitudeDegrees": 131.30666,
+        "altitudeKilometers": 429.252563,
+        "particleFluxPerCm2SrSecond": 0.5317479314
+      },
+      "exercise": {
+        "sourceDate": "2005-07-24",
+        "subjectCode": "4023",
+        "phase": "EXERCISE",
+        "elapsedSeconds": 540,
+        "fromStage": "2",
+        "toStage": "3",
+        "fromSourceHeartRateBpm": 123,
+        "toSourceHeartRateBpm": 161,
+        "fromSourceRecordId": 2,
+        "toSourceRecordId": 3,
+        "fromSourceFileKey": "PEAK_SUMMARY",
+        "toSourceFileKey": "PEAK_SUMMARY",
+        "simulatedWorkloadWatts": 150
       }
     }
   ],
-  "transferId": "transfer_9d4ff87f286238bbb9c8e4672130bd887084b6783f6729b313206e8cdd85fa00"
+  "transferId": "transfer_475b62ea6f468ee4998e805baf815cf9f935f07119091f9a1b36d28106077901"
 }
 ```
 
