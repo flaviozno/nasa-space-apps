@@ -54,13 +54,13 @@ flowchart TD
 
 For the initial implementation, **use HTTP for both communication steps**. Do not add an MQTT broker yet. The onboard service initiates the wearable synchronization, just as the Edge does in the proposed BLE architecture; Vercel only emulates the wearable's response. HTTP is an MVP transport substitution for the BLE and MQTT transports proposed in `infra/telemetry.drawio`; durable storage, the receipt acknowledgement, the Outbox, and application ACK preserve the delivery behavior we need to demonstrate without another running component.
 
-The simulator package implements the Vercel responder and includes a development-only onboard mock. The production onboard and Earth services described here still need to be implemented.
+The Vercel responder and the onboard-to-emulator ingestion worker are implemented. The Crew API read endpoints still return fixture data in this MVP; persisted wearable observations are available to the shared observation and Outbox flow.
 
 ### Wearable emulator: current MVP behavior
 
 The emulator in [`emu/`](./emu/) stands in for a physical wearable. It is passive: the onboard service initiates each synchronization request, and the emulator returns a bounded `TelemetryBatch` as the wearable would. There is no physical sensor or device connection in this MVP.
 
-For every `POST /api/sync`, the emulator queries four public NASA data sources: historical actigraphy/sleep records, ISS DosTel radiation observations, and two exercise-test files. These external requests are part of the MVP data flow. If a source is unavailable or its response cannot be parsed, that source falls back to the checked-in NASA snapshot, and the response identifies whether each source was live or came from a bundled snapshot.
+The onboard service calls the single Vercel deployment at `https://emu-eight-umber.vercel.app/`; the API has no URL version prefix. For each `POST /api/sync`, the emulator queries four public NASA data sources: historical actigraphy/sleep records, ISS DosTel radiation observations, and two exercise-test files. These external requests are part of the MVP data flow. If a source is unavailable or its response cannot be parsed, that source falls back to the checked-in NASA snapshot. Source provenance is documented in [`emu/README.md`](./emu/README.md).
 
 The returned reading deliberately combines NASA evidence with mock wearable fields:
 
@@ -112,8 +112,18 @@ Everything (onboard, Earth, web) with Docker:
 
 ```bash
 cp .env.example .env
+# Set SIMULATOR_TOKEN in .env to the token configured for the Vercel emulator.
 docker compose up --build
 ```
+
+To run only the Onboard API on your machine while Docker runs its PostgreSQL database:
+
+```bash
+# Windows: py -3.12 scripts/start_onboard.py
+# macOS/Linux: python3 scripts/start_onboard.py
+```
+
+The launcher detects Windows, macOS, or Linux; checks Python 3.12+, `uv`, Docker, and Docker Compose; starts `onboard-db`; applies Alembic migrations; then runs Uvicorn at `http://127.0.0.1:8001` with reload enabled. Set `SIMULATOR_TOKEN` in `.env` first. This local mode disables the Earth Outbox worker so the Vercel ingestion path can be exercised by itself. Stop PostgreSQL later with `docker compose stop onboard-db`.
 
 | URL | What |
 | --- | --- |
@@ -172,6 +182,8 @@ Initial configuration:
 | Onboard synchronization interval | 1 minute |
 | Maximum simulated seconds per invocation | 60 |
 | Typical full-minute batch | 240 readings |
+| Devices per API request | 1–3 |
+| Readings per API response | Up to 100; the onboard worker paginates |
 | Scenario | NORMAL |
 | Data source label | SIMULATED |
 
@@ -183,18 +195,17 @@ The same seed, session, configuration, device, and sequence produce the same rea
 
 ### Step 3 — Persist onboard and acknowledge
 
-The onboard service:
+The onboard ingestion worker:
 
 1. Validates the simulator response contract and requested sequence range.
 2. Checks that the session configuration matches the stored configuration.
-3. Opens a database transaction with appropriate session serialization.
-4. Inserts new readings, evaluates the initial simple rules, records any alerts, and creates Outbox events.
-5. Advances the contiguous cursor.
-6. Commits the transaction durably before acknowledging the simulator.
+3. Persists raw readings, normalized heart-rate/SpO₂/temperature observations, baseline alerts, Outbox events, and per-device cursors in one database transaction per response page.
+4. Commits each page durably before sending its `ReceiptAck`.
+5. Advances the simulated time window only after all device groups and pages finish.
 
-For this small MVP, rule evaluation is deterministic and lightweight and runs inside this bounded transaction. No separate processing queue is required. If asynchronous jobs are introduced later, they must be persisted in the same transaction before ACK.
+For this small MVP, baseline rule evaluation is deterministic and lightweight and runs inside the same bounded transaction. No separate processing queue is required. If asynchronous jobs are introduced later, they must be persisted in the same transaction before ACK.
 
-The simulator-response contract is **all or nothing per batch**. A conflicting or invalid batch is rejected without partially advancing the cursor. Repeated identical samples do not create additional readings or alerts.
+Repeated identical samples do not create additional readings or alerts. Receipt ACKs are persisted with their batches and retried before the next sync request if the Vercel acknowledgement call fails.
 
 ### Step 4 — Send `ReceiptAck`
 
@@ -206,7 +217,7 @@ Authorization: Bearer <SIMULATOR_TOKEN>
 Content-Type: application/json
 ```
 
-The acknowledgement makes the HTTP simulation mirror the BLE contract. Since the simulator is stateless, it only validates the acknowledgement; the durable cursor remains onboard. If this request fails, a retry is harmless, and the next `SyncRequest` starts from the advanced onboard cursor.
+The acknowledgement makes the HTTP simulation mirror the BLE contract. Since the simulator is stateless, it only validates the acknowledgement; the durable cursor remains onboard. If this request fails, onboard retries the same receipt, and the next `SyncRequest` starts from the advanced onboard cursor.
 
 The Vercel Function returns the requested telemetry directly and does not continue work in the background or make calls to the VPS.
 

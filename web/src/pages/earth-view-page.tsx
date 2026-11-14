@@ -120,7 +120,7 @@ function LinkStatusBand({ sync, earth, now }: { sync: SyncStatus; earth: EarthSt
 
         <div className="space-y-2">
           <p className="text-sm font-semibold tracking-widest text-muted-foreground">PENDING ONBOARD</p>
-          <p className="text-4xl font-semibold tabular-nums" aria-label="Pending events">
+          <p className="font-mono text-4xl font-semibold tabular-nums" aria-label="Pending events">
             {sync.pendingCount.toLocaleString('en-US')}
           </p>
           <p className="text-base text-muted-foreground">
@@ -134,7 +134,7 @@ function LinkStatusBand({ sync, earth, now }: { sync: SyncStatus; earth: EarthSt
 
         <div className="space-y-2">
           <p className="text-sm font-semibold tracking-widest text-muted-foreground">LAST RECEPTION ON EARTH</p>
-          <p className="text-4xl font-semibold tabular-nums">{earth.lastReceivedAtMs === null ? '—' : formatGmtClock(earth.lastReceivedAtMs)}</p>
+          <p className="font-mono text-4xl font-semibold tabular-nums">{earth.lastReceivedAtMs === null ? '—' : formatGmtClock(earth.lastReceivedAtMs)}</p>
           <p className={cn('text-base', behindMs !== null && behindMs > STALE_AFTER_MS ? 'font-semibold text-status-warn' : 'text-muted-foreground')}>
             {earth.lastReceivedAtMs === null
               ? 'Nothing received yet'
@@ -203,7 +203,7 @@ function EarthCrewCard({ member, alert, now }: { member: EarthCrewMember; alert:
           return (
             <div key={m.metric} className="space-y-0.5">
               <dt className="text-sm text-muted-foreground">{metricDisplay(m.metric).label}</dt>
-              <dd className={cn('text-3xl font-semibold tabular-nums', flagged && 'text-status-alert')}>{formatValue(m.metric, m.value)}</dd>
+              <dd className={cn('font-mono text-3xl font-semibold tabular-nums', flagged && 'text-status-alert')}>{formatValue(m.metric, m.value)}</dd>
               <dd className="text-sm text-muted-foreground">{displayUnit(m.unit)}</dd>
             </div>
           )

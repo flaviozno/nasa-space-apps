@@ -1,5 +1,6 @@
 import { ActivityIcon } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router'
+import { DisplayModeControl } from '@/components/display-mode-control'
 import { ServiceStatus } from '@/components/service-status'
 import { EARTH_API, ONBOARD_API } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -26,7 +27,8 @@ export function AppLayout() {
           <NavLink to="/" end className={navClass}>Crew</NavLink>
           <NavLink to="/earth" className={navClass}>Earth view</NavLink>
         </nav>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <DisplayModeControl />
           <ServiceStatus label="Onboard" baseUrl={ONBOARD_API} />
           <ServiceStatus label="Earth" baseUrl={EARTH_API} />
         </div>

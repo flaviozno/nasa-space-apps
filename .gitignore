@@ -20,3 +20,8 @@ data/
 # Web
 node_modules/
 dist/
+
+# Graphify artifacts, except the publishable report and graph data.
+/graphify-out/*
+!/graphify-out/GRAPH_REPORT.md
+!/graphify-out/graph.json

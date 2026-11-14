@@ -30,7 +30,8 @@ export function AlertBanner({ alerts, now }: { alerts: Alert[]; now: number }) {
               <SirenIcon className="size-6" aria-hidden="true" />
             </span>
             <div className="min-w-0 space-y-1">
-              <p className="text-xl font-semibold">
+              <p className="flex flex-wrap items-center gap-x-2 text-xl font-semibold">
+                <span className="rounded bg-status-alert px-2 py-0.5 text-sm font-bold tracking-widest text-white">CRITICAL</span>
                 {text.title}
                 {text.reading && <span className="text-status-alert"> — {text.reading}</span>}
               </p>

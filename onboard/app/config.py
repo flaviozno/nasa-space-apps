@@ -1,6 +1,7 @@
 """Onboard settings, read from ONBOARD_* environment variables (see .env.example)."""
 
 from pathlib import Path
+from typing import Literal
 
 from hub_common.sync_contract import MAX_EVENTS_PER_BATCH
 from pydantic import Field
@@ -20,8 +21,16 @@ class OnboardSettings(BaseSettings):
     crew_file: Path = WORKSPACE_DIR / "contracts" / "crew.json"
     metrics_file: Path = WORKSPACE_DIR / "contracts" / "metrics.json"
     # Wearable emulator on Vercel (SyncRequest / ReceiptAck).
-    simulator_url: str = ""
+    simulator_url: str = "https://emu-eight-umber.vercel.app"
     simulator_token: str = ""
+    simulator_timeout_s: float = Field(default=10.0, gt=0)
+    ingest_worker_enabled: bool = True
+    ingest_interval_s: float = Field(default=60.0, gt=0)
+    ingest_session_id: str = "mvp-session-1"
+    ingest_boot_id: str = "mvp-boot-1"
+    ingest_scenario: Literal[
+        "NORMAL", "ELEVATED_HEART_RATE", "LOW_SPO2", "NASA_EXERCISE_REPLAY"
+    ] = "NORMAL"
     # Earth ingest, reached over the private Docker network.
     earth_url: str = "http://earth:8000"
     earth_ingest_token: str = ""

@@ -4,12 +4,12 @@ The onboard PostgreSQL schema is managed only through these migrations. Run comm
 
 ## One branch per owner
 
-Each owner has an independent Alembic branch in its own folder. Branches don't share a chain, so three people can add migrations at the same time without creating conflicting heads.
+Each owner has an Alembic branch in its own folder. The ingest branch depends on the observations and sync tables it writes to; its current migration declares both dependencies so they are applied first.
 
 | Branch label | Folder | Owner | Tables |
 | --- | --- | --- | --- |
 | `observations` | `versions/observations/` | Matheus | `observations`, `questionnaire_responses` |
-| `ingest` | `versions/ingest/` | Miguel | `simulation_sessions`, `samples`, `alerts` |
+| `ingest` | `versions/ingest/` | Miguel | `ingest_sessions`, `ingest_cursors`, `ingest_receipts`, `wearable_samples`, `alerts` |
 | `sync` | `versions/sync/` | Guilherme | `outbox`, `settings` (simulated Earth link) |
 
 Each branch starts with an empty "start … branch" revision. Don't edit or delete it.
@@ -38,10 +38,10 @@ Always use `upgrade heads` (plural): `upgrade head` fails because there are thre
 
 - Write the `upgrade()` and `downgrade()` with `op.create_table`, `op.add_column`, etc. There are no SQLAlchemy models to autogenerate from.
 - Once a migration is merged into `main`, don't edit it; add a new one.
-- Need a table from another branch (e.g. `alerts` referencing `observations`)? Declare it in your migration so it runs after the other one:
+- Need tables from other branches? Declare the current revision IDs as dependencies so the ingest migration runs after the observations and Outbox branches. `branch@head` is a CLI target syntax and cannot be used in `depends_on`:
 
   ```python
-  depends_on = "observations@head"  # or the specific revision id
+  depends_on = ("089bc82e7798", "e7707c1954d8")
   ```
 
 - Locally, start only the database with `docker compose up -d onboard-db` (published on `localhost:5433`), then run `uv run alembic upgrade heads`.

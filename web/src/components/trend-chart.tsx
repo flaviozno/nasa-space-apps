@@ -47,7 +47,7 @@ export function TrendChart({ crewId, metric, windowMinutes, onWindowChange }: Tr
             {unit && <span className="ml-2 text-lg font-normal text-muted-foreground">{unit}</span>}
           </h2>
           <p className="flex items-center gap-2 text-base text-muted-foreground">
-            <span className="inline-block h-3 w-5 rounded-sm bg-primary/20 ring-1 ring-primary/40" aria-hidden="true" />
+            <span className="inline-block h-3 w-5 rounded-sm bg-status-advisory/20 ring-1 ring-status-advisory/60" aria-hidden="true" />
             Your normal range (median ± 2σ)
           </p>
         </div>
