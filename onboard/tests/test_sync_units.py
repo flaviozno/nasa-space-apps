@@ -6,6 +6,8 @@ import pytest
 from app.sync.backoff import MAX_DELAY_MS, retry_delay_ms
 from app.sync.events import build_event
 from hub_common.sync_contract import EventType
+from pydantic import ValidationError
+from sync_fakes import make_event
 
 
 def test_backoff_doubles_with_bounded_jitter() -> None:
@@ -24,14 +26,19 @@ def test_backoff_rejects_negative_attempts() -> None:
 
 
 def test_same_source_gives_the_same_event_id() -> None:
-    first = build_event(EventType.OBSERVATIONS, "crew-1", "sample-9", {"a": 1}, 10)
-    again = build_event(EventType.OBSERVATIONS, "crew-1", "sample-9", {"a": 1}, 20)
-    other_type = build_event(EventType.ALERT, "crew-1", "sample-9", {"a": 1}, 10)
+    first = make_event("sample-9")
+    again = make_event("sample-9").model_copy(update={"created_at_onboard_ms": 20})
+    other_type = make_event("sample-9", EventType.ALERT)
     assert first.event_id == again.event_id
     assert first.event_id != other_type.event_id
 
 
 def test_priority_comes_from_the_type() -> None:
-    alert = build_event(EventType.ALERT, "crew-1", "a-1", {}, 10)
-    reading = build_event(EventType.OBSERVATIONS, "crew-1", "s-1", {}, 10)
-    assert alert.priority < reading.priority
+    assert make_event("a-1", EventType.ALERT).priority < make_event("s-1").priority
+
+
+def test_payload_must_match_the_event_type() -> None:
+    with pytest.raises(ValidationError, match="observations"):
+        build_event(EventType.OBSERVATIONS, "crew-1", "s-1", {"source": "wearable"}, 10)
+    with pytest.raises(ValidationError, match="alertId"):
+        build_event(EventType.ALERT, "crew-1", "a-1", {"message": "m"}, 10)

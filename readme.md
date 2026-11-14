@@ -257,15 +257,22 @@ This setting represents a communication outage. It does not require disabling th
 Producers (ingest, Crew API) hand events to the Outbox inside their own transaction, so the source data and its event exist together or not at all:
 
 ```python
-from app.sync.events import build_event, enqueue_event
-from hub_common.sync_contract import EventType
+from app.sync.events import build_alert_event, build_observations_event, enqueue_event
+from hub_common.sync_contract import AlertPayload, ObservationItem, ObservationsPayload
 
 # `connection` is the same transaction that inserted the observations.
-event = build_event(EventType.OBSERVATIONS, crew_id, source_ref=sample_id,
-                    payload={"source": "wearable", "observations": [...]},
-                    created_at_onboard_ms=now_ms)
-enqueue_event(connection, event)  # False if this source_ref was already queued
+payload = ObservationsPayload(source="wearable", observations=[
+    ObservationItem(metric="heart_rate", value=72, unit="bpm", taken_at=taken_at_ms),
+])
+enqueue_event(connection, build_observations_event(crew_id, sample_id, payload, now_ms))
+
+alert = AlertPayload(alert_id=alert_id, rule_id="single_reading_zscore", rule_version="1",
+                     metric="spo2", value=88.5, z_score=-8.6, message="...", created_at=now_ms)
+enqueue_event(connection, build_alert_event(crew_id, alert, now_ms))
+# enqueue_event returns False if this source was already queued.
 ```
+
+The payload must match the event type (`ObservationsPayload` or `AlertPayload`); building an event with any other shape fails, and Earth answers `422`.
 
 The worker (in the onboard container, every 5 s) sends due `PENDING` events in batches of up to 100, alerts first, and marks them `SYNCED` only after Earth's ACK. Failed batches retry with exponential backoff (5 s doubling up to 5 min, plus jitter).
 
@@ -273,6 +280,15 @@ The worker (in the onboard container, every 5 s) sends due `PENDING` events in b
 | --- | --- | --- |
 | `GET /api/onboard/v1/sync/status` | — | `linkEnabled`, `pendingCount`, `pendingAlerts`, `oldestPendingAgeMs`, `lastAckAtMs`, `lastError` |
 | `PUT /api/onboard/v1/sync/link` `{"enabled": false}` | `Bearer $ONBOARD_ADMIN_TOKEN` | Turn the simulated Earth link off or on |
+
+The Earth view reads only what already crossed the link. Ages and order use onboard time; data older than `EARTH_STALE_AFTER_MS` (default 10 min) is `STALE`, and a crew member with no data is `MISSING`:
+
+| Endpoint (through the web proxy) | What |
+| --- | --- |
+| `GET /api/earth/v1/views/crew` | Every crew member: `freshness`, `dataAgeMs`, `alertCount`, and the latest value per metric with its own age |
+| `GET /api/earth/v1/views/crew/{crewId}` | One crew member (`404` if not in `contracts/crew.json`) |
+| `GET /api/earth/v1/views/alerts?crewId=&limit=50` | Synced alerts, newest first, with `dataAgeMs` and `deliveryDelayMs` (how long the link held it) |
+| `GET /api/earth/v1/views/status` | Event counts, conflicts, last reception, newest data age, average delivery delay (last 100 events) |
 
 Earth ingest (`POST /v1/events/batches`) needs `Bearer $EARTH_INGEST_TOKEN` and is reachable only on the private Docker network. Both tokens come from `.env`; when `EARTH_INGEST_TOKEN` is empty, Earth refuses every batch and the Outbox only grows.
 

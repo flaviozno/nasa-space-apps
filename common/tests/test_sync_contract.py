@@ -1,10 +1,12 @@
 import pytest
 from hub_common.sync_contract import (
+    AlertPayload,
     EventBatch,
     EventBatchAck,
     EventType,
     SyncEvent,
     ack_confirms_batch,
+    payload_json,
 )
 from pydantic import ValidationError
 
@@ -17,7 +19,10 @@ def build_event(event_id: str) -> SyncEvent:
         crew_id="crew-1",
         source_ref=f"src-{event_id}",
         created_at_onboard_ms=1_000,
-        payload={"observations": []},
+        payload={
+            "source": "wearable",
+            "observations": [{"metric": "heart_rate", "value": 70, "unit": "bpm", "takenAt": 900}],
+        },
     )
 
 
@@ -52,3 +57,26 @@ def test_ack_must_name_the_batch_and_every_event() -> None:
     assert ack_confirms_batch(batch, full)
     assert not ack_confirms_batch(batch, partial)
     assert not ack_confirms_batch(batch, other_batch)
+
+
+def test_payload_is_validated_against_the_type() -> None:
+    with pytest.raises(ValidationError, match="unit"):
+        SyncEvent(
+            event_id="evt-1",
+            type=EventType.OBSERVATIONS,
+            priority=1,
+            crew_id="crew-1",
+            source_ref="s",
+            created_at_onboard_ms=1,
+            payload={
+                "source": "manual",
+                "observations": [{"metric": "spo2", "value": 1, "takenAt": 1}],
+            },
+        )
+
+
+def test_payload_json_uses_camel_case() -> None:
+    alert = AlertPayload(
+        alert_id="a", rule_id="r", rule_version="1", message="m", created_at=1, z_score=-3.5
+    )
+    assert payload_json(alert)["zScore"] == -3.5

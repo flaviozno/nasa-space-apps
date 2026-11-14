@@ -9,6 +9,7 @@ from sqlalchemy import Engine
 
 from app.config import EarthSettings
 from app.ingest.router import router as ingest_router
+from app.views.crew_roster import load_roster
 from app.views.router import router as views_router
 
 ROUTERS = (ingest_router, views_router)
@@ -24,6 +25,7 @@ def create_app(
     resolved_engine = engine or create_database_engine(resolved.database_url)
     app = build_service_app("earth", resolved, resolved_engine, ROUTERS)
     app.state.clock = clock or SystemClock()
+    app.state.crew_roster = load_roster(resolved.crew_file)
     return app
 
 

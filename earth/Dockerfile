@@ -1,5 +1,5 @@
 # Build context is the app/ folder (see docker-compose.yml): the service needs the uv
-# workspace and the shared `common` package.
+# workspace, the shared `common` package and contracts/crew.json (Earth view roster).
 FROM python:3.12-slim
 COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/venv PATH=/venv/bin:$PATH
@@ -9,6 +9,7 @@ COPY pyproject.toml uv.lock .python-version ./
 COPY common/ common/
 COPY onboard/pyproject.toml onboard/pyproject.toml
 COPY earth/ earth/
+COPY contracts/ contracts/
 RUN uv sync --frozen --no-dev --package earth
 
 WORKDIR /workspace/earth

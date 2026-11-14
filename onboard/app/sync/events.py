@@ -7,7 +7,14 @@
 import json
 import uuid
 
-from hub_common.sync_contract import PRIORITY_BY_TYPE, EventType, SyncEvent
+from hub_common.sync_contract import (
+    PRIORITY_BY_TYPE,
+    AlertPayload,
+    EventType,
+    ObservationsPayload,
+    SyncEvent,
+    payload_json,
+)
 from pydantic import JsonValue
 from sqlalchemy import Connection, text
 
@@ -50,6 +57,29 @@ def build_event(
         source_ref=source_ref,
         created_at_onboard_ms=created_at_onboard_ms,
         payload=payload,
+    )
+
+
+def build_observations_event(
+    crew_id: str, source_ref: str, payload: ObservationsPayload, created_at_onboard_ms: int
+) -> SyncEvent:
+    """OBSERVATIONS event for one source record (a wearable sample, a questionnaire response).
+
+    Example:
+        build_observations_event("crew-2", sample_id, ObservationsPayload(
+            source="wearable",
+            observations=[ObservationItem(metric="heart_rate", value=72, unit="bpm", taken_at=t)],
+        ), now_ms)
+    """
+    return build_event(
+        EventType.OBSERVATIONS, crew_id, source_ref, payload_json(payload), created_at_onboard_ms
+    )
+
+
+def build_alert_event(crew_id: str, payload: AlertPayload, created_at_onboard_ms: int) -> SyncEvent:
+    """ALERT event; the alert ID is its source identity. Example: `build_alert_event("crew-3", alert, now)`."""
+    return build_event(
+        EventType.ALERT, crew_id, payload.alert_id, payload_json(payload), created_at_onboard_ms
     )
 
 

@@ -1,9 +1,17 @@
 """Named fakes for the Outbox worker and sync endpoints (no database, no network)."""
 
 from app.sync.earth_client import EarthDeliveryError
-from app.sync.events import build_event
+from app.sync.events import build_alert_event, build_observations_event
 from app.sync.schemas import PendingEvent, RetrySchedule, SyncStatus
-from hub_common.sync_contract import EventBatch, EventBatchAck, EventType, SyncEvent
+from hub_common.sync_contract import (
+    AlertPayload,
+    EventBatch,
+    EventBatchAck,
+    EventType,
+    ObservationItem,
+    ObservationsPayload,
+    SyncEvent,
+)
 
 
 class FakeClock:
@@ -15,7 +23,15 @@ class FakeClock:
 
 
 def make_event(source_ref: str, event_type: EventType = EventType.OBSERVATIONS) -> SyncEvent:
-    return build_event(event_type, "crew-1", source_ref, {"ref": source_ref}, 500)
+    """A valid event created at onboard time 500 for crew-1."""
+    if event_type is EventType.ALERT:
+        alert = AlertPayload(
+            alert_id=source_ref, rule_id="r", rule_version="1", message="m", created_at=500
+        )
+        return build_alert_event("crew-1", alert, 500)
+    item = ObservationItem(metric="heart_rate", value=72, unit="bpm", taken_at=500)
+    payload = ObservationsPayload(source="wearable", observations=[item])
+    return build_observations_event("crew-1", source_ref, payload, 500)
 
 
 class FakeOutboxStore:
