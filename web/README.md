@@ -17,10 +17,17 @@ Owner: Wallace. React + Vite + TypeScript + shadcn/ui. UI text in English.
 | --- | --- |
 | `src/routes.tsx` | Routes: `/` (crew picker), `/crew/:crewId` (Crew Hub), `/earth` (Earth view) |
 | `src/lib/api.ts` | API base paths and fetch helpers |
-| `src/lib/placeholder-crew.ts` | Temporary crew list until `GET /api/onboard/v1/crew` exists |
 | `src/generated/onboard-api.d.ts` | Types generated from the onboard OpenAPI — do not edit; run `npm run gen:api` |
 | `src/lib/onboard-types.ts` | Short names for those types (`CrewMember`, `CrewSummary`, `MetricTrend`, …) |
 | `src/mocks/` | MSW handlers for the Crew API; `fixtures/onboard.json` holds responses captured from the Phase 0 stubs |
+| `src/lib/onboard-api.ts` | Typed calls to the Crew API; errors become `ApiError` with FastAPI's `detail` as the message |
+| `src/lib/onboard-queries.ts` | TanStack Query hooks (`useCrew`, `useCrewMetrics`, `useMetricTrend`, `useSubmitDailyCheckin`, …) — pages use these, not `fetch` |
+| `src/components/query-state.tsx` | `LoadingBlock` and `QueryError` for loading and error states |
+| `src/test/mock-server.ts` | The MSW mocks as a Node server for tests (`startMockServer()`) |
+
+### Data fetching
+
+Server data goes through [TanStack Query](https://tanstack.com/query): caching, loading/error states, and polling. Metrics and trends refresh every 30 s (wearable batches arrive once a minute), alerts every 15 s. A successful submission refetches that crew member's data. 4xx errors are not retried.
 | `src/test/` | Test setup and named fakes (`FakeHealthServer`) |
 | `nginx.conf` | Production proxy: same `/api/*` paths as the dev server |
 

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { fetchServiceHealth, type HealthFetcher, type ServiceHealth } from '@/lib/api'
 
+const SIZE = 'h-9 px-4 text-base'
+
 interface ServiceStatusProps {
   label: string
   baseUrl: string
@@ -20,7 +22,7 @@ export function ServiceStatus({ label, baseUrl, fetcher }: ServiceStatusProps) {
     }
   }, [baseUrl, fetcher])
 
-  if (health === null) return <Badge variant="outline">{label}: checking…</Badge>
-  if (health.state === 'ok') return <Badge>{label}: online</Badge>
-  return <Badge variant="destructive" title={health.detail}>{label}: offline</Badge>
+  if (health === null) return <Badge variant="outline" className={SIZE}>{label}: checking…</Badge>
+  if (health.state === 'ok') return <Badge className={SIZE}>{label}: online</Badge>
+  return <Badge variant="destructive" className={SIZE} title={health.detail}>{label}: offline</Badge>
 }

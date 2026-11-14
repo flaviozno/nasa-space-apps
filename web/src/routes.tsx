@@ -1,6 +1,8 @@
 import type { RouteObject } from 'react-router'
 import { AppLayout } from '@/components/app-layout'
 import { CrewHubPage } from '@/pages/crew-hub-page'
+import { CrewOverviewPage } from '@/pages/crew-overview-page'
+import { CrewSectionPlaceholder } from '@/pages/crew-section-placeholder'
 import { CrewSelectPage } from '@/pages/crew-select-page'
 import { EarthViewPage } from '@/pages/earth-view-page'
 
@@ -10,7 +12,16 @@ export const routes: RouteObject[] = [
     element: <AppLayout />,
     children: [
       { path: '/', element: <CrewSelectPage /> },
-      { path: '/crew/:crewId', element: <CrewHubPage /> },
+      {
+        path: '/crew/:crewId',
+        element: <CrewHubPage />,
+        children: [
+          { index: true, element: <CrewOverviewPage /> },
+          { path: 'checkin', element: <CrewSectionPlaceholder title="Daily check-in" /> },
+          { path: 'weekly', element: <CrewSectionPlaceholder title="Weekly questionnaires" /> },
+          { path: 'manual', element: <CrewSectionPlaceholder title="Manual measurements" /> },
+        ],
+      },
       { path: '/earth', element: <EarthViewPage /> },
     ],
   },
