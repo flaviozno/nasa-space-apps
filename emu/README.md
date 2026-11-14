@@ -213,8 +213,8 @@ Before the first deployment, configure these repository values:
 | GitHub location | Name | Value |
 | --- | --- | --- |
 | Secret | `VERCEL_TOKEN` | Vercel access token with permission to deploy this project. |
-| Variable | `VERCEL_ORG_ID` | ID of the Vercel account or team that owns the project. |
-| Variable | `VERCEL_PROJECT_ID` | ID of the Vercel project whose Root Directory is `emu`. |
+| Secret | `VERCEL_ORG_ID` | ID of the Vercel account or team that owns the project. |
+| Secret | `VERCEL_PROJECT_ID` | ID of the Vercel project whose Root Directory is `emu`. |
 
 Create a GitHub `production` environment, restrict it to the `main` branch, and optionally require reviewers before a deployment. Never commit the token, a `.vercel/` directory, or an environment file containing secrets.
 

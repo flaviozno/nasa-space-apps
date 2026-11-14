@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   VERCEL_CLI_VERSION: '39.1.0'
 
 jobs:
@@ -48,6 +48,16 @@ jobs:
 
       - name: Instalar Vercel CLI
         run: npm install --global "vercel@${VERCEL_CLI_VERSION}"
+
+      - name: Verificar credenciais da Vercel
+        run: |
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "::error::VERCEL_TOKEN is unavailable. Add it as a repository or production-environment secret, then re-run this workflow."
+            exit 1
+          fi
+          vercel whoami --format json
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Obter configuração de produção da Vercel
         run: vercel pull --yes --environment=production
