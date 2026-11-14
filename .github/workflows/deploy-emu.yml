@@ -55,21 +55,21 @@ jobs:
             echo "::error::VERCEL_TOKEN is unavailable. Add it as a repository or production-environment secret, then re-run this workflow."
             exit 1
           fi
-          vercel whoami --format json
+          vercel whoami --format json --token "$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Obter configuração de produção da Vercel
-        run: vercel pull --yes --environment=production
+        run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Preparar deployment
-        run: vercel build --prod
+        run: vercel build --prod --token "$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Publicar em produção
-        run: vercel deploy --prebuilt --prod
+        run: vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
