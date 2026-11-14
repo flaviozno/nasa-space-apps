@@ -43,7 +43,7 @@ export function VitalCard({ summary, selected, onSelect, now }: VitalCardProps) 
       </span>
 
       <span className="flex items-baseline gap-2">
-        <span className={cn('text-6xl font-semibold tracking-tight tabular-nums', !hasValue && 'text-muted-foreground')}>
+        <span className={cn('font-mono text-6xl font-semibold tracking-tight tabular-nums', !hasValue && 'text-muted-foreground')}>
           {formatValue(summary.metric, summary.value)}
         </span>
         <span className="text-xl text-muted-foreground">{displayUnit(summary.unit)}</span>

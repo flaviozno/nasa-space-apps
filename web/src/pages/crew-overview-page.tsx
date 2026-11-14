@@ -129,7 +129,7 @@ function MetricTile({ summary, selected, onSelect, now }: { summary: MetricSumma
         {metricDisplay(summary.metric, summary.label).label}
         <StatusIcon className={cn('size-5', status.text)} aria-label={status.label} />
       </span>
-      <span className="text-4xl font-semibold tabular-nums">
+      <span className="font-mono text-4xl font-semibold tabular-nums">
         {formatValue(summary.metric, summary.value)}
         <span className="ml-1.5 text-lg font-normal text-muted-foreground">{displayUnit(summary.unit)}</span>
       </span>
