@@ -3,7 +3,9 @@ import { CrewAvatar } from '@/components/crew-avatar'
 import { CrewNavRail } from '@/components/crew-nav-rail'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import type { CrewHubContext } from '@/lib/crew-hub-context'
-import { useCrew } from '@/lib/onboard-queries'
+import { useNow } from '@/hooks/use-now'
+import { useCrew, useQuestionnaireStatus } from '@/lib/onboard-queries'
+import { isAvailable } from '@/lib/questionnaire-status'
 
 /**
  * `/crew/:crewId` — Crew Hub (owner: Wallace). Shell shared by its sections: who is signed in,
@@ -12,6 +14,8 @@ import { useCrew } from '@/lib/onboard-queries'
 export function CrewHubPage() {
   const { crewId = '' } = useParams()
   const crew = useCrew()
+  const status = useQuestionnaireStatus(crewId)
+  const now = useNow()
 
   if (crew.isPending) return <LoadingBlock className="h-16" />
   if (crew.isError) return <QueryError error={crew.error} onRetry={() => crew.refetch()} />
@@ -42,7 +46,7 @@ export function CrewHubPage() {
         </div>
       </header>
       <div className="flex flex-col gap-4 md:flex-row">
-        <CrewNavRail />
+        <CrewNavRail due={{ checkin: status.isSuccess && isAvailable(status.data.dailyCheckin, now) }} />
         <div className="min-w-0 flex-1">
           <Outlet context={context} />
         </div>

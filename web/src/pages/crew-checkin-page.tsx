@@ -1,8 +1,9 @@
-import { CheckCircle2Icon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { CalendarCheckIcon, CheckCircle2Icon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
-import { QueryError } from '@/components/query-state'
+import { LoadingBlock, QueryError } from '@/components/query-state'
 import { ScalePicker } from '@/components/scale-picker'
 import { useCrewHubMember } from '@/lib/crew-hub-context'
 import {
@@ -12,7 +13,10 @@ import {
   SYMPTOM_QUESTIONS,
   toCheckinPayload,
 } from '@/lib/daily-checkin'
-import { useSubmitDailyCheckin } from '@/lib/onboard-queries'
+import { useNow } from '@/hooks/use-now'
+import { ApiError } from '@/lib/onboard-api'
+import { onboardKeys, useQuestionnaireStatus, useSubmitDailyCheckin } from '@/lib/onboard-queries'
+import { formatCountdown, formatGmtClock, isAvailable } from '@/lib/questionnaire-status'
 import { formatClock } from '@/lib/time'
 import { cn } from '@/lib/utils'
 
@@ -27,10 +31,14 @@ const bigButton =
 /**
  * `/crew/:crewId/checkin` — daily check-in, one question per screen like a car display:
  * tap a number and it moves on. Symptoms share one screen; a review screen sends it.
+ * Once a day: after a check-in it stays closed until 00:00 GMT (the ISS's official time).
  */
 export function CrewCheckinPage() {
   const member = useCrewHubMember()
   const submit = useSubmitDailyCheckin(member.crewId)
+  const status = useQuestionnaireStatus(member.crewId)
+  const queryClient = useQueryClient()
+  const now = useNow()
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<CheckinAnswers>(INITIAL_ANSWERS)
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -43,16 +51,18 @@ export function CrewCheckinPage() {
     setStep(Math.max(0, Math.min(REVIEW_STEP, next)))
   }
 
-  const restart = () => {
-    submit.reset()
-    setAnswers(INITIAL_ANSWERS)
-    setStep(0)
-  }
-
   const save = () => {
     const payload = toCheckinPayload(answers)
     if (!payload) return
-    submit.mutate(payload, { onSuccess: () => toast.success('Check-in saved') })
+    submit.mutate(payload, {
+      onSuccess: () => toast.success('Check-in saved'),
+      // 409: someone already checked in today (another tablet, a retry) — show the closed state.
+      onError: (error) => {
+        if (error instanceof ApiError && error.status === 409) {
+          queryClient.invalidateQueries({ queryKey: onboardKeys.questionnaireStatus(member.crewId) })
+        }
+      },
+    })
   }
 
   if (submit.isSuccess) {
@@ -64,14 +74,32 @@ export function CrewCheckinPage() {
           {submit.data.observationsCreated} answers recorded at {formatClock(submit.data.submittedAt)}. They are stored
           onboard first and reach Earth when the link allows.
         </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link to={`/crew/${member.crewId}`} className={cn(bigButton, 'bg-primary text-primary-foreground')}>
-            Back to overview
-          </Link>
-          <button type="button" onClick={restart} className={cn(bigButton, 'border-2 bg-card active:bg-accent')}>
-            Start over
-          </button>
-        </div>
+        <Link to={`/crew/${member.crewId}`} className={cn(bigButton, 'bg-primary text-primary-foreground')}>
+          Back to overview
+        </Link>
+      </section>
+    )
+  }
+
+  if (status.isPending) return <LoadingBlock className="h-96 rounded-3xl" />
+  if (status.isError) {
+    return <QueryError error={status.error} title="Could not check today's check-in" onRetry={() => status.refetch()} />
+  }
+
+  const daily = status.data.dailyCheckin
+  if (!isAvailable(daily, now)) {
+    return (
+      <section className="flex min-h-96 flex-col items-center justify-center gap-5 rounded-3xl border bg-card p-8 text-center">
+        <CalendarCheckIcon className="size-20 text-status-ok" aria-hidden="true" />
+        <h2 className="text-4xl font-semibold">Check-in done for today</h2>
+        <p className="max-w-2xl text-xl text-muted-foreground">
+          {daily.lastSubmittedAt !== null && <>Submitted at {formatGmtClock(daily.lastSubmittedAt)}. </>}
+          The next check-in opens at {formatGmtClock(daily.availableAgainAt!)} — in{' '}
+          {formatCountdown(daily.availableAgainAt!, now)}.
+        </p>
+        <Link to={`/crew/${member.crewId}`} className={cn(bigButton, 'bg-primary text-primary-foreground')}>
+          Back to overview
+        </Link>
       </section>
     )
   }

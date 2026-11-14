@@ -15,6 +15,7 @@ import type {
   QuestionnaireResult,
   TeamClimateInput,
 } from '@/lib/onboard-types'
+import type { QuestionnaireStatus } from '@/lib/questionnaire-status'
 
 /** HTTP error from the API, with FastAPI's `detail` turned into readable text. */
 export class ApiError extends Error {
@@ -87,6 +88,10 @@ export const onboardApi = {
   },
 
   getAlerts: (crewId: string) => request<Alert[]>(`${crewPath(crewId)}/alerts`),
+
+  /** PROVISIONAL endpoint (not in the onboard API yet); see src/lib/questionnaire-status.ts. */
+  getQuestionnaireStatus: (crewId: string) =>
+    request<QuestionnaireStatus>(`${crewPath(crewId)}/questionnaires/status`),
 
   submitDailyCheckin: (crewId: string, answers: DailyCheckinInput) =>
     post<QuestionnaireResult>(`${crewPath(crewId)}/questionnaires/daily-checkin`, answers),

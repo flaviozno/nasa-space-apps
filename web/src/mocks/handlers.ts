@@ -22,6 +22,7 @@ import type {
   QuestionnaireResult,
   TeamClimateInput,
 } from '@/lib/onboard-types'
+import { isAvailable, type QuestionnaireStatus, windowAfter } from '@/lib/questionnaire-status'
 import onboardFixtures from './fixtures/onboard.json'
 
 interface MemberFixtures {
@@ -73,6 +74,32 @@ function questionnaireResult(
     total,
     observationsCreated,
   }
+}
+
+// Questionnaire submissions made during this session, so the mock can enforce the same
+// once-per-window rule the backend will (daily: until 00:00 UTC; weekly: 7 days).
+type QuestionnaireKind = keyof QuestionnaireStatus
+const submissions = new Map<string, number>()
+const submissionKey = (crewId: string, kind: QuestionnaireKind) => `${crewId}:${kind}`
+
+/** Forget every questionnaire submission (tests call this between cases). */
+export function resetMockSubmissions() {
+  submissions.clear()
+}
+
+function statusFor(crewId: string): QuestionnaireStatus {
+  const window = (kind: QuestionnaireKind) => windowAfter(kind, submissions.get(submissionKey(crewId, kind)) ?? null)
+  return { dailyCheckin: window('dailyCheckin'), phq4: window('phq4'), teamClimate: window('teamClimate') }
+}
+
+/** Records a submission, or returns the 409 the backend is expected to send when it is too early. */
+function recordSubmission(crewId: string, kind: QuestionnaireKind) {
+  const window = statusFor(crewId)[kind]
+  if (!isAvailable(window, Date.now())) {
+    return HttpResponse.json({ detail: `${kind} already submitted; available again at ${new Date(window.availableAgainAt!).toISOString()}` }, { status: 409 })
+  }
+  submissions.set(submissionKey(crewId, kind), Date.now())
+  return null
 }
 
 const crew = `${ONBOARD_API}/v1/crew`
@@ -127,10 +154,18 @@ export const handlers = [
     return HttpResponse.json(result, { status: 201 })
   }),
 
+  http.get(`${crew}/:crewId/questionnaires/status`, ({ params }) => {
+    const crewId = String(params.crewId)
+    if (!fixtures.members[crewId]) return notFound(`unknown crewId: ${crewId}`)
+    return HttpResponse.json(statusFor(crewId))
+  }),
+
   http.post(`${crew}/:crewId/questionnaires/daily-checkin`, async ({ params, request }) => {
     const crewId = String(params.crewId)
     if (!fixtures.members[crewId]) return notFound(`unknown crewId: ${crewId}`)
     const body = (await request.json()) as DailyCheckinInput
+    const tooEarly = recordSubmission(crewId, 'dailyCheckin')
+    if (tooEarly) return tooEarly
     return HttpResponse.json(questionnaireResult(crewId, 'daily_checkin', null, Object.keys(body).length), {
       status: 201,
     })
@@ -140,6 +175,8 @@ export const handlers = [
     const crewId = String(params.crewId)
     if (!fixtures.members[crewId]) return notFound(`unknown crewId: ${crewId}`)
     const body = (await request.json()) as Phq4Input
+    const tooEarly = recordSubmission(crewId, 'phq4')
+    if (tooEarly) return tooEarly
     const total = body.answers.reduce((sum, answer) => sum + answer, 0)
     return HttpResponse.json(questionnaireResult(crewId, 'phq4', total, 1), { status: 201 })
   }),
@@ -148,6 +185,8 @@ export const handlers = [
     const crewId = String(params.crewId)
     if (!fixtures.members[crewId]) return notFound(`unknown crewId: ${crewId}`)
     const body = (await request.json()) as TeamClimateInput
+    const tooEarly = recordSubmission(crewId, 'teamClimate')
+    if (tooEarly) return tooEarly
     return HttpResponse.json(questionnaireResult(crewId, 'team_climate', body.score, 1), { status: 201 })
   }),
 

@@ -1,10 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
-import { onboardKeys, useCrew, useCrewMetrics, useSubmitTeamClimate } from '@/lib/onboard-queries'
+import { onboardKeys, useCrew, useCrewMetrics, useQuestionnaireStatus, useSubmitTeamClimate } from '@/lib/onboard-queries'
 import { createQueryClient } from '@/lib/query-client'
-import { startMockServer } from '@/test/mock-server'
+import { mockServer, startMockServer } from '@/test/mock-server'
 
 startMockServer()
 
@@ -37,5 +38,17 @@ describe('onboard query hooks', () => {
     const { result } = renderHook(() => useSubmitTeamClimate('crew-1'), { wrapper })
     await result.current.mutateAsync({ score: 8 })
     expect(client.getQueryState(onboardKeys.metrics('crew-1'))?.isInvalidated).toBe(true)
+  })
+
+  it('treats a missing questionnaire status endpoint (404) as everything open', async () => {
+    mockServer.use(
+      http.get('*/api/onboard/v1/crew/:crewId/questionnaires/status', () =>
+        HttpResponse.json({ detail: 'Not Found' }, { status: 404 }),
+      ),
+    )
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useQuestionnaireStatus('crew-1'), { wrapper })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.dailyCheckin.availableAgainAt).toBeNull()
   })
 })

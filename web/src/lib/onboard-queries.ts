@@ -4,7 +4,8 @@
 // show a new batch soon after it lands without hammering the API.
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { onboardApi, type TrendOptions } from '@/lib/onboard-api'
+import { ApiError, onboardApi, type TrendOptions } from '@/lib/onboard-api'
+import { OPEN_STATUS } from '@/lib/questionnaire-status'
 
 const LIVE_REFRESH_MS = 30_000
 const ALERT_REFRESH_MS = 15_000
@@ -19,6 +20,23 @@ export const onboardKeys = {
   trend: (crewId: string, metric: string, options: TrendOptions) =>
     [...onboardKeys.member(crewId), 'trend', metric, options] as const,
   alerts: (crewId: string) => [...onboardKeys.member(crewId), 'alerts'] as const,
+  questionnaireStatus: (crewId: string) => [...onboardKeys.member(crewId), 'questionnaire-status'] as const,
+}
+
+/** Which questionnaires can be answered now; refetched after every submission (same member key). */
+export function useQuestionnaireStatus(crewId: string) {
+  return useQuery({
+    queryKey: onboardKeys.questionnaireStatus(crewId),
+    // Until the onboard API implements the endpoint (404), treat everything as open.
+    queryFn: () =>
+      onboardApi.getQuestionnaireStatus(crewId).catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 404 && !String(error.message).startsWith('unknown crewId')) {
+          return OPEN_STATUS
+        }
+        throw error
+      }),
+    refetchInterval: 60_000,
+  })
 }
 
 export function useCrew() {

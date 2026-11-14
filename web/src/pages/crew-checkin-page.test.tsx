@@ -73,6 +73,48 @@ describe('daily check-in', () => {
     expect(await screen.findByRole('heading', { name: 'How tired do you feel?' })).toBeInTheDocument()
   })
 
+  it('closes the check-in for the rest of the UTC day once saved', async () => {
+    renderAt('/crew/crew-1/checkin')
+    await answerFeelings()
+    fireEvent.click(screen.getByRole('button', { name: /Review/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Save check-in' }))
+    fireEvent.click(await screen.findByRole('link', { name: 'Back to overview' }))
+
+    // Overview no longer asks for it; opening the section shows when it reopens.
+    await screen.findByRole('region', { name: 'Current levels' })
+    expect(screen.queryByText('Daily check-in due')).not.toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Crew Hub sections' })).getByRole('link', { name: /Check-in/ }))
+    expect(await screen.findByRole('heading', { name: 'Check-in done for today' })).toBeInTheDocument()
+    expect(screen.getByText(/The next check-in opens at 00:00 GMT/)).toBeInTheDocument()
+  })
+
+  it('asks for the check-in on the overview while it is due', async () => {
+    renderAt('/crew/crew-1')
+    expect(await screen.findByRole('link', { name: /Daily check-in due/ })).toBeInTheDocument()
+    expect(within(screen.getByRole('navigation', { name: 'Crew Hub sections' })).getByRole('link', { name: /Check-in/ })).toHaveTextContent('Due')
+  })
+
+  it('switches to the closed state when the API says it was already done (409)', async () => {
+    // Another tablet checks in while this one is filling the form: the server only learns it on save.
+    let doneElsewhere = false
+    mockServer.use(
+      http.get('*/api/onboard/v1/crew/:crewId/questionnaires/status', () => {
+        const closed = { lastSubmittedAt: Date.now(), availableAgainAt: Date.now() + 3_600_000 }
+        const open = { lastSubmittedAt: null, availableAgainAt: null }
+        return HttpResponse.json({ dailyCheckin: doneElsewhere ? closed : open, phq4: open, teamClimate: open })
+      }),
+      http.post('*/api/onboard/v1/crew/:crewId/questionnaires/daily-checkin', () => {
+        doneElsewhere = true
+        return HttpResponse.json({ detail: 'dailyCheckin already submitted' }, { status: 409 })
+      }),
+    )
+    renderAt('/crew/crew-1/checkin')
+    await answerFeelings()
+    fireEvent.click(screen.getByRole('button', { name: /Review/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Save check-in' }))
+    expect(await screen.findByRole('heading', { name: 'Check-in done for today' })).toBeInTheDocument()
+  })
+
   it('shows the API validation error and keeps the answers', async () => {
     mockServer.use(
       http.post('*/api/onboard/v1/crew/:crewId/questionnaires/daily-checkin', () =>
