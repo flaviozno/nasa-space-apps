@@ -1,30 +1,51 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createQueryClient } from '@/lib/query-client'
 import { routes } from '@/routes'
-import { FakeHealthServer } from '@/test/fake-health-server'
+import { mockServer, startMockServer } from '@/test/mock-server'
+
+startMockServer()
 
 function renderAt(path: string) {
-  render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />)
+  render(
+    <QueryClientProvider client={createQueryClient({ retry: false })}>
+      <RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />
+    </QueryClientProvider>,
+  )
 }
 
 describe('routes', () => {
   beforeEach(() => {
     // The layout checks both backends on every page.
-    const server = new FakeHealthServer()
-      .respondOk('/api/onboard/health', 'onboard')
-      .respondStatus('/api/earth/health', 503)
-    vi.stubGlobal('fetch', server.fetch)
+    mockServer.use(
+      http.get('*/api/onboard/health', () => HttpResponse.json({ service: 'onboard', status: 'ok' })),
+      http.get('*/api/earth/health', () => new HttpResponse(null, { status: 503 })),
+    )
   })
 
-  it('lists the 4 crew members on /', () => {
+  it('lists the 4 crew members from the Crew API on /', async () => {
     renderAt('/')
-    expect(screen.getAllByRole('link', { name: /Commander|Pilot|Specialist|Engineer/ })).toHaveLength(4)
+    expect(await screen.findAllByRole('link', { name: /Commander|Pilot|Specialist|Engineer/ })).toHaveLength(4)
   })
 
-  it('shows the selected astronaut on /crew/:crewId', () => {
+  it('shows an error with a retry button when the crew cannot load', async () => {
+    mockServer.use(http.get('*/api/onboard/v1/crew', () => new HttpResponse(null, { status: 500 })))
+    renderAt('/')
+    expect(await screen.findByText('Could not load the crew')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+  })
+
+  it('shows the selected astronaut on /crew/:crewId', async () => {
     renderAt('/crew/crew-2')
-    expect(screen.getByRole('heading', { name: 'Kenji Mori' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Kenji Mori' })).toBeInTheDocument()
+  })
+
+  it('says so when the crew member does not exist', async () => {
+    renderAt('/crew/crew-9')
+    expect(await screen.findByRole('heading', { name: 'Unknown crew member' })).toBeInTheDocument()
   })
 
   it('shows the Earth view on /earth', () => {

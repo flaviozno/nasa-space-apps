@@ -17,7 +17,6 @@ Owner: Wallace. React + Vite + TypeScript + shadcn/ui. UI text in English.
 | --- | --- |
 | `src/routes.tsx` | Routes: `/` (crew picker), `/crew/:crewId` (Crew Hub), `/earth` (Earth view) |
 | `src/lib/api.ts` | API base paths and fetch helpers |
-| `src/lib/placeholder-crew.ts` | Temporary crew list until `GET /api/onboard/v1/crew` exists |
 | `src/generated/onboard-api.d.ts` | Types generated from the onboard OpenAPI — do not edit; run `npm run gen:api` |
 | `src/lib/onboard-types.ts` | Short names for those types (`CrewMember`, `CrewSummary`, `MetricTrend`, …) |
 | `src/mocks/` | MSW handlers for the Crew API; `fixtures/onboard.json` holds responses captured from the Phase 0 stubs |
