@@ -90,7 +90,7 @@ export function validateSync(value: unknown, maxRecords = 100): SyncRequest {
       "deviceId duplicado na mesma requisição.",
     );
   if (
-    !["NORMAL", "ELEVATED_HEART_RATE", "LOW_SPO2"].includes(
+    !["NORMAL", "ELEVATED_HEART_RATE", "LOW_SPO2", "NASA_EXERCISE_REPLAY"].includes(
       String(input.scenario),
     )
   )

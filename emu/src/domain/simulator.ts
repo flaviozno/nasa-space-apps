@@ -6,7 +6,8 @@ import type {
 import { hash } from "../utils/hash.ts";
 import { acquisitionTime, MAX_SEQUENCE } from "../utils/time.ts";
 import { generateReading } from "./deterministic-generator.ts";
-export function simulate(request: SyncRequest): TelemetryBatch {
+import { ACTIGRAPHY_URL, EXERCISE_PEAK_URL, EXERCISE_REST_URL, RADIATION_URL, type NasaData } from "./nasa-data.ts";
+export function simulate(request: SyncRequest, nasaData: NasaData): TelemetryBatch {
   const cursors = request.devices.map((device) => ({ ...device }));
   const readings: TelemetryReading[] = [];
   const eligible = () =>
@@ -32,6 +33,7 @@ export function simulate(request: SyncRequest): TelemetryBatch {
         next.fromSequence,
         request.sessionId,
         request.scenario,
+        nasaData,
       ),
     );
     next.fromSequence += 1;
@@ -42,6 +44,13 @@ export function simulate(request: SyncRequest): TelemetryBatch {
     sessionId: request.sessionId,
     generatedAtMs: request.requestedAtMs,
     hasMore: eligible().length > 0,
+    nasaSources: {
+      revision: nasaData.revision,
+      actigraphyUrl: ACTIGRAPHY_URL,
+      radiationUrl: RADIATION_URL,
+      exerciseRestUrl: EXERCISE_REST_URL,
+      exercisePeakUrl: EXERCISE_PEAK_URL,
+    },
     readings,
   };
   return {
