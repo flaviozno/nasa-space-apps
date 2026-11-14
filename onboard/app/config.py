@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from hub_common.sync_contract import MAX_EVENTS_PER_BATCH
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SERVICE_DIR = Path(__file__).resolve().parents[1]
@@ -23,3 +25,10 @@ class OnboardSettings(BaseSettings):
     # Earth ingest, reached over the private Docker network.
     earth_url: str = "http://earth:8000"
     earth_ingest_token: str = ""
+    # Outbox worker (app/sync). Disable it in tests that build the app without a database.
+    sync_worker_enabled: bool = True
+    sync_interval_s: float = Field(default=5.0, gt=0)
+    sync_batch_size: int = Field(default=MAX_EVENTS_PER_BATCH, ge=1, le=MAX_EVENTS_PER_BATCH)
+    sync_timeout_s: float = Field(default=10.0, gt=0)
+    # Protects PUT /v1/sync/link, which is reachable through the public web proxy.
+    admin_token: str = ""

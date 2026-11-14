@@ -3,6 +3,8 @@
 .env*
 !.env.example
 .DS_Store
+# Personal notes and drafts
+.scratch/
 
 # Python
 .venv/

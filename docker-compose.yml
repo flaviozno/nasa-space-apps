@@ -53,6 +53,7 @@ services:
       ONBOARD_SIMULATOR_TOKEN: ${SIMULATOR_TOKEN:-}
       ONBOARD_EARTH_URL: http://earth:8000
       ONBOARD_EARTH_INGEST_TOKEN: ${EARTH_INGEST_TOKEN:-}
+      ONBOARD_ADMIN_TOKEN: ${ONBOARD_ADMIN_TOKEN:-}
     depends_on:
       onboard-db:
         condition: service_healthy

@@ -223,20 +223,21 @@ Use an atomic batch ACK for this first version as well. The onboard worker only 
 
 The Vercel simulator's OpenAPI and JSON Schemas are the source of truth for onboard-to-simulator `SyncRequest`, `TelemetryBatch` response, and `ReceiptAck` traffic. Reuse them rather than redefining those payloads in prose.
 
-For onboard-to-Earth traffic, define one small versioned JSON contract before implementation. The first version needs only:
+Onboard-to-Earth traffic uses one small versioned JSON contract, implemented in `common/src/hub_common/sync_contract.py` (`SyncEvent`, `EventBatch`, `EventBatchAck`, `EventBatchConflict`):
 
 | Field | Purpose |
 | --- | --- |
-| version | Contract version, initially 1 |
-| eventId | Stable identity retained across every retry |
-| type | FULL_READING or EXPERIMENTAL_ALERT |
-| sessionId | Simulation session |
-| sourceSampleId | Original reading identity |
-| createdAtOnboardMs | Onboard event creation time |
-| dataSource | Always SIMULATED |
-| payload | Complete reading or self-contained alert evidence |
+| version | Contract version, `1` |
+| eventId | Stable identity retained across every retry, derived from `type` + `sourceRef` |
+| type | `OBSERVATIONS` (from any source) or `ALERT` |
+| priority | `0` for alerts, `1` for observations; lower is sent first |
+| crewId | Crew member the event is about |
+| sourceRef | Original identity (sample ID, questionnaire response ID, alert ID) |
+| createdAtOnboardMs | Onboard event creation time; Earth orders and ages data by it, never by arrival |
+| dataSource | Always `SIMULATED` |
+| payload | Self-contained content: `{source, observations: [...]}` or the alert evidence |
 
-The batch adds batchId and events. The ACK adds batchId, persistedAtMs, and acceptedEventIds. Correlate sourceSampleId, eventId, and batchId in technical logs without logging credentials or full health payloads.
+The batch adds `batchId`, `sentAtOnboardMs`, and 1–100 `events`. The ACK adds `batchId`, `persistedAtMs`, and `acceptedEventIds`; Earth sends it only after committing. A known `eventId` with different content makes Earth reject the whole batch with `409` and the conflicting IDs. Correlate `eventId` and `batchId` in technical logs without logging credentials or full health payloads.
 
 The minimal MVP sends **complete readings**. Delta encoding, Protobuf, base recovery, and partial ACKs are deferred. They remain planned extensions from the proposed architecture after the basic delivery path works.
 
@@ -250,6 +251,30 @@ A single persisted boolean setting, controlled through an authenticated administ
 - Link enabled: the worker resumes forwarding pending events.
 
 This setting represents a communication outage. It does not require disabling the VPS network or stopping either database.
+
+### Using it
+
+Producers (ingest, Crew API) hand events to the Outbox inside their own transaction, so the source data and its event exist together or not at all:
+
+```python
+from app.sync.events import build_event, enqueue_event
+from hub_common.sync_contract import EventType
+
+# `connection` is the same transaction that inserted the observations.
+event = build_event(EventType.OBSERVATIONS, crew_id, source_ref=sample_id,
+                    payload={"source": "wearable", "observations": [...]},
+                    created_at_onboard_ms=now_ms)
+enqueue_event(connection, event)  # False if this source_ref was already queued
+```
+
+The worker (in the onboard container, every 5 s) sends due `PENDING` events in batches of up to 100, alerts first, and marks them `SYNCED` only after Earth's ACK. Failed batches retry with exponential backoff (5 s doubling up to 5 min, plus jitter).
+
+| Endpoint (through the web proxy) | Auth | What |
+| --- | --- | --- |
+| `GET /api/onboard/v1/sync/status` | — | `linkEnabled`, `pendingCount`, `pendingAlerts`, `oldestPendingAgeMs`, `lastAckAtMs`, `lastError` |
+| `PUT /api/onboard/v1/sync/link` `{"enabled": false}` | `Bearer $ONBOARD_ADMIN_TOKEN` | Turn the simulated Earth link off or on |
+
+Earth ingest (`POST /v1/events/batches`) needs `Bearer $EARTH_INGEST_TOKEN` and is reachable only on the private Docker network. Both tokens come from `.env`; when `EARTH_INGEST_TOKEN` is empty, Earth refuses every batch and the Outbox only grows.
 
 If the entire VPS is unavailable, both services stop. Once it returns, the deterministic simulator can regenerate missing synthetic readings from the recovered cursor. This is not proof of offline storage in a physical wearable.
 
