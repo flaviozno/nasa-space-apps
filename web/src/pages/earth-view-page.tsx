@@ -4,6 +4,7 @@ import { LoadingBlock, QueryError } from '@/components/query-state'
 import { useNow } from '@/hooks/use-now'
 import type { EarthAlert, EarthCrewMember, EarthStatus, SyncStatus } from '@/lib/earth-contract'
 import { useEarthAlerts, useEarthCrew, useEarthStatus, useSetLink, useSyncStatus } from '@/lib/earth-queries'
+import { describeAlert } from '@/lib/alert-text'
 import { displayUnit, formatValue, metricDisplay } from '@/lib/metric-catalog'
 import { formatGmtClock } from '@/lib/questionnaire-status'
 import { formatAge } from '@/lib/time'
@@ -224,10 +225,7 @@ function EarthCrewCard({ member, alert, now }: { member: EarthCrewMember; alert:
 function EarthAlertRow({ alert, crew }: { alert: EarthAlert; crew: EarthCrewMember[] }) {
   const name = crew.find((member) => member.crewId === alert.crewId)?.name ?? alert.crewId
   const delayMinutes = Math.round((alert.receivedAtMs - alert.createdAtOnboardMs) / 60_000)
-  const reading =
-    alert.metric && alert.value !== null
-      ? `${metricDisplay(alert.metric).label} ${formatValue(alert.metric, alert.value)}${alert.zScore !== null ? ` (z = ${alert.zScore.toFixed(1)})` : ''}`
-      : null
+  const text = describeAlert(alert, 'the')
 
   return (
     <li className="flex flex-wrap items-center gap-4 rounded-2xl border-2 border-status-alert/50 bg-status-alert/10 p-4 animate-in fade-in slide-in-from-left-2">
@@ -236,10 +234,14 @@ function EarthAlertRow({ alert, crew }: { alert: EarthAlert; crew: EarthCrewMemb
       </span>
       <div className="min-w-0 flex-1 space-y-1">
         <p className="text-xl font-semibold">
-          {name}
-          {reading && <span className="font-normal text-muted-foreground"> — {reading}</span>}
+          {name} — {text.title}
+          {text.reading && <span className="text-status-alert"> {text.reading}</span>}
         </p>
-        <p className="text-base text-muted-foreground">{alert.message}</p>
+        {text.deviation && (
+          <p className="text-base text-muted-foreground" title={alert.message}>
+            {text.deviation}
+          </p>
+        )}
       </div>
       <div className="flex items-center gap-3 text-base">
         <span className="flex items-center gap-1.5">
