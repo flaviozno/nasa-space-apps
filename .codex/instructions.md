@@ -1,7 +1,7 @@
 ﻿# Project Architecture: nasa-space-apps
 
 > Generated locally using Graphify and Ollama.
-> Updated: 2026-11-14 19:55:21
+> Updated: 2026-11-15 02:46:22
 >
 > This document summarizes the architecture to support
 > efficient development with Codex.
@@ -13,234 +13,236 @@
 ## 1. Project Overview
 
 ### Project Purpose
-The `nasa-space-apps` project aims to build a minimal viable product (MVP) for a space health telemetry system. The system will simulate the collection, processing, and delivery of health data from astronauts on a simulated space mission.
+The `nasa-space-apps` project is an MVP (Minimum Viable Product) that demonstrates a space-crew health telemetry flow. It simulates a wearable sending readings to the onboard service, which processes and stores the data locally, then synchronizes it with Earth when the link is available.
 
 ### Main Functionality
-- **Onboard Service**: Collects telemetry data from a wearable emulator, processes it, and stores it locally.
-- **Crew Dashboard**: Displays the current health status, trends, and deviations from personal baselines for each astronaut.
-- **Earth Service**: Receives and processes telemetry data from the onboard service, and provides a view for flight surgeons.
+- **Wearable Emulator (TypeScript/Vercel)**: Simulates wearable telemetry data.
+- **Onboard API and Processing (FastAPI)**: Stores readings, evaluates alerts, and maintains a reliable outbox.
+- **Earth Ingestion and Query API (FastAPI)**: Receives synchronized events idempotently.
+- **Crew Hub and Earth View (React/Vite)**: Provides the user interface for viewing crew health data.
 
 ### Languages and Frameworks
-- **Python**: The primary programming language.
-- **FastAPI**: A web framework for building APIs.
-- **SQLAlchemy**: An ORM for database interactions.
-- **PostgreSQL**: The database management system.
-- **Docker**: Containerization for development and deployment.
+- **Python**: For backend services.
+- **TypeScript**: For the emulator and web frontend.
+- **FastAPI**: For building the API endpoints.
+- **React/Vite**: For the web frontend.
+- **PostgreSQL**: For database storage.
+- **Alembic**: For database migrations.
 
 ### Runtime and Execution Environment
-- **Docker Compose**: Used to manage multi-container Docker applications.
-- **Local Development**: Run services locally using Docker Compose.
-- **CI/CD**: Not detailed in the provided context.
+- **Docker**: For running the entire stack locally.
+- **Python**: For backend services.
+- **Node.js**: For the emulator and web frontend.
 
 ### Relevant Architectural Decisions
-- **Separate Databases**: Onboard and Earth services use separate PostgreSQL databases to ensure data isolation.
-- **Outbox Pattern**: Used for reliable message delivery from the onboard service to the Earth service.
-- **Bearer Token Authentication**: Ensures that only authorized endpoints can access certain functionalities.
+- **Microservices Architecture**: The project is divided into three main services: `emu`, `onboard`, and `earth`.
+- **FastAPI**: Used for building RESTful APIs.
+- **PostgreSQL**: For storing telemetry data.
+- **Alembic**: For managing database migrations.
+- **Docker Compose**: For orchestrating the development environment.
 
 ## 2. Architecture Overview
 
 ### Architectural Pattern
-The project follows a microservices architecture, with two main services: `onboard` and `earth`.
+The project follows a microservices architecture, with each service running in its own container. The services communicate via HTTP/HTTPS endpoints.
 
 ### Application Layers
-- **Presentation Layer**: Exposes APIs for the onboard and Earth services.
-- **Business Logic Layer**: Contains the core logic for data processing and synchronization.
-- **Data Access Layer**: Handles database interactions.
+- **Presentation Layer**: The web frontend (`app/web`) and emulator (`app/emu`).
+- **Application Layer**: The onboard service (`app/onboard`) and earth service (`app/earth`).
+- **Infrastructure Layer**: Shared utilities and dependencies (`app/common`).
 
 ### Main Entry Points
-- **Onboard Service**: Exposes endpoints for telemetry data ingestion and processing.
-- **Earth Service**: Exposes endpoints for receiving and processing telemetry data.
+- **Web Frontend**: `app/web`
+- **Onboard API**: `app/onboard`
+- **Earth API**: `app/earth`
+- **Emulator**: `app/emu`
 
 ### Dependency Direction
-- **Onboard Service**: Depends on the `earth` service for sending telemetry data.
-- **Earth Service**: Depends on the `onboard` service for receiving telemetry data.
+- **Web Frontend**: Depends on Onboard API and Earth API.
+- **Onboard API**: Depends on Earth API.
+- **Emulator**: Depends on Onboard API.
 
 ### Module Organization
-- **Onboard Service**: Contains modules for telemetry data ingestion, processing, and synchronization.
-- **Earth Service**: Contains modules for receiving, processing, and displaying telemetry data.
+- **Common**: Shared code used by all services.
+- **Emu**: Wearable emulator.
+- **Onboard**: Onboard API and processing.
+- **Earth**: Earth ingestion and query API.
+- **Web**: Crew Hub and Earth View.
 
 ### Relevant Integrations
 - **Database**: PostgreSQL for storing telemetry data.
-- **API Gateway**: FastAPI for exposing RESTful APIs.
-- **Outbox Pattern**: For reliable message delivery between services.
+- **APIs**: Onboard API and Earth API for data exchange.
+- **Docker Compose**: For orchestrating the development environment.
 
 ## 3. Module Responsibilities
 
 | Module or Component | Relevant File Paths | Responsibility | Dependencies | When Codex Should Inspect It |
-|---------------------|---------------------|----------------|--------------|------------------------------|
-| **Onboard Service** | - `app/onboard/app/main.py`<br>- `app/onboard/app/ingest/`<br>- `app/onboard/app/sync/`<br>- `app/onboard/app/views/` | Handles telemetry data ingestion, processing, and synchronization. | - `earth` service<br>- `database` | Always |
-| **Earth Service** | - `app/earth/app/main.py`<br>- `app/earth/app/views/` | Receives and processes telemetry data. | - `onboard` service<br>- `database` | Always |
-| **Database** | - `app/common/src/hub_common/database.py`<br>- `app/onboard/migrations/`<br>- `app/earth/migrations/` | Manages database connections and migrations. | - `sqlalchemy` | Always |
-| **API Gateway** | - `app/common/src/hub_common/app_factory.py`<br>- `app/onboard/app/main.py`<br>- `app/earth/app/main.py` | Exposes RESTful APIs. | - `fastapi` | Always |
-| **Outbox Pattern** | - `app/onboard/app/sync/worker.py`<br>- `app/onboard/app/sync/store.py` | Ensures reliable message delivery. | - `database` | Always |
+| --- | --- | --- | --- | --- |
+| **Common** | `app/common/src/hub_common/` | Shared code used by all services. | None | Always |
+| **Emu** | `app/emu/` | Wearable emulator. | Onboard API | When modifying emulator logic |
+| **Onboard** | `app/onboard/` | Onboard API and processing. | Earth API | When modifying onboard logic |
+| **Earth** | `app/earth/` | Earth ingestion and query API. | None | When modifying earth logic |
+| **Web** | `app/web/` | Crew Hub and Earth View. | Onboard API, Earth API | When modifying web frontend logic |
 
 ## 4. Execution and Data Flows
 
 ### Entry Points
-- **Onboard Service**: `app/onboard/app/main.py`
-- **Earth Service**: `app/earth/app/main.py`
+- **Web Frontend**: `app/web`
+- **Onboard API**: `app/onboard`
+- **Earth API**: `app/earth`
+- **Emulator**: `app/emu`
 
 ### Function or Component Interactions
-- **Onboard Service**:
-  - Ingests telemetry data from the emulator.
-  - Processes the data and stores it locally.
-  - Sends telemetry data to the Earth service using the outbox pattern.
-- **Earth Service**:
-  - Receives telemetry data from the onboard service.
-  - Processes the data and stores it locally.
-  - Displays the data in the crew dashboard.
+- **Web Frontend**: Calls Onboard API and Earth API to fetch data.
+- **Onboard API**: Calls Earth API to synchronize data.
+- **Emulator**: Sends telemetry data to Onboard API.
 
 ### State and Data Movement
-- **Onboard Service**: Telemetry data is ingested, processed, and stored locally. It then sends the data to the Earth service.
-- **Earth Service**: Receives telemetry data, processes it, and stores it locally. It then displays the data in the crew dashboard.
+- **Web Frontend**: Fetches data from Onboard API and Earth API.
+- **Onboard API**: Stores data in PostgreSQL and calls Earth API.
+- **Earth API**: Receives data and stores it idempotently.
 
 ### Backend or API Interactions When Present
-- **Onboard Service**: Sends telemetry data to the Earth service using the outbox pattern.
-- **Earth Service**: Receives telemetry data from the onboard service.
+- **Web Frontend**: Interacts with Onboard API and Earth API.
+- **Onboard API**: Interacts with Earth API.
 
 ### Dependency Chains
-- **Onboard Service**: Depends on the `earth` service for sending telemetry data.
-- **Earth Service**: Depends on the `onboard` service for receiving telemetry data.
+- **Web Frontend**: Onboard API -> Earth API
+- **Onboard API**: Earth API
+- **Emulator**: Onboard API
 
 ## 5. Code Organization
 
 ### Directory Structure
-- `app/common/`: Shared code between the onboard and Earth services.
-- `app/onboard/`: Code for the onboard service.
-- `app/earth/`: Code for the Earth service.
-- `app/emu/`: Code for the emulator service.
-- `app/web/`: Code for the web application.
-- `app/contracts/`: Shared data contracts.
+```
+app/
+├── emu/          # Wearable emulator (TypeScript/Vercel)
+├── onboard/      # Onboard API and processing (FastAPI)
+├── earth/        # Earth ingestion and query API (FastAPI)
+├── web/          # Crew Hub and Earth View (React/Vite)
+├── common/       # Shared Python code
+├── contracts/    # Metric catalog and crew data
+├── pyproject.toml
+└── uv.lock
+docs/             # Architecture, plan, and product documentation
+infra/
+└── docker-compose.yml
+scripts/
+└── start.py      # Local launcher
+```
 
 ### File Naming Conventions
-- Python files use snake_case for module and function names.
-- Configuration files use snake_case for variable names.
+- **Python**: snake_case for functions, variables, and classes.
+- **TypeScript**: camelCase for functions, variables, and classes.
+- **JSON**: camelCase for keys.
 
 ### Module Boundaries
-- `app/common/`: Contains shared modules and utilities.
-- `app/onboard/`: Contains modules specific to the onboard service.
-- `app/earth/`: Contains modules specific to the Earth service.
+- **Common**: Shared code used by all services.
+- **Emu**: Wearable emulator.
+- **Onboard**: Onboard API and processing.
+- **Earth**: Earth ingestion and query API.
+- **Web**: Crew Hub and Earth View.
 
 ### Shared Components
-- `app/common/src/hub_common/`: Contains shared dependencies and utilities.
-- `app/common/tests/`: Contains shared test utilities.
+- **Database**: PostgreSQL for storing telemetry data.
+- **APIs**: Onboard API and Earth API for data exchange.
 
 ### Reusable Services and Utilities
-- `common/src/hub_common/app_factory.py`: Shared FastAPI app construction logic.
-- `common/src/hub_common/auth.py`: Shared authentication logic.
-- `common/src/hub_common/database.py`: Shared database connection logic.
+- **FastAPI**: For building RESTful APIs.
+- **Alembic**: For managing database migrations.
 
 ### Configuration Organization
-- `app/onboard/app/config.py`: Configuration for the onboard service.
-- `app/earth/app/config.py`: Configuration for the Earth service.
-- `infra/docker-compose.yml`: Configuration for Docker Compose.
+- **Environment Variables**: `.env` file for configuration.
+- **Docker Compose**: `docker-compose.yml` for orchestrating the development environment.
 
 ## 6. Coding Conventions
 
 ### Naming
-- **Classes**: PascalCase
-- **Functions and Methods**: snake_case
-- **Variables**: snake_case
+- **Python**: snake_case for functions, variables, and classes.
+- **TypeScript**: camelCase for functions, variables, and classes.
+- **JSON**: camelCase for keys.
 
 ### Functions and Methods
-- Functions and methods should have clear and descriptive names.
-- Use type hints for function parameters and return types.
+- **Python**: Use type hints for function parameters and return types.
+- **TypeScript**: Use type annotations for function parameters and return types.
 
 ### Classes and Interfaces
-- Classes should have clear and descriptive names.
-- Use type hints for class attributes and methods.
+- **Python**: Use `class` keyword for defining classes.
+- **TypeScript**: Use `interface` keyword for defining interfaces.
 
 ### Types
-- Use type hints for all variables, function parameters, and return types.
+- **Python**: Use `typing` module for type hints.
+- **TypeScript**: Use TypeScript's built-in types.
 
 ### Error Handling
-- Use try-except blocks to handle exceptions.
-- Log errors using the `log_json` function.
+- **Python**: Use `try-except` blocks for error handling.
+- **TypeScript**: Use `try-catch` blocks for error handling.
 
 ### Imports and Exports
-- Import only the necessary modules and functions.
-- Use relative imports when possible.
+- **Python**: Use `import` statement for importing modules.
+- **TypeScript**: Use `import` statement for importing modules.
 
 ### Component Structure
-- Components should be modular and reusable.
-- Use interfaces for loosely coupled components.
+- **Python**: Use classes and functions to organize code.
+- **TypeScript**: Use classes and functions to organize code.
 
 ### State Management
-- Use dependency injection for managing state.
-- Avoid global state whenever possible.
+- **Python**: Use `asyncio` for managing state.
+- **TypeScript**: Use `async/await` for managing state.
 
 ### Styling
-- Follow PEP 8 style guide for Python code.
-- Use consistent indentation and line length.
+- **Python**: Use PEP 8 for code styling.
+- **TypeScript**: Use Prettier for code styling.
 
 ### Dependency Injection
-- Use dependency injection for managing dependencies.
-- Avoid hard-coded dependencies.
+- **Python**: Use `fastapi` for dependency injection.
+- **TypeScript**: Use `fastapi` for dependency injection.
 
 ## 7. Dependencies and Integrations
 
 ### Important Libraries
-- `fastapi`: For building APIs.
-- `sqlalchemy`: For ORM and database interactions.
-- `psycopg2`: PostgreSQL database adapter for Python.
-- `alembic`: Database migration tool.
+- **Python**: `fastapi`, `sqlalchemy`, `alembic`, `uvicorn`.
+- **TypeScript**: `fastapi`, `react`, `vite`, `typescript`.
 
 ### Internal Dependencies
-- `app/common/src/hub_common/`: Shared code between services.
-- `app/onboard/app/`: Code for the onboard service.
-- `app/earth/app/`: Code for the Earth service.
+- **Common**: Shared code used by all services.
+- **Emu**: Wearable emulator.
+- **Onboard**: Onboard API and processing.
+- **Earth**: Earth ingestion and query API.
+- **Web**: Crew Hub and Earth View.
 
 ### External Services
-- `earth`: The Earth service for receiving telemetry data.
+- **Database**: PostgreSQL for storing telemetry data.
+- **APIs**: Onboard API and Earth API for data exchange.
 
 ### Shared Modules
-- `app/common/src/hub_common/app_factory.py`: Shared FastAPI app construction logic.
-- `app/common/src/hub_common/auth.py`: Shared authentication logic.
-- `app/common/src/hub_common/database.py`: Shared database connection logic.
+- **FastAPI**: For building RESTful APIs.
+- **Alembic**: For managing database migrations.
 
 ### Configuration Dependencies
-- `app/onboard/app/config.py`: Configuration for the onboard service.
-- `app/earth/app/config.py`: Configuration for the Earth service.
+- **Environment Variables**: `.env` file for configuration.
+- **Docker Compose**: `docker-compose.yml` for orchestrating the development environment.
 
 ### Components with Broad Impact
-- `outbox pattern`: Ensures reliable message delivery between services.
-- `database`: Manages data persistence.
+- **Web Frontend**: Interacts with Onboard API and Earth API.
+- **Onboard API**: Interacts with Earth API.
 
 ## 8. Development Commands
 
 ### Verified Commands
-- **Development**:
-  ```sh
-  cd app/onboard && uvicorn app.main:app --reload
-  cd app/earth && uvicorn app.main:app --reload
-  ```
-- **Build**:
-  ```sh
-  uv build
-  ```
-- **Tests**:
-  ```sh
-  uv test
-  ```
-- **Linting**:
-  ```sh
-  uv lint
-  ```
-- **Formatting**:
-  ```sh
-  uv format
-  ```
-- **Application Execution**:
-  ```sh
-  uv run
-  ```
+- **Python**:
+  - `python scripts/start.py`: Start the complete stack.
+  - `python -m unittest discover -s app/contracts/tests`: Run tests for contracts.
+- **TypeScript**:
+  - `cd app/emu && npm run typecheck`: Typecheck the emulator code.
+  - `cd app/web && npm run typecheck && npm test`: Typecheck and test the web frontend code.
 
 ## 9. Change Impact Guide
 
 ### Adding a Feature
 1. Identify the relevant module.
 2. Read the architecture instructions.
-3. Consult the graph report if needed.
+3. Consult the graph report only when needed.
 4. Inspect source files before modifying code.
 5. Follow existing project conventions.
 6. Reuse established abstractions.
@@ -250,7 +252,7 @@ The project follows a microservices architecture, with two main services: `onboa
 ### Updating an Existing Feature
 1. Identify the relevant module.
 2. Read the architecture instructions.
-3. Consult the graph report if needed.
+3. Consult the graph report only when needed.
 4. Inspect source files before modifying code.
 5. Follow existing project conventions.
 6. Reuse established abstractions.
@@ -260,7 +262,7 @@ The project follows a microservices architecture, with two main services: `onboa
 ### Refactoring Shared Code
 1. Identify the relevant module.
 2. Read the architecture instructions.
-3. Consult the graph report if needed.
+3. Consult the graph report only when needed.
 4. Inspect source files before modifying code.
 5. Follow existing project conventions.
 6. Reuse established abstractions.
@@ -270,7 +272,7 @@ The project follows a microservices architecture, with two main services: `onboa
 ### Changing Application Configuration
 1. Identify the relevant module.
 2. Read the architecture instructions.
-3. Consult the graph report if needed.
+3. Consult the graph report only when needed.
 4. Inspect source files before modifying code.
 5. Follow existing project conventions.
 6. Reuse established abstractions.
@@ -280,7 +282,7 @@ The project follows a microservices architecture, with two main services: `onboa
 ### Adding Dependencies
 1. Identify the relevant module.
 2. Read the architecture instructions.
-3. Consult the graph report if needed.
+3. Consult the graph report only when needed.
 4. Inspect source files before modifying code.
 5. Follow existing project conventions.
 6. Reuse established abstractions.
@@ -290,7 +292,7 @@ The project follows a microservices architecture, with two main services: `onboa
 ### Modifying Integration Behavior
 1. Identify the relevant module.
 2. Read the architecture instructions.
-3. Consult the graph report if needed.
+3. Consult the graph report only when needed.
 4. Inspect source files before modifying code.
 5. Follow existing project conventions.
 6. Reuse established abstractions.
@@ -300,7 +302,7 @@ The project follows a microservices architecture, with two main services: `onboa
 ### Updating Tests
 1. Identify the relevant module.
 2. Read the architecture instructions.
-3. Consult the graph report if needed.
+3. Consult the graph report only when needed.
 4. Inspect source files before modifying code.
 5. Follow existing project conventions.
 6. Reuse established abstractions.
@@ -310,24 +312,27 @@ The project follows a microservices architecture, with two main services: `onboa
 ## 10. Architecture Risks
 
 ### Coupled Modules
-- `onboard` and `earth` services are tightly coupled through the outbox pattern.
+- **Web Frontend**: Interacts with Onboard API and Earth API.
+- **Onboard API**: Interacts with Earth API.
 
 ### Important Dependency Relationships
-- `onboard` depends on `earth` for sending telemetry data.
-- `earth` depends on `onboard` for receiving telemetry data.
+- **Database**: PostgreSQL for storing telemetry data.
+- **APIs**: Onboard API and Earth API for data exchange.
 
 ### Shared State
-- Both services share a database for storing telemetry data.
+- **Database**: Shared state for storing telemetry data.
 
 ### Critical Execution Paths
-- The outbox pattern is a critical execution path for reliable message delivery.
+- **Web Frontend**: Fetches data from Onboard API and Earth API.
+- **Onboard API**: Stores data in PostgreSQL and calls Earth API.
+- **Earth API**: Receives data and stores it idempotently.
 
 ### Areas that Require Extra Verification
-- The outbox pattern implementation.
-- Database migrations.
+- **Web Frontend**: Interacts with Onboard API and Earth API.
+- **Onboard API**: Interacts with Earth API.
 
 ### Unknown or Uncertain Relationships
-- The exact behavior of the emulator service.
+- **Database**: Shared state for storing telemetry data.
 
 ## 11. Codex Development Workflow
 
@@ -342,14 +347,14 @@ The project follows a microservices architecture, with two main services: `onboa
 
 ## 12. Quick Reference
 
-| Common Development Tasks | Files or Modules Likely Involved |
-|--------------------------|----------------------------------|
-| Adding a Feature         | Relevant module and its tests    |
-| Updating an Existing Feature | Relevant module and its tests    |
-| Refactoring Shared Code  | Relevant module and its tests    |
-| Changing Application Configuration | Configuration files and relevant modules |
-| Adding Dependencies      | `pyproject.toml` and relevant modules |
-| Modifying Integration Behavior | Relevant modules and their tests |
-| Updating Tests           | Relevant module and its tests    |
+| Common Development Tasks | Files/Modules Involved |
+| --- | --- |
+| Adding a Feature | Relevant module, architecture instructions, graph report, source files |
+| Updating an Existing Feature | Relevant module, architecture instructions, graph report, source files |
+| Refactoring Shared Code | Relevant module, architecture instructions, graph report, source files |
+| Changing Application Configuration | Relevant module, architecture instructions, graph report, source files |
+| Adding Dependencies | Relevant module, architecture instructions, graph report, source files |
+| Modifying Integration Behavior | Relevant module, architecture instructions, graph report, source files |
+| Updating Tests | Relevant module, architecture instructions, graph report, source files |
 
-This document provides a comprehensive overview of the `nasa-space-apps` project, including its architecture, modules, and development workflow. It should help the AI coding agent understand the project's structure and make efficient modifications.
+This document provides a detailed and efficient project instructions for OpenAI Codex using the repository context. It covers project overview, architecture, module responsibilities, execution and data flows, code organization, coding conventions, dependencies and integrations, development commands, change impact guide, architecture risks, and a development workflow.
