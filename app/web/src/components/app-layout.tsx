@@ -6,7 +6,9 @@ import { ServiceStatus } from '@/components/service-status'
 import { EARTH_API, ONBOARD_API } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
-const navClass = (isActive: boolean) =>
+const REPOSITORY_URL = 'https://github.com/flaviozno/nasa-space-apps/tree/main'
+
+const navClass =(isActive: boolean) =>
   cn(
     'relative flex min-h-11 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors sm:px-4',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70',
@@ -54,7 +56,7 @@ export function AppLayout() {
     : location.pathname
 
   return (
-    <div className={cn('app-shell overflow-x-clip bg-background text-foreground', isCrewHub ? 'flex h-svh flex-col overflow-y-hidden' : 'min-h-svh')}>
+    <div className={cn('app-shell overflow-x-clip bg-background text-foreground', isCrewHub ? 'flex h-svh flex-col overflow-y-hidden' : 'flex min-h-svh flex-col')}>
       <header className="sticky top-0 z-30 shrink-0 border-b border-white/7 bg-background/75 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 sm:gap-4 sm:px-6">
           <Link to="/" aria-label="CORA home" className="group flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70">
@@ -81,11 +83,24 @@ export function AppLayout() {
         transition={{ duration: 0.28, ease: 'easeOut' }}
         className={cn(
           'relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10',
-          isCrewHub && 'flex min-h-0 flex-1 flex-col overflow-hidden',
+          // flex-1 keeps the footer at the bottom of short pages.
+          isCrewHub ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : 'flex-1',
         )}
       >
         <Outlet />
       </motion.main>
+      <footer className="shrink-0 border-t border-white/5">
+        <div className="mx-auto flex max-w-7xl justify-center px-4 py-3 text-xs text-muted-foreground/70 sm:px-6">
+          <a
+            href={REPOSITORY_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
+          >
+            CORA · Source on GitHub
+          </a>
+        </div>
+      </footer>
     </div>
   )
 }

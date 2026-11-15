@@ -38,6 +38,11 @@ describe('routes', () => {
     expect(screen.getByRole('link', { name: 'Crew' })).not.toHaveAttribute('aria-current')
   })
 
+  it('links to the source repository in the footer', () => {
+    renderAt('/earth')
+    expect(screen.getByRole('link', { name: /Source on GitHub/ })).toHaveAttribute('href', 'https://github.com/flaviozno/nasa-space-apps/tree/main')
+  })
+
   it('shows backend status in the header', async () => {
     renderAt('/')
     expect(await screen.findByText('Onboard: online')).toBeInTheDocument()
