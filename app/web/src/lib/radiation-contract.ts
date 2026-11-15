@@ -1,9 +1,8 @@
-// PROVISIONAL contract for the station radiation view. No backend route exists yet: the
-// onboard ingest already stores each wearable reading's `radiation` block (raw payload in
-// `wearable_samples`), but nothing serves it. Field names mirror the emulator's
-// RadiationEvidence (emu/src/contracts/telemetry.ts) so the route can pass them through.
-//
-// Proposed route: GET /api/onboard/v1/environment/radiation?windowMinutes=120
+// Contract of GET /api/onboard/v1/environment/radiation?windowMinutes=120
+// (onboard/app/environment). The route reads the `radiation` block the wearable ingest stores
+// with each reading (`wearable_samples.payload`), drops the repeats, and rebuilds the timeline
+// from the NASA timestamps. Field names mirror the emulator's RadiationEvidence
+// (emu/src/contracts/telemetry.ts) and onboard's RadiationTrackOut.
 
 /** One ISS DosTel reading. Environmental, not a crew member's personal dose. */
 export interface RadiationSample {

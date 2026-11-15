@@ -1,4 +1,4 @@
-// Mock of the PROVISIONAL radiation route. Replays ~2 h of real ISS DosTel readings
+// Mock of the onboard radiation route. Replays ~2 h of real ISS DosTel readings
 // (fixtures/iss-radiation.json, the same snapshot the wearable emulator bundles) in a loop
 // aligned to the clock, so the station marker moves forward as time passes.
 

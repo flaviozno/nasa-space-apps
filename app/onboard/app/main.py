@@ -13,6 +13,7 @@ from sqlalchemy import Engine
 
 from app.config import OnboardSettings
 from app.crew.router import router as crew_router
+from app.environment.router import router as environment_router
 from app.ingest.client import VercelEmulatorClient
 from app.ingest.router import router as ingest_router
 from app.ingest.store import PostgresIngestStore
@@ -23,7 +24,7 @@ from app.sync.router import router as sync_router
 from app.sync.store import PostgresOutboxStore
 from app.sync.worker import EarthBatchSender, OutboxStore, OutboxWorker
 
-ROUTERS = (ingest_router, crew_router, observations_router, sync_router)
+ROUTERS = (ingest_router, crew_router, environment_router, observations_router, sync_router)
 logger = logging.getLogger("onboard.main")
 
 
