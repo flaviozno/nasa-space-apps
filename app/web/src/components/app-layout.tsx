@@ -1,4 +1,4 @@
-import { ActivityIcon, EarthIcon, UsersRoundIcon } from 'lucide-react'
+import { EarthIcon, UsersRoundIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Link, Outlet, useLocation } from 'react-router'
 import { DisplayModeControl } from '@/components/display-mode-control'
@@ -51,14 +51,11 @@ export function AppLayout() {
     <div className={cn('app-shell overflow-x-clip bg-background text-foreground', isCrewHub ? 'flex h-svh flex-col overflow-y-hidden' : 'min-h-svh')}>
       <header className="sticky top-0 z-30 shrink-0 border-b border-white/7 bg-background/75 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 sm:gap-4 sm:px-6">
-          <Link to="/" className="group flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70">
-            <span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/25 bg-primary/12 text-primary shadow-[0_0_28px_-8px_var(--primary)]">
-              <span className="absolute inset-1 rounded-xl border border-primary/20" />
-              <ActivityIcon className="relative size-5" aria-hidden="true" />
-            </span>
+          <Link to="/" aria-label="CORA home" className="group flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70">
+            <img src="/cora-mark.svg" alt="" className="size-10 shrink-0 sm:hidden" aria-hidden="true" />
             <span className="hidden min-w-0 sm:block">
-              <span className="block text-[10px] font-bold tracking-[0.22em] text-primary/80">ORBITAL HEALTH</span>
-              <span className="block truncate text-base font-semibold tracking-tight">Mission Hub</span>
+              <img src="/cora-logo.svg" alt="CORA" className="h-8 w-auto" />
+              <span className="mt-0.5 block text-[9px] font-bold tracking-[0.2em] text-primary/75">CREW OPERATIONS READINESS</span>
             </span>
           </Link>
 

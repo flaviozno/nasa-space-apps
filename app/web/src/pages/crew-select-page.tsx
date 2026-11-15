@@ -15,7 +15,7 @@ export function CrewSelectPage() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="max-w-2xl space-y-3 pt-2 sm:pt-6">
         <p className="text-xs font-bold tracking-[0.22em] text-primary">LOCAL ACCESS</p>
         <h1 className="max-w-xl text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">Select your profile.</h1>
-        <p className="text-lg text-muted-foreground sm:text-xl">Your data only.</p>
+        <p className="text-lg text-muted-foreground sm:text-xl">Your data stays local to the mission.</p>
       </motion.div>
 
       {crew.isPending && (

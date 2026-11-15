@@ -1,11 +1,28 @@
-# Space Health Telemetry
+# CORA
 
-An MVP that demonstrates a space-crew health telemetry flow: a simulated
-wearable sends readings to the onboard service, which processes and stores the
-data locally, then synchronizes it with Earth when the link is available.
+<p align="center">
+  <img src="app/assets/cora-logo.svg" alt="CORA" width="260" />
+</p>
+
+> **Crew Operations Readiness Assistant**
+>
+> *Local insight. Clear action. Even offline.*
+
+CORA is an onboard-first health telemetry MVP for space crews. It turns
+simulated wearable signals, check-ins, and manual measurements into an
+explainable next operational step — without requiring a live connection to
+Earth. When the link returns, the evidence synchronizes safely with the ground
+team.
 
 The project uses only synthetic or historical demonstration data. It is not a
 medical device, clinical monitor, or diagnostic system.
+
+## Product principles
+
+- **Local first:** collection, assessment, and action guidance continue when Earth is unavailable.
+- **Personal context:** each reading is compared with the astronaut's own pre-flight baseline.
+- **Clear evidence:** `OK`, `DEVIATION`, `STALE`, `INVALID`, and `NO_DATA` are distinct states.
+- **Operational support, not diagnosis:** CORA does not diagnose, prescribe, or calculate an individual's radiation dose.
 
 ## Structure
 
@@ -71,7 +88,7 @@ app/emu → app/onboard → app/earth
 - `emu` responds to telemetry requests from Onboard.
 - `onboard` stores readings, evaluates alerts, and maintains a reliable outbox.
 - `earth` receives synchronized events idempotently.
-- `web` provides the Crew Hub and Earth View.
+- `web` provides CORA's onboard Crew Hub and Earth View.
 
 ## Development and validation
 
@@ -91,7 +108,7 @@ python -m unittest discover -s app/contracts/tests
 
 ## Documentation
 
-- [Product insights and MVP scope](docs/insights.md) — why the Astronaut Health Hub exists, the onboard action loop, NASA-data boundaries, and known MVP gaps.
+- [Product insights and MVP scope](docs/insights.md) — why CORA exists, the onboard action loop, NASA-data boundaries, and known MVP gaps.
 - [Telemetry architecture](docs/telemetry-architecture.md) — the intended end-to-end telemetry and synchronization design.
 - [Plan and ownership](docs/plan.md) — implementation scope, delivery flow, and team ownership.
 - [Infrastructure](infra/) — Docker Compose stack, local service topology, and the telemetry diagrams.

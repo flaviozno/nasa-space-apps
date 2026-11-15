@@ -29,6 +29,7 @@ export function EarthViewPage() {
   return (
     <section className="space-y-6 sm:space-y-8">
       <motion.header initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }} className="max-w-3xl space-y-3 pt-2 sm:pt-6">
+        <p className="text-xs font-bold tracking-[0.22em] text-primary">CORA / GROUND LINK</p>
         <h1 className="text-4xl font-semibold tracking-tight">Earth view</h1>
         <p className="text-xl text-muted-foreground">
           Flight surgeon console — crew data as received on Earth. When the link is down, this view falls behind; the spacecraft
