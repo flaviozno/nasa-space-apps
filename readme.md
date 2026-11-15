@@ -11,6 +11,8 @@
 
 ## 1. Goal
 
+In addition to telemetry display, the MVP includes an explainable **Mission Readiness Copilot**. It evaluates personal baseline deviation, the latest fatigue check-in, and a clearly labelled historical NASA environmental reference to organize a local operational review before a critical task. It is not a medical diagnosis, prediction, treatment recommendation, or personal radiation-dose estimate. The design record and acceptance criteria are in [Mission Readiness action prompt](./docs/mission-readiness-action-prompt.md).
+
 Build the smallest working, integrable system that demonstrates this flow:
 
 1. Have the onboard service request telemetry from the wearable emulator for a crew of 4 astronauts.
@@ -57,6 +59,12 @@ For the initial implementation, **use HTTP for both communication steps**. Do no
 The Vercel responder and the onboard-to-emulator ingestion worker are implemented. The Crew API read endpoints still return fixture data in this MVP; persisted wearable observations are available to the shared observation and Outbox flow.
 
 ### Wearable emulator: current MVP behavior
+
+#### Mission Readiness Copilot
+
+The onboard service persists the DosTel value separately as a `mission_context_snapshot`; it is never converted into an astronaut health observation. The local deterministic rule evaluates three bounded signals: an elevated historical radiation reference (at or above 10 microGy/h), heart rate at least 3 baseline spreads from the astronaut's reference, and a fresh fatigue check-in of 7/10 or above. Only all three produce `REVIEW_BEFORE_CRITICAL_TASK`; partial or missing evidence produces `MONITOR`, and nominal complete evidence produces `READY`.
+
+The Crew Hub exposes the state and a “Why am I seeing this?” evidence list. A review recommendation is stored and enqueued in the same transaction as its alert event, so it remains usable locally while the Earth link is unavailable and reaches Earth once after reconnection. Its payload contains at most the heart-rate, fatigue, and historical-context evidence required to explain the outcome.
 
 The emulator in [`emu/`](./emu/) stands in for a physical wearable. It is passive: the onboard service initiates each synchronization request, and the emulator returns a bounded `TelemetryBatch` as the wearable would. There is no physical sensor or device connection in this MVP.
 
@@ -396,6 +404,8 @@ Onboard processing continues while the Earth link is disabled. However, acquisit
 With 60 generated seconds per minute, existing backlog does not shrink at steady state. Set `MAX_SECONDS_PER_SYNC` to 120 when catch-up is required. Likewise, onboard-to-Earth throughput must exceed incoming event generation to drain its backlog.
 
 ## 11. What We Intentionally Defer
+
+Mission Readiness is deliberately operational and explainable. It does not diagnose a condition, predict an outcome, prescribe treatment, validate a clinical threshold, or treat historical DosTel records as live personal radiation exposure.
 
 - Physical wearable integration and BLE.
 - MQTT broker and other transport infrastructure.

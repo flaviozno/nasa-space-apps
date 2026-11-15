@@ -1,17 +1,19 @@
-import { ChevronRightIcon, ClipboardCheckIcon } from 'lucide-react'
+import { BellRingIcon, ChevronRightIcon, ClipboardCheckIcon, Clock3Icon, RadioTowerIcon, ShieldCheckIcon, TriangleAlertIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { AlertBanner } from '@/components/alert-banner'
+import { MissionReadinessCard } from '@/components/mission-readiness-card'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { TrendChart } from '@/components/trend-chart'
 import { VitalCard } from '@/components/vital-card'
 import { useNow } from '@/hooks/use-now'
 import { useCrewHubMember } from '@/lib/crew-hub-context'
+import { useSyncStatus } from '@/lib/earth-queries'
 import { displayUnit, formatValue, metricDisplay, PRIMARY_VITALS } from '@/lib/metric-catalog'
 import { STATUS_STYLES } from '@/lib/metric-status'
-import { useCrewAlerts, useCrewMetrics, useQuestionnaireStatus } from '@/lib/onboard-queries'
+import { useCrewAlerts, useCrewMetrics, useMissionReadiness, useQuestionnaireStatus } from '@/lib/onboard-queries'
 import { isAvailable } from '@/lib/questionnaire-status'
-import type { MetricSummary } from '@/lib/onboard-types'
+import type { CrewSummary, MetricSummary, MissionReadiness } from '@/lib/onboard-types'
 import { formatAge } from '@/lib/time'
 import { cn } from '@/lib/utils'
 
@@ -20,7 +22,9 @@ export function CrewOverviewPage() {
   const member = useCrewHubMember()
   const metrics = useCrewMetrics(member.crewId)
   const alerts = useCrewAlerts(member.crewId)
+  const readiness = useMissionReadiness(member.crewId)
   const status = useQuestionnaireStatus(member.crewId)
+  const sync = useSyncStatus()
   const now = useNow()
   const [chosenMetric, setChosenMetric] = useState<string | null>(null)
   const [windowMinutes, setWindowMinutes] = useState(30)
@@ -51,7 +55,16 @@ export function CrewOverviewPage() {
 
   return (
     <div className="space-y-4">
+      <OperationalSummary
+        metrics={metrics.data}
+        readiness={readiness.data}
+        dailyCheckinDue={status.isSuccess ? isAvailable(status.data.dailyCheckin, now) : null}
+        alertCount={alerts.data?.length}
+        link={sync.data}
+        now={now}
+      />
       {alerts.isSuccess && <AlertBanner alerts={alerts.data} now={now} />}
+      {readiness.isSuccess && <MissionReadinessCard readiness={readiness.data} />}
 
       {status.isSuccess && isAvailable(status.data.dailyCheckin, now) && (
         <Link
@@ -106,6 +119,122 @@ export function CrewOverviewPage() {
           </div>
         </section>
       )}
+    </div>
+  )
+}
+
+/** A single, non-clinical glance at the operational signals needed before reviewing details. */
+function OperationalSummary({
+  metrics,
+  readiness,
+  dailyCheckinDue,
+  alertCount,
+  link,
+  now,
+}: {
+  metrics: CrewSummary
+  readiness: MissionReadiness | undefined
+  dailyCheckinDue: boolean | null
+  alertCount: number | undefined
+  link: { linkEnabled: boolean; pendingCount: number; pendingAlerts: number; lastError: string | null } | undefined
+  now: number
+}) {
+  const latestReading = metrics.metrics.reduce<number | null>((latest, metric) => {
+    const takenAt = metric.takenAt ?? null
+    return takenAt !== null && (latest === null || takenAt > latest) ? takenAt : latest
+  }, null)
+  const needsReview = readiness?.status === 'REVIEW_BEFORE_CRITICAL_TASK'
+  const monitor = readiness?.status === 'MONITOR'
+  const linkDetail = link?.lastError
+    ? 'Needs attention'
+    : link?.pendingCount
+      ? `${link.pendingCount} queued`
+      : 'Queue clear'
+
+  return (
+    <section aria-label="Operational summary" className="glass-panel overflow-hidden rounded-3xl border">
+      <header className="flex items-center justify-between gap-3 border-b px-5 py-4 sm:px-6">
+        <div>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-primary">MISSION SNAPSHOT</p>
+          <h2 className="text-lg font-semibold tracking-tight">Operational summary</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">Live local context</p>
+      </header>
+      <div className="grid grid-cols-2 divide-x divide-y sm:grid-cols-5 sm:divide-y-0">
+        <SummaryItem
+          label="Readiness"
+          value={readiness ? readiness.status.replaceAll('_', ' ') : 'Assessing'}
+          detail={readiness ? 'Local mission context' : 'Waiting for context'}
+          icon={needsReview || monitor ? TriangleAlertIcon : ShieldCheckIcon}
+          tone={needsReview ? 'alert' : monitor ? 'warn' : 'ok'}
+        />
+        <SummaryItem
+          label="Latest sample"
+          value={latestReading !== null ? formatAge(latestReading, now) : 'No data'}
+          detail={latestReading !== null ? 'Most recent valid metric' : 'No reading received'}
+          icon={Clock3Icon}
+          tone={latestReading !== null ? 'default' : 'muted'}
+        />
+        <SummaryItem
+          label="Daily check-in"
+          value={dailyCheckinDue === null ? 'Checking' : dailyCheckinDue ? 'Due now' : 'Complete'}
+          detail={dailyCheckinDue ? 'Takes about 30 seconds' : 'UTC daily window'}
+          icon={ClipboardCheckIcon}
+          tone={dailyCheckinDue ? 'warn' : 'ok'}
+        />
+        <SummaryItem
+          label="Alerts"
+          value={alertCount === undefined ? 'Checking' : `${alertCount} active`}
+          detail={alertCount ? 'Review before tasking' : 'No active alerts'}
+          icon={BellRingIcon}
+          tone={alertCount ? 'alert' : 'ok'}
+        />
+        <SummaryItem
+          label="Data link"
+          value={link === undefined ? 'Checking' : link.linkEnabled ? 'Connected' : 'Offline'}
+          detail={link === undefined ? 'Link status unavailable' : linkDetail}
+          icon={RadioTowerIcon}
+          tone={link?.lastError || !link?.linkEnabled ? 'alert' : link.pendingCount ? 'warn' : 'ok'}
+          className="col-span-2 sm:col-span-1"
+        />
+      </div>
+    </section>
+  )
+}
+
+type SummaryTone = 'default' | 'ok' | 'warn' | 'alert' | 'muted'
+
+function SummaryItem({
+  label,
+  value,
+  detail,
+  icon: Icon,
+  tone,
+  className,
+}: {
+  label: string
+  value: string
+  detail: string
+  icon: typeof Clock3Icon
+  tone: SummaryTone
+  className?: string
+}) {
+  const tones: Record<SummaryTone, string> = {
+    default: 'text-primary',
+    ok: 'text-status-ok',
+    warn: 'text-status-warn',
+    alert: 'text-status-alert',
+    muted: 'text-muted-foreground',
+  }
+
+  return (
+    <div className={cn('min-w-0 space-y-2 px-4 py-4 sm:px-5', className)}>
+      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        <Icon className={cn('size-4 shrink-0', tones[tone])} aria-hidden="true" />
+        <span className="truncate">{label}</span>
+      </div>
+      <p className={cn('text-base font-semibold leading-tight sm:text-lg', tones[tone])}>{value}</p>
+      <p className="min-h-9 text-xs leading-snug text-muted-foreground">{detail}</p>
     </div>
   )
 }

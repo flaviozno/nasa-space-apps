@@ -34,6 +34,7 @@ from app.crew.schemas import (
     ManualEntryIn,
     ManualEntryOut,
     MetricTrendOut,
+    MissionReadinessOut,
     ObservationOut,
     Phq4In,
     QuestionnaireResponseOut,
@@ -50,6 +51,13 @@ from app.observations.repository import (
     range_observations,
 )
 from app.observations.schemas import ObservationSource
+from app.readiness import (
+    DISCLAIMER,
+    RULE_ID,
+    RULE_VERSION,
+    evaluate_for_crew,
+    persist_review_recommendation,
+)
 
 router = APIRouter(prefix="/v1/crew", tags=["crew"])
 
@@ -177,6 +185,40 @@ def read_alerts(crew_id: str, request: Request) -> list[AlertOut]:
     return alerts_for(_contract(request), crew_id)
 
 
+@router.get("/{crew_id}/mission-readiness", response_model=MissionReadinessOut, summary="Explainable local mission readiness")
+def read_mission_readiness(
+    crew_id: str, request: Request, connection: DatabaseConnection
+) -> MissionReadinessOut:
+    """Return the current local operational state and its at-most-three evidence items."""
+    contract = _contract(request)
+    member = require_crew_member(contract, crew_id)
+    now = _now_ms(request)
+    decision = evaluate_for_crew(connection, crew_id, member["baselines"].get("heart_rate"), now)
+    return MissionReadinessOut(
+        crew_id=crew_id,
+        status=decision.status,
+        rule_id=RULE_ID,
+        rule_version=RULE_VERSION,
+        evaluated_at=now,
+        message=decision.message,
+        sufficient_context=decision.sufficient_context,
+        evidence=[
+            {
+                "id": item.id,
+                "label": item.label,
+                "value": item.value,
+                "unit": item.unit,
+                "taken_at": item.taken_at_ms,
+                "source": item.source,
+                "source_ref": item.source_ref,
+                "detail": item.detail,
+            }
+            for item in decision.evidence
+        ],
+        disclaimer=DISCLAIMER,
+    )
+
+
 def _manual_source_ref(crew_id: str, metric: str, taken_at: int) -> str:
     """Stable identity for a manual entry: same member + metric + time = same record.
 
@@ -293,6 +335,11 @@ def _submit_questionnaire(
     rows = _questionnaire_rows(crew_id, catalog, response_id, values, now)
     inserted_rows, _ = insert_observations(connection, rows)
     enqueue_observations_event(connection, crew_id, response_id, inserted_rows)
+    # A new fatigue answer can complete the three-signal readiness rule even
+    # when its wearable/context evidence was stored earlier.
+    if questionnaire == "daily_checkin" and inserted_rows:
+        member = require_crew_member(contract, crew_id)
+        persist_review_recommendation(connection, crew_id, member["baselines"].get("heart_rate"), now)
     return QuestionnaireResponseOut(
         response_id=response_id,
         crew_id=crew_id,

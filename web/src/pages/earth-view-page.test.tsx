@@ -83,6 +83,33 @@ describe('Earth view', () => {
     expect(alerts).toHaveTextContent('9 min delay')
   })
 
+  it('shows a synced readiness recommendation with its bounded evidence', async () => {
+    serveState({}, Date.now(), crewWithDataFrom(Date.now()), [
+      {
+        eventId: 'readiness-1',
+        crewId: 'crew-1',
+        metric: 'heart_rate',
+        value: 126,
+        zScore: 5,
+        message: 'Review before a critical task.',
+        createdAtOnboardMs: minutesAgo(3),
+        receivedAtMs: Date.now(),
+        recommendationStatus: 'REVIEW_BEFORE_CRITICAL_TASK',
+        evidence: [
+          { id: 'hr', label: 'Heart rate', value: 126, unit: 'bpm', takenAt: Date.now(), source: 'wearable', sourceRef: 'sample' },
+          { id: 'fatigue', label: 'Fatigue check-in', value: 8, unit: 'score', takenAt: Date.now(), source: 'questionnaire', sourceRef: 'checkin' },
+          { id: 'rad', label: 'Historical reference', value: 10.2, unit: 'microGy/h', takenAt: Date.now(), source: 'nasa_osdr_radlab', sourceRef: 'dostel' },
+        ],
+        disclaimer: 'Historical reference only.',
+      },
+    ])
+    renderAt('/earth')
+    const alerts = await screen.findByRole('region', { name: 'Alerts received on Earth' })
+    expect(await within(alerts).findByText('REVIEW BEFORE CRITICAL TASK')).toBeInTheDocument()
+    expect(alerts).toHaveTextContent('Fatigue check-in 8 score')
+    expect(alerts).toHaveTextContent('Historical reference only.')
+  })
+
   it('cuts and restores the link from the demo control', async () => {
     renderAt('/earth')
     fireEvent.click(await screen.findByRole('button', { name: /Cut the link/ }))

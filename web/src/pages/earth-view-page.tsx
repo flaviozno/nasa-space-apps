@@ -1,4 +1,5 @@
 import { RadioTowerIcon, SatelliteDishIcon, SirenIcon, UnplugIcon, ZapIcon } from 'lucide-react'
+import { motion } from 'motion/react'
 import { CrewAvatar } from '@/components/crew-avatar'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { useNow } from '@/hooks/use-now'
@@ -26,14 +27,14 @@ export function EarthViewPage() {
   const now = useNow(5_000)
 
   return (
-    <section className="space-y-6">
-      <header className="space-y-1">
+    <section className="space-y-6 sm:space-y-8">
+      <motion.header initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }} className="max-w-3xl space-y-3 pt-2 sm:pt-6">
         <h1 className="text-4xl font-semibold tracking-tight">Earth view</h1>
         <p className="text-xl text-muted-foreground">
           Flight surgeon console — crew data as received on Earth. When the link is down, this view falls behind; the spacecraft
           keeps everything.
         </p>
-      </header>
+      </motion.header>
 
       {sync.isPending || earth.isPending ? (
         <LoadingBlock className="h-48 rounded-3xl" />
@@ -75,7 +76,7 @@ export function EarthViewPage() {
       </section>
 
       <section aria-label="Alerts received on Earth" className="space-y-3">
-        <h2 className="text-2xl font-semibold">Alerts received on Earth</h2>
+        <h2 className="text-2xl font-semibold">Alerts and readiness recommendations received on Earth</h2>
         {alerts.isError && <QueryError error={alerts.error} title="Could not load alerts" onRetry={() => alerts.refetch()} />}
         {alerts.isSuccess && alerts.data.length === 0 && (
           <p className="rounded-2xl border border-dashed p-6 text-lg text-muted-foreground">No alerts have reached Earth.</p>
@@ -101,7 +102,7 @@ function LinkStatusBand({ sync, earth, now }: { sync: SyncStatus; earth: EarthSt
     <section
       aria-label="Link status"
       className={cn(
-        'space-y-5 rounded-3xl border-2 p-6 transition-colors duration-500',
+        'glass-panel space-y-5 rounded-3xl border p-5 transition-colors duration-500 sm:p-6',
         online ? 'border-status-ok/50 bg-status-ok/5' : 'border-status-alert/60 bg-status-alert/10',
       )}
     >
@@ -226,6 +227,7 @@ function EarthAlertRow({ alert, crew }: { alert: EarthAlert; crew: EarthCrewMemb
   const name = crew.find((member) => member.crewId === alert.crewId)?.name ?? alert.crewId
   const delayMinutes = Math.round((alert.receivedAtMs - alert.createdAtOnboardMs) / 60_000)
   const text = describeAlert(alert, 'the')
+  const readiness = alert.recommendationStatus
 
   return (
     <li className="flex flex-wrap items-center gap-4 rounded-2xl border-2 border-status-alert/50 bg-status-alert/10 p-4 animate-in fade-in slide-in-from-left-2">
@@ -237,7 +239,15 @@ function EarthAlertRow({ alert, crew }: { alert: EarthAlert; crew: EarthCrewMemb
           {name} — {text.title}
           {text.reading && <span className="text-status-alert"> {text.reading}</span>}
         </p>
-        {text.deviation && (
+        {readiness && (
+          <>
+            <p className="text-base font-semibold text-status-alert">{readiness.replaceAll('_', ' ')}</p>
+            <p className="text-base text-muted-foreground">{alert.message}</p>
+            {alert.evidence && <p className="text-sm text-muted-foreground">Evidence: {alert.evidence.map((item) => `${item.label} ${item.value} ${item.unit}`).join(' Â· ')}</p>}
+            {alert.disclaimer && <p className="text-sm text-muted-foreground">{alert.disclaimer}</p>}
+          </>
+        )}
+        {!readiness && text.deviation && (
           <p className="text-base text-muted-foreground" title={alert.message}>
             {text.deviation}
           </p>

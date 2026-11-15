@@ -12,6 +12,7 @@ import type {
   ManualEntryInput,
   ManualEntryResult,
   MetricTrend,
+  MissionReadiness,
   Phq4Input,
   QuestionnaireResult,
   TeamClimateInput,
@@ -48,6 +49,8 @@ export const onboardApi = {
   },
 
   getAlerts: (crewId: string) => request<Alert[]>(`${crewPath(crewId)}/alerts`),
+
+  getMissionReadiness: (crewId: string) => request<MissionReadiness>(`${crewPath(crewId)}/mission-readiness`),
 
   /** PROVISIONAL endpoint (not in the onboard API yet); see src/lib/questionnaire-status.ts. */
   getQuestionnaireStatus: (crewId: string) =>

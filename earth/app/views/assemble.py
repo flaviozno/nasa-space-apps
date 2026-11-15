@@ -103,9 +103,12 @@ def _alert_view(row: Row, alert: AlertPayload, now_ms: int) -> AlertView:
         z_score=alert.z_score,
         message=alert.message,
         created_at_onboard_ms=row.created_at_onboard_ms,
-        received_at_earth_ms=row.received_at_earth_ms,
+        received_at_ms=row.received_at_earth_ms,
         data_age_ms=now_ms - row.created_at_onboard_ms,
         delivery_delay_ms=row.received_at_earth_ms - row.created_at_onboard_ms,
+        recommendation_status=alert.recommendation_status,
+        evidence=alert.evidence,
+        disclaimer=alert.disclaimer,
     )
 
 

@@ -1,4 +1,5 @@
 import { Link, Outlet, useParams } from 'react-router'
+import { motion } from 'motion/react'
 import { CrewAvatar } from '@/components/crew-avatar'
 import { CrewNavRail } from '@/components/crew-nav-rail'
 import { DeviceChip } from '@/components/device-chip'
@@ -36,26 +37,29 @@ export function CrewHubPage() {
   const context: CrewHubContext = { member }
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-center gap-4">
-        <CrewAvatar name={member.name} className="size-16 text-xl" />
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold">{member.name}</h1>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-lg text-muted-foreground">{member.role}</span>
+    <div className="flex h-full min-h-0 flex-col gap-4 sm:gap-6">
+      <motion.header initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="glass-panel shrink-0 flex flex-wrap items-center gap-4 rounded-3xl border p-4 sm:p-5">
+        <CrewAvatar name={member.name} className="size-15 text-xl sm:size-18" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-[10px] font-bold tracking-[0.2em] text-primary">ACTIVE CREW PROFILE</p>
+          <h1 className="truncate text-3xl font-semibold tracking-tight sm:text-4xl">{member.name}</h1>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-base text-muted-foreground">{member.role}</span>
             <DeviceChip deviceId={member.deviceId} className="py-0.5" />
           </div>
         </div>
-      </header>
-      <div className="flex flex-col gap-4 md:flex-row">
+      </motion.header>
+      <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row md:gap-6">
         <CrewNavRail
           due={{
             checkin: status.isSuccess && isAvailable(status.data.dailyCheckin, now),
             weekly: status.isSuccess && (isAvailable(status.data.phq4, now) || isAvailable(status.data.teamClimate, now)),
           }}
         />
-        <div className="min-w-0 flex-1">
-          <Outlet context={context} />
+        <div className="crew-content-frame relative min-h-0 min-w-0 flex-1">
+          <div role="region" aria-label="Crew content" tabIndex={0} className="crew-content-scroll h-full overflow-y-auto overscroll-contain pr-1 pb-20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60 md:pr-3 md:pb-24">
+            <Outlet context={context} />
+          </div>
         </div>
       </div>
     </div>

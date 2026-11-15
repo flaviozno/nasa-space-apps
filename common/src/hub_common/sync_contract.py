@@ -42,6 +42,19 @@ class ObservationsPayload(CamelModel):
     observations: list[ObservationItem] = Field(min_length=1)
 
 
+class AlertEvidence(CamelModel):
+    """One compact, traceable item explaining an operational recommendation."""
+
+    id: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    value: float
+    unit: str = Field(min_length=1)
+    taken_at: int = Field(ge=0)
+    source: str = Field(min_length=1)
+    source_ref: str = Field(min_length=1)
+    detail: str | None = None
+
+
 class AlertPayload(CamelModel):
     """Payload of an ALERT event: self-contained evidence (mirrors the Crew API AlertOut)."""
 
@@ -53,6 +66,11 @@ class AlertPayload(CamelModel):
     z_score: float | None = None
     message: str
     created_at: int = Field(ge=0)
+    # Existing single-reading alerts leave these optional fields unset. Mission
+    # Readiness uses them to carry its bounded, explainable evidence set.
+    recommendation_status: Literal["READY", "MONITOR", "REVIEW_BEFORE_CRITICAL_TASK"] | None = None
+    evidence: list[AlertEvidence] = Field(default_factory=list, max_length=3)
+    disclaimer: str | None = None
 
 
 PAYLOAD_MODEL_BY_TYPE: dict[EventType, type[CamelModel]] = {

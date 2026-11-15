@@ -129,6 +129,30 @@ export const handlers = [
     return member ? HttpResponse.json(fresh(member.alerts)) : notFound(`unknown crewId: ${params.crewId}`)
   }),
 
+  http.get(`${crew}/:crewId/mission-readiness`, ({ params }) => {
+    const crewId = String(params.crewId)
+    if (!fixtures.members[crewId]) return notFound(`unknown crewId: ${crewId}`)
+    const review = crewId === 'crew-3'
+    const now = Date.now()
+    return HttpResponse.json({
+      crewId,
+      status: review ? 'REVIEW_BEFORE_CRITICAL_TASK' : 'MONITOR',
+      ruleId: 'mission_readiness_context',
+      ruleVersion: '1',
+      evaluatedAt: now,
+      sufficientContext: review,
+      message: review
+        ? 'Review before a critical task: heart rate differs from personal baseline, fatigue is elevated, and a historical environmental radiation reference is elevated.'
+        : 'Mission context is incomplete; monitor before a critical task.',
+      evidence: review ? [
+        { id: 'hr-demo', label: 'Heart rate', value: 125, unit: 'bpm', takenAt: now - 30_000, source: 'wearable', sourceRef: 'demo-hr' },
+        { id: 'fatigue-demo', label: 'Fatigue check-in', value: 8, unit: 'score', takenAt: now - 60_000, source: 'questionnaire', sourceRef: 'demo-checkin' },
+        { id: 'dostel-demo', label: 'Historical ISS DosTel dose-rate reference', value: 10.2, unit: 'microGy/h', takenAt: now - 90_000, source: 'nasa_osdr_radlab', sourceRef: 'dostel-demo', detail: 'https://visualization.osdr.nasa.gov/radlab/gui/data-api/' },
+      ] : [],
+      disclaimer: 'Historical NASA environmental reference; not a personal radiation dose or medical diagnosis.',
+    })
+  }),
+
   http.post(`${crew}/:crewId/manual-entries`, async ({ params, request }) => {
     const crewId = String(params.crewId)
     const member = fixtures.members[crewId]

@@ -80,3 +80,22 @@ def test_payload_json_uses_camel_case() -> None:
         alert_id="a", rule_id="r", rule_version="1", message="m", created_at=1, z_score=-3.5
     )
     assert payload_json(alert)["zScore"] == -3.5
+
+
+def test_alert_payload_carries_bounded_mission_readiness_evidence() -> None:
+    alert = AlertPayload(
+        alert_id="readiness-1",
+        rule_id="mission_readiness_context",
+        rule_version="1",
+        message="Review before a critical task.",
+        created_at=1,
+        recommendation_status="REVIEW_BEFORE_CRITICAL_TASK",
+        evidence=[
+            {"id": "hr", "label": "Heart rate", "value": 126, "unit": "bpm", "takenAt": 1, "source": "wearable", "sourceRef": "sample"},
+            {"id": "fatigue", "label": "Fatigue check-in", "value": 8, "unit": "score", "takenAt": 1, "source": "questionnaire", "sourceRef": "checkin"},
+            {"id": "rad", "label": "Historical reference", "value": 10.2, "unit": "microGy/h", "takenAt": 1, "source": "nasa_osdr_radlab", "sourceRef": "dostel"},
+        ],
+    )
+    body = payload_json(alert)
+    assert body["recommendationStatus"] == "REVIEW_BEFORE_CRITICAL_TASK"
+    assert len(body["evidence"]) == 3

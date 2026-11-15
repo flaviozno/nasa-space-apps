@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ingest/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ingest Status
+         * @description Return the durable emulator cursor and latest worker outcome.
+         */
+        get: operations["ingest_status_v1_ingest_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/crew": {
         parameters: {
             query?: never;
@@ -76,7 +96,11 @@ export interface paths {
          * Metric summary of one member
          * @description Latest value, z-score, and status per metric (OK, DEVIATION, STALE, INVALID, NO_DATA).
          *
-         *     Example: `GET /v1/crew/crew-3/metrics` → heart_rate with status DEVIATION in the fixture.
+         *     Status rules: |z| >= 3 against the fixed baseline is DEVIATION; wearable
+         *     values older than 5 minutes (manual/questionnaire 26 h) downgrade OK to
+         *     STALE; a null latest value is INVALID; no rows is NO_DATA — never 0.
+         *
+         *     Example: `GET /v1/crew/crew-1/metrics` → 24 metric rows in contract order.
          */
         get: operations["read_summary_v1_crew__crew_id__metrics_get"];
         put?: never;
@@ -96,7 +120,7 @@ export interface paths {
         };
         /**
          * Trend series of one metric
-         * @description Trend points for a chart, oldest first, downsampled to maxPoints.
+         * @description Real trend points for a chart, oldest first, downsampled to maxPoints.
          *
          *     Example: `GET /v1/crew/crew-1/metrics/heart_rate/trends?windowMinutes=30&maxPoints=30`.
          */
@@ -118,11 +142,34 @@ export interface paths {
         };
         /**
          * Local alerts of one member
-         * @description Alerts raised by onboard rules. Final fields follow the ingest branch schema.
+         * @description Alerts raised by onboard rules.
+         *
+         *     Fixture data for now: the `alerts` table belongs to the ingest branch
+         *     (Miguel); this endpoint reads it once that migration lands.
          *
          *     Example: `GET /v1/crew/crew-3/alerts` → one ELEVATED_HEART_RATE fixture alert.
          */
         get: operations["read_alerts_v1_crew__crew_id__alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/crew/{crew_id}/mission-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Explainable local mission readiness
+         * @description Return the current local operational state and its at-most-three evidence items.
+         */
+        get: operations["read_mission_readiness_v1_crew__crew_id__mission_readiness_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -144,9 +191,14 @@ export interface paths {
          * Submit manual measurements
          * @description Store measurements the astronaut typed (body mass, blood pressure, water, grip).
          *
-         *     Stub: echoes the entries as observations with resolved units and `source=manual`.
+         *     Each entry is one source record: validated against the catalog scale,
+         *     persisted with `source=manual`, and queued to Earth through the Outbox in
+         *     the same transaction. Entries without an explicit takenAt share the server
+         *     clock, so re-sending the same request resolves to the same identity and
+         *     counts as duplicates.
          *
-         *     Example: `POST /v1/crew/crew-2/manual-entries` with `{"entries": [{"metric": "body_mass", "value": 74.2}]}`.
+         *     Example: `POST /v1/crew/crew-2/manual-entries` with
+         *     `{"entries": [{"metric": "body_mass", "value": 74.2}]}`.
          */
         post: operations["create_manual_entries_v1_crew__crew_id__manual_entries_post"];
         delete?: never;
@@ -168,7 +220,9 @@ export interface paths {
          * Answer the daily check-in
          * @description Daily form: mood, stress, fatigue, sleepiness (KSS) and six symptom scores.
          *
-         *     Stub: returns the receipt; the real endpoint stores one observation per answer.
+         *     Stores the response envelope, one observation per answer, and the Outbox
+         *     event in one transaction. The MVP does not enforce one-per-day at the API
+         *     level; the UI decides when to show the form.
          *
          *     Example: `POST /v1/crew/crew-1/questionnaires/daily-checkin` with `{"mood": 7, ...}`.
          */
@@ -232,12 +286,9 @@ export interface paths {
         };
         /**
          * Query observations
-         * @description Query observations with filters; results are ordered oldest first.
+         * @description Query the real observation table with filters; ordered oldest first.
          *
-         *     Stub: ignores metric/source/time filters and returns fixture history for the
-         *     requested crew member (defaults to crew-1).
-         *
-         *     Example: `GET /v1/observations?crewId=crew-1&limit=6`.
+         *     Example: `GET /v1/observations?crewId=crew-1&metric=heart_rate&limit=50`.
          */
         get: operations["list_observations_v1_observations_get"];
         put?: never;
@@ -245,13 +296,57 @@ export interface paths {
          * Accept observation batches
          * @description Generic input for sources that are neither the wearable nor the Crew Hub forms.
          *
-         *     Validates crew and metric ids and echoes the batch with resolved units (stub).
-         *     The real endpoint is idempotent: repeating the same (source, sourceRef, metric)
-         *     counts as a duplicate instead of creating a second row.
+         *     Validates crew and metric ids against the contracts, rejects readings outside
+         *     the catalog scale, resolves the unit, and persists idempotently: repeating the
+         *     same (source, sourceRef, metric) counts as a duplicate instead of creating a
+         *     second row. `value: null` is stored as an INVALID reading, never 0. The
+         *     response lists only the rows that actually persisted, and each persisted row
+         *     is queued to Earth through the Outbox (same transaction).
          *
-         *     Example: `POST /v1/observations` with `{"observations": [{"crewId": "crew-1", "metric": "steps"}]}`.
+         *     Example: `POST /v1/observations` with
+         *     `{"observations": [{"crewId": "crew-1", "metric": "heart_rate", "value": 82}]}`.
          */
         post: operations["create_observations_v1_observations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sync/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Status
+         * @description Earth link state and Outbox backlog. Example: `GET /v1/sync/status`.
+         */
+        get: operations["read_status_v1_sync_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sync/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Link
+         * @description Turn the simulated Earth link on or off. Example: `PUT /v1/sync/link {"enabled": false}`.
+         */
+        put: operations["update_link_v1_sync_link_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -401,6 +496,11 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** LinkUpdate */
+        LinkUpdate: {
+            /** Enabled */
+            enabled: boolean;
+        };
         /**
          * ManualEntryIn
          * @description Request body of `POST /v1/crew/{crewId}/manual-entries`.
@@ -484,6 +584,32 @@ export interface components {
             unit: string;
             /** Points */
             points: components["schemas"]["TrendPointOut"][];
+        };
+        /**
+         * MissionReadinessOut
+         * @description A local operational recommendation, never a clinical assessment.
+         */
+        MissionReadinessOut: {
+            /** Crewid */
+            crewId: string;
+            status: components["schemas"]["ReadinessStatus"];
+            /** Ruleid */
+            ruleId: string;
+            /** Ruleversion */
+            ruleVersion: string;
+            /**
+             * Evaluatedat
+             * @description Unix timestamp in milliseconds
+             */
+            evaluatedAt: number;
+            /** Message */
+            message: string;
+            /** Sufficientcontext */
+            sufficientContext: boolean;
+            /** Evidence */
+            evidence: components["schemas"]["ReadinessEvidenceOut"][];
+            /** Disclaimer */
+            disclaimer: string;
         };
         /**
          * ObservationBatchIn
@@ -616,6 +742,48 @@ export interface components {
             /** Observationscreated */
             observationsCreated: number;
         };
+        /** ReadinessEvidenceOut */
+        ReadinessEvidenceOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Value */
+            value: number;
+            /** Unit */
+            unit: string;
+            /**
+             * Takenat
+             * @description Unix timestamp in milliseconds
+             */
+            takenAt: number;
+            /** Source */
+            source: string;
+            /** Sourceref */
+            sourceRef: string;
+            /** Detail */
+            detail?: string | null;
+        };
+        /**
+         * ReadinessStatus
+         * @enum {string}
+         */
+        ReadinessStatus: "READY" | "MONITOR" | "REVIEW_BEFORE_CRITICAL_TASK";
+        /** SyncStatus */
+        SyncStatus: {
+            /** Linkenabled */
+            linkEnabled: boolean;
+            /** Pendingcount */
+            pendingCount: number;
+            /** Pendingalerts */
+            pendingAlerts: number;
+            /** Oldestpendingagems */
+            oldestPendingAgeMs: number | null;
+            /** Lastackatms */
+            lastAckAtMs: number | null;
+            /** Lasterror */
+            lastError: string | null;
+        };
         /**
          * TeamClimateIn
          * @description Weekly team climate self-assessment.
@@ -675,6 +843,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+        };
+    };
+    ingest_status_v1_ingest_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
@@ -814,6 +1004,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AlertOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_mission_readiness_v1_crew__crew_id__mission_readiness_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                crew_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MissionReadinessOut"];
                 };
             };
             /** @description Validation Error */
@@ -1024,6 +1245,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ObservationBatchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_status_v1_sync_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncStatus"];
+                };
+            };
+        };
+    };
+    update_link_v1_sync_link_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncStatus"];
                 };
             };
             /** @description Validation Error */

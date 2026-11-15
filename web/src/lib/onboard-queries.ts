@@ -20,6 +20,7 @@ export const onboardKeys = {
   trend: (crewId: string, metric: string, options: TrendOptions) =>
     [...onboardKeys.member(crewId), 'trend', metric, options] as const,
   alerts: (crewId: string) => [...onboardKeys.member(crewId), 'alerts'] as const,
+  readiness: (crewId: string) => [...onboardKeys.member(crewId), 'mission-readiness'] as const,
   questionnaireStatus: (crewId: string) => [...onboardKeys.member(crewId), 'questionnaire-status'] as const,
 }
 
@@ -72,6 +73,14 @@ export function useCrewAlerts(crewId: string) {
   return useQuery({
     queryKey: onboardKeys.alerts(crewId),
     queryFn: () => onboardApi.getAlerts(crewId),
+    refetchInterval: ALERT_REFRESH_MS,
+  })
+}
+
+export function useMissionReadiness(crewId: string) {
+  return useQuery({
+    queryKey: onboardKeys.readiness(crewId),
+    queryFn: () => onboardApi.getMissionReadiness(crewId),
     refetchInterval: ALERT_REFRESH_MS,
   })
 }

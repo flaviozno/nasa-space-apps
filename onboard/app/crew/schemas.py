@@ -11,6 +11,7 @@ from typing import Annotated
 from pydantic import Field
 
 from app.observations.schemas import CamelModel, EpochMs, MetricId, ObservationOut
+from app.readiness import ReadinessStatus
 
 
 class CrewMemberOut(CamelModel):
@@ -166,3 +167,28 @@ class AlertOut(CamelModel):
     z_score: float | None = None
     message: str
     created_at: EpochMs
+
+
+class ReadinessEvidenceOut(CamelModel):
+    id: str
+    label: str
+    value: float
+    unit: str
+    taken_at: EpochMs
+    source: str
+    source_ref: str
+    detail: str | None = None
+
+
+class MissionReadinessOut(CamelModel):
+    """A local operational recommendation, never a clinical assessment."""
+
+    crew_id: str
+    status: ReadinessStatus
+    rule_id: str
+    rule_version: str
+    evaluated_at: EpochMs
+    message: str
+    sufficient_context: bool
+    evidence: list[ReadinessEvidenceOut]
+    disclaimer: str

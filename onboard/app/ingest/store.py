@@ -2,11 +2,12 @@
 
 import json
 
+from hub_common.sync_contract import AlertPayload, ObservationItem, ObservationsPayload
 from sqlalchemy import Engine, text
 
 from app.ingest.contracts import TelemetryBatch
+from app.readiness import persist_radiation_context, persist_review_recommendation
 from app.sync.events import build_alert_event, build_observations_event, enqueue_event
-from hub_common.sync_contract import AlertPayload, ObservationItem, ObservationsPayload
 
 SIMULATOR_EPOCH_MS = 1_767_225_600_000  # 2026-01-01T00:00:00Z in emulator time.
 WINDOW_MS = 60_000
@@ -110,6 +111,13 @@ class PostgresIngestStore:
                 )
 
                 observation_items = []
+                persist_radiation_context(
+                    connection,
+                    observed_at_ms=reading.acquired_at_ms,
+                    source_timestamp=reading.radiation.source_timestamp,
+                    instrument_id=reading.radiation.instrument_id,
+                    dose_rate_micro_gy_per_hour=reading.radiation.absorbed_dose_rate_micro_gy_per_hour,
+                )
                 for metric, field, unit, divisor in METRIC_FIELDS:
                     raw_value = getattr(reading, field)
                     value = None if raw_value is None else raw_value / divisor
@@ -193,6 +201,9 @@ class PostgresIngestStore:
                             received_at_ms,
                         ),
                     )
+                persist_review_recommendation(
+                    connection, crew_id, baselines.get("heart_rate"), received_at_ms
+                )
                 connection.execute(
                     text("""
                         UPDATE ingest_cursors

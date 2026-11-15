@@ -2,7 +2,8 @@
 
 from enum import StrEnum
 
-from hub_common.sync_contract import CamelModel
+from hub_common.sync_contract import AlertEvidence, CamelModel
+from pydantic import Field
 
 
 class Freshness(StrEnum):
@@ -41,9 +42,12 @@ class AlertView(CamelModel):
     z_score: float | None
     message: str
     created_at_onboard_ms: int
-    received_at_earth_ms: int
+    received_at_ms: int
     data_age_ms: int
     delivery_delay_ms: int
+    recommendation_status: str | None = None
+    evidence: list[AlertEvidence] = Field(default_factory=list)
+    disclaimer: str | None = None
 
 
 class EarthStatusView(CamelModel):

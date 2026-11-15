@@ -25,6 +25,12 @@ Um hub de saúde para uma tripulação de 4 astronautas, sem login (o tripulante
 
 ## 2. Decisão de arquitetura: tudo vira `observation`
 
+### Extensão de produto: Mission Readiness Copilot
+
+O MVP também guarda um `mission_context_snapshot` separado das `observations` pessoais para a referência ambiental histórica do ISS DosTel/RadLab. A regra local, determinística e explicável combina: desvio de FC em relação à baseline, fadiga do último check-in e uma janela de referência ambiental elevada. Com os três sinais, gera `REVIEW_BEFORE_CRITICAL_TASK`; com evidência parcial, `MONITOR`; com contexto completo nominal, `READY`. Isso organiza uma revisão operacional local, não um diagnóstico, dose individual de radiação ou prescrição médica.
+
+O Crew Hub mostra o cartão **Mission Readiness** e “Why am I seeing this?”. A recomendação de revisão entra na mesma Outbox dos alertas e, quando o link volta, a Earth view mostra as evidências e o atraso de entrega sem duplicá-la.
+
 Para o sistema ser modular, toda fonte de dados (wearable, questionário, entrada manual, integrações futuras) grava no mesmo formato.
 O dashboard só lê `observations`, então uma fonte nova é só um adaptador novo.
 

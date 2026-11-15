@@ -1,4 +1,5 @@
 import { CalendarCheckIcon, ClipboardCheckIcon, GaugeIcon, RulerIcon, UsersIcon, type LucideIcon } from 'lucide-react'
+import { motion } from 'motion/react'
 import { NavLink } from 'react-router'
 import { cn } from '@/lib/utils'
 
@@ -20,9 +21,9 @@ const ITEMS: RailItem[] = [
 
 const itemClass = (active: boolean) =>
   cn(
-    'flex min-h-20 min-w-24 flex-col items-center justify-center gap-1.5 rounded-2xl px-3 py-2 text-base font-medium transition-colors',
+    'relative flex min-h-16 min-w-22 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition-colors sm:min-h-18 sm:min-w-24 sm:text-sm',
     'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60',
-    active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground active:bg-accent',
+    active ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground active:bg-accent',
   )
 
 /**
@@ -33,22 +34,25 @@ export function CrewNavRail({ due = {} }: { due?: { checkin?: boolean; weekly?: 
   return (
     <nav
       aria-label="Crew Hub sections"
-      className="flex gap-2 overflow-x-auto rounded-3xl border bg-card p-2 md:sticky md:top-4 md:flex-col md:self-start"
+      className="glass-panel shrink-0 flex gap-1.5 overflow-x-auto rounded-2xl border p-1.5 md:flex-col md:self-stretch"
     >
       {ITEMS.map(({ to, label, icon: Icon, end, dueKey }) => (
         <NavLink key={to} to={to} end={end} className={({ isActive }) => cn(itemClass(isActive), 'relative')}>
-          <Icon className="size-8" aria-hidden="true" />
+          {({ isActive }) => <>
+          {isActive && <motion.span layoutId="crew-nav-active" className="absolute inset-0 -z-10 rounded-xl bg-primary shadow-[0_8px_24px_-12px_var(--primary)]" transition={{ type: 'spring', bounce: 0.16, duration: 0.4 }} />}
+          <Icon className="size-5 sm:size-6" aria-hidden="true" />
           {label}
           {dueKey && due[dueKey] && (
-            <span className="absolute top-1.5 right-1.5 rounded-full bg-status-warn px-1.5 text-xs font-bold text-background">
+            <span className="absolute top-1 right-1 rounded-full bg-status-warn px-1.5 text-[10px] font-bold text-background">
               Due
             </span>
           )}
+          </>}
         </NavLink>
       ))}
       <div className="hidden flex-1 md:block" />
       <NavLink to="/" className={itemClass(false)}>
-        <UsersIcon className="size-8" aria-hidden="true" />
+        <UsersIcon className="size-5 sm:size-6" aria-hidden="true" />
         Switch
       </NavLink>
     </nav>

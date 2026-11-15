@@ -50,4 +50,7 @@ export interface EarthAlert {
   message: string
   createdAtOnboardMs: number
   receivedAtMs: number
+  recommendationStatus?: 'READY' | 'MONITOR' | 'REVIEW_BEFORE_CRITICAL_TASK' | null
+  evidence?: { id: string; label: string; value: number; unit: string; takenAt: number; source: string; sourceRef: string; detail?: string | null }[]
+  disclaimer?: string | null
 }
