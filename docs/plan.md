@@ -125,23 +125,23 @@ Cada pessoa é dona de uma pasta. Mudanças na pasta de outra pessoa só com PR 
 
 | Pessoa | Frente | Pasta | Entregas |
 | --- | --- | --- | --- |
-| Flávio | Emulador de wearable | `emu/` | 4 dispositivos (1 por tripulante); FC, SpO₂, temperatura e canal de radiação integrado ao wearable; cenários de demo trocáveis por config |
-| Miguel | Ingestão de bordo | `onboard/app/ingest/` | Agendador de bordo que envia `SyncRequest` ao simulador a cada minuto, grava o `TelemetryBatch` com cursor durável e responde com `ReceiptAck` (contrato do Flávio); converte samples em `observations`; regras de alerta (limite absoluto + desvio da linha de base); grava eventos no `outbox` |
-| Matheus | Crew API | `onboard/app/crew/`, `onboard/app/observations/` | Modelo `observation` (dono do schema); tripulação e linha de base (seed fixo); endpoints de leitura, tendência e z-score; questionários e entrada manual; `POST /v1/observations` genérico |
-| Wallace | Frontend | `web/` | React + Vite + shadcn; rotas `/crew/:id` (hub) e `/earth` (médico de voo); funciona com mock até a API existir |
-| Guilherme | Terra, sync e infra | `earth/`, `onboard/app/sync/`, `infra/` | VPS, docker-compose, proxy HTTPS; outbox worker + alternância do link; Earth service (ingestão idempotente + leitura); coordena pitch e vídeo |
+| Flávio | Emulador de wearable | `app/emu/` | 4 dispositivos (1 por tripulante); FC, SpO₂, temperatura e canal de radiação integrado ao wearable; cenários de demo trocáveis por config |
+| Miguel | Ingestão de bordo | `app/onboard/app/ingest/` | Agendador de bordo que envia `SyncRequest` ao simulador a cada minuto, grava o `TelemetryBatch` com cursor durável e responde com `ReceiptAck` (contrato do Flávio); converte samples em `observations`; regras de alerta (limite absoluto + desvio da linha de base); grava eventos no `outbox` |
+| Matheus | Crew API | `app/onboard/app/crew/`, `app/onboard/app/observations/` | Modelo `observation` (dono do schema); tripulação e linha de base (seed fixo); endpoints de leitura, tendência e z-score; questionários e entrada manual; `POST /v1/observations` genérico |
+| Wallace | Frontend | `app/web/` | React + Vite + shadcn; rotas `/crew/:id` (hub) e `/earth` (médico de voo); funciona com mock até a API existir |
+| Guilherme | Terra, sync e infra | `app/earth/`, `app/onboard/app/sync/`, `infra/` | VPS, docker-compose, proxy HTTPS; outbox worker + alternância do link; Earth service (ingestão idempotente + leitura); coordena pitch e vídeo |
 
 Arquivos compartilhados, todos com dono:
 
 | Arquivo | Dono | Regra |
 | --- | --- | --- |
-| `contracts/metrics.json` (catálogo de métricas) | Matheus | Congelado ao fim da Fase 0; mudanças só por PR avisado no grupo |
-| `contracts/crew.json` (4 tripulantes + linha de base fixa) | Matheus | Idem |
+| `app/contracts/metrics.json` (catálogo de métricas) | Matheus | Congelado ao fim da Fase 0; mudanças só por PR avisado no grupo |
+| `app/contracts/crew.json` (4 tripulantes + linha de base fixa) | Matheus | Idem |
 | OpenAPI do onboard (gerado pelo FastAPI) | Matheus | Wallace gera os tipos TS a partir dele |
 | Contrato de sincronização bordo ↔ simulador (`SyncRequest`, `TelemetryBatch`, `ReceiptAck`) | Flávio | Miguel valida |
 | Contrato bordo → Terra | Guilherme | Miguel grava no outbox nesse formato |
-| `onboard/app/main.py`, `db.py` (montagem dos routers, conexão) | Guilherme | Criados na Fase 0; depois quase não mudam |
-| Migrations Alembic do onboard | Cada um na própria branch e pasta | `versions/observations/` (Matheus), `versions/ingest/` (Miguel), `versions/sync/` (Guilherme); ver `onboard/migrations/README.md` |
+| `app/onboard/app/main.py`, `db.py` (montagem dos routers, conexão) | Guilherme | Criados na Fase 0; depois quase não mudam |
+| Migrations Alembic do onboard | Cada um na própria branch e pasta | `versions/observations/` (Matheus), `versions/ingest/` (Miguel), `versions/sync/` (Guilherme); ver `app/onboard/migrations/README.md` |
 
 ## 4. Fluxo de trabalho
 
@@ -151,8 +151,8 @@ Arquivos compartilhados, todos com dono:
    - Entrada pela UI no MVP: `hrv_rmssd`, `resp_rate`, `sleep_duration`, `exercise_duration` (classificadas como wearable, mas ainda não emitidas pelo emulador), além de `body_mass`, `blood_pressure_systolic`, `blood_pressure_diastolic`, `water_intake` e `grip_strength` (manuais).
    - Questionário diário: `mood`, `stress`, `fatigue`, `sleepiness`, sintomas 0–10 (`symptom_headache`, `symptom_back_pain`, `symptom_congestion`, `symptom_eye_irritation`, `symptom_skin`, `symptom_nausea`).
    - Questionário semanal: `phq4`, `team_climate`.
-   - IDs, unidades e escalas estão em [`contracts/crew.json`](../contracts/crew.json) até o `metrics.json` existir.
-2. Fixar a linha de base dos 4 tripulantes (mediana e dispersão por métrica) em `contracts/crew.json`.
+   - IDs, unidades e escalas estão em [`app/contracts/crew.json`](../app/contracts/crew.json) até o `metrics.json` existir.
+2. Fixar a linha de base dos 4 tripulantes (mediana e dispersão por métrica) em `app/contracts/crew.json`.
 3. Guilherme sobe o esqueleto do repo: `docker-compose` com `onboard`, `earth`, `web`; FastAPI com routers vazios; README atualizado.
 4. Matheus publica os modelos Pydantic e endpoints *stub* que devolvem fixtures. O OpenAPI sai automaticamente.
 5. Wallace gera tipos (`openapi-typescript`) e mocks (MSW) a partir dele.
@@ -178,7 +178,7 @@ Cada um na sua pasta, contra mocks e fixtures. PRs pequenos e frequentes na `mai
 
 - Branch por pessoa/tarefa, PR curto, merge na `main` assim que funciona. Nada de branch longa.
 - Contrato mudou → PR avisado no grupo antes do merge.
-- Cada serviço sobe com `docker compose up`; quem quebrar a `main` conserta primeiro.
+- Cada serviço sobe com `docker compose -f infra/docker-compose.yml up`; quem quebrar a `main` conserta primeiro.
 - Dados são sempre `SIMULATED`; nenhuma afirmação de validade clínica.
 
 ## 6. Diferenças em relação ao `readme.md` atual (atualizar na Fase 0)

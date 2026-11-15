@@ -68,17 +68,17 @@ The project follows a microservices architecture, with two main services: `onboa
 
 | Module or Component | Relevant File Paths | Responsibility | Dependencies | When Codex Should Inspect It |
 |---------------------|---------------------|----------------|--------------|------------------------------|
-| **Onboard Service** | - `onboard/app/main.py`<br>- `onboard/app/ingest/`<br>- `onboard/app/sync/`<br>- `onboard/app/views/` | Handles telemetry data ingestion, processing, and synchronization. | - `earth` service<br>- `database` | Always |
-| **Earth Service** | - `earth/app/main.py`<br>- `earth/app/views/` | Receives and processes telemetry data. | - `onboard` service<br>- `database` | Always |
-| **Database** | - `common/src/hub_common/database.py`<br>- `onboard/migrations/`<br>- `earth/migrations/` | Manages database connections and migrations. | - `sqlalchemy` | Always |
-| **API Gateway** | - `common/src/hub_common/app_factory.py`<br>- `onboard/app/main.py`<br>- `earth/app/main.py` | Exposes RESTful APIs. | - `fastapi` | Always |
-| **Outbox Pattern** | - `onboard/app/sync/worker.py`<br>- `onboard/app/sync/store.py` | Ensures reliable message delivery. | - `database` | Always |
+| **Onboard Service** | - `app/onboard/app/main.py`<br>- `app/onboard/app/ingest/`<br>- `app/onboard/app/sync/`<br>- `app/onboard/app/views/` | Handles telemetry data ingestion, processing, and synchronization. | - `earth` service<br>- `database` | Always |
+| **Earth Service** | - `app/earth/app/main.py`<br>- `app/earth/app/views/` | Receives and processes telemetry data. | - `onboard` service<br>- `database` | Always |
+| **Database** | - `app/common/src/hub_common/database.py`<br>- `app/onboard/migrations/`<br>- `app/earth/migrations/` | Manages database connections and migrations. | - `sqlalchemy` | Always |
+| **API Gateway** | - `app/common/src/hub_common/app_factory.py`<br>- `app/onboard/app/main.py`<br>- `app/earth/app/main.py` | Exposes RESTful APIs. | - `fastapi` | Always |
+| **Outbox Pattern** | - `app/onboard/app/sync/worker.py`<br>- `app/onboard/app/sync/store.py` | Ensures reliable message delivery. | - `database` | Always |
 
 ## 4. Execution and Data Flows
 
 ### Entry Points
-- **Onboard Service**: `onboard/app/main.py`
-- **Earth Service**: `earth/app/main.py`
+- **Onboard Service**: `app/onboard/app/main.py`
+- **Earth Service**: `app/earth/app/main.py`
 
 ### Function or Component Interactions
 - **Onboard Service**:
@@ -105,23 +105,25 @@ The project follows a microservices architecture, with two main services: `onboa
 ## 5. Code Organization
 
 ### Directory Structure
-- `common/`: Shared code between the onboard and Earth services.
-- `onboard/`: Code for the onboard service.
-- `earth/`: Code for the Earth service.
-- `emu/`: Code for the emulator service.
+- `app/common/`: Shared code between the onboard and Earth services.
+- `app/onboard/`: Code for the onboard service.
+- `app/earth/`: Code for the Earth service.
+- `app/emu/`: Code for the emulator service.
+- `app/web/`: Code for the web application.
+- `app/contracts/`: Shared data contracts.
 
 ### File Naming Conventions
 - Python files use snake_case for module and function names.
 - Configuration files use snake_case for variable names.
 
 ### Module Boundaries
-- `common/`: Contains shared modules and utilities.
-- `onboard/`: Contains modules specific to the onboard service.
-- `earth/`: Contains modules specific to the Earth service.
+- `app/common/`: Contains shared modules and utilities.
+- `app/onboard/`: Contains modules specific to the onboard service.
+- `app/earth/`: Contains modules specific to the Earth service.
 
 ### Shared Components
-- `common/src/hub_common/`: Contains shared dependencies and utilities.
-- `common/tests/`: Contains shared test utilities.
+- `app/common/src/hub_common/`: Contains shared dependencies and utilities.
+- `app/common/tests/`: Contains shared test utilities.
 
 ### Reusable Services and Utilities
 - `common/src/hub_common/app_factory.py`: Shared FastAPI app construction logic.
@@ -129,9 +131,9 @@ The project follows a microservices architecture, with two main services: `onboa
 - `common/src/hub_common/database.py`: Shared database connection logic.
 
 ### Configuration Organization
-- `onboard/app/config.py`: Configuration for the onboard service.
-- `earth/app/config.py`: Configuration for the Earth service.
-- `docker-compose.yml`: Configuration for Docker Compose.
+- `app/onboard/app/config.py`: Configuration for the onboard service.
+- `app/earth/app/config.py`: Configuration for the Earth service.
+- `infra/docker-compose.yml`: Configuration for Docker Compose.
 
 ## 6. Coding Conventions
 
@@ -184,21 +186,21 @@ The project follows a microservices architecture, with two main services: `onboa
 - `alembic`: Database migration tool.
 
 ### Internal Dependencies
-- `common/src/hub_common/`: Shared code between services.
-- `onboard/app/`: Code for the onboard service.
-- `earth/app/`: Code for the Earth service.
+- `app/common/src/hub_common/`: Shared code between services.
+- `app/onboard/app/`: Code for the onboard service.
+- `app/earth/app/`: Code for the Earth service.
 
 ### External Services
 - `earth`: The Earth service for receiving telemetry data.
 
 ### Shared Modules
-- `common/src/hub_common/app_factory.py`: Shared FastAPI app construction logic.
-- `common/src/hub_common/auth.py`: Shared authentication logic.
-- `common/src/hub_common/database.py`: Shared database connection logic.
+- `app/common/src/hub_common/app_factory.py`: Shared FastAPI app construction logic.
+- `app/common/src/hub_common/auth.py`: Shared authentication logic.
+- `app/common/src/hub_common/database.py`: Shared database connection logic.
 
 ### Configuration Dependencies
-- `onboard/app/config.py`: Configuration for the onboard service.
-- `earth/app/config.py`: Configuration for the Earth service.
+- `app/onboard/app/config.py`: Configuration for the onboard service.
+- `app/earth/app/config.py`: Configuration for the Earth service.
 
 ### Components with Broad Impact
 - `outbox pattern`: Ensures reliable message delivery between services.
@@ -209,8 +211,8 @@ The project follows a microservices architecture, with two main services: `onboa
 ### Verified Commands
 - **Development**:
   ```sh
-  uvicorn onboard.app.main:app --reload
-  uvicorn earth.app.main:app --reload
+  cd app/onboard && uvicorn app.main:app --reload
+  cd app/earth && uvicorn app.main:app --reload
   ```
 - **Build**:
   ```sh

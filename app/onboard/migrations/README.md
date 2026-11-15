@@ -1,6 +1,6 @@
 # Onboard migrations (Alembic)
 
-The onboard PostgreSQL schema is managed only through these migrations. Run commands from the `onboard/` folder.
+The onboard PostgreSQL schema is managed only through these migrations. Run commands from the `app/onboard/` folder.
 
 ## One branch per owner
 
@@ -44,5 +44,5 @@ Always use `upgrade heads` (plural): `upgrade head` fails because there are thre
   depends_on = ("089bc82e7798", "e7707c1954d8")
   ```
 
-- Locally, start only the database with `docker compose up -d onboard-db` (published on `localhost:5433`), then run `uv run alembic upgrade heads`.
-- To start over: `docker compose down -v` deletes both databases.
+- Locally, from the repository root, start only the database with `docker compose -f infra/docker-compose.yml up -d onboard-db` (published on `localhost:5433`), then run `uv run alembic upgrade heads`.
+- To start over, from the repository root: `docker compose -f infra/docker-compose.yml down -v` deletes both databases.

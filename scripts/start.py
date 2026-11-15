@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Start the Onboard API locally with its PostgreSQL database in Docker."""
+"""Start the complete local stack or only the Onboard API with its database."""
 
 from __future__ import annotations
 
+import argparse
 import os
 import platform
 import shutil
@@ -14,6 +15,8 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 ROOT = Path(__file__).resolve().parents[1]
+APP_DIR = ROOT / "app"
+COMPOSE_FILE = ROOT / "infra" / "docker-compose.yml"
 ENV_FILE = ROOT / ".env"
 MIN_PYTHON = (3, 12)
 DEFAULT_ONBOARD_PORT = "8001"
@@ -117,7 +120,7 @@ def prepare_environment(dotenv: dict[str, str]) -> dict[str, str]:
     return env
 
 
-def main() -> int:
+def start_onboard() -> int:
     try:
         system = os_name()
         print(f"Detected platform: {system}")
@@ -136,7 +139,8 @@ def main() -> int:
         env = prepare_environment(dotenv)
         port = validate_local_port(env.get("ONBOARD_LOCAL_PORT", DEFAULT_ONBOARD_PORT))
 
-        run([docker, "compose", "version"], cwd=ROOT)
+        compose = [docker, "compose", "-f", str(COMPOSE_FILE)]
+        run(compose + ["version"], cwd=ROOT)
         docker_info = subprocess.run(
             [docker, "info"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
@@ -146,10 +150,9 @@ def main() -> int:
             )
         print("Docker Engine and Compose OK.")
 
-        run([uv, "sync", "--all-packages"], cwd=ROOT, env=env)
-        run([docker, "compose", "up", "-d", "onboard-db"], cwd=ROOT, env=env)
+        run([uv, "sync", "--all-packages"], cwd=APP_DIR, env=env)
+        run(compose + ["up", "-d", "onboard-db"], cwd=ROOT, env=env)
 
-        compose = [docker, "compose"]
         for attempt in range(30):
             ready = subprocess.run(
                 compose
@@ -168,7 +171,7 @@ def main() -> int:
             raise StartError("onboard-db did not become ready within 60 seconds.")
         print("Docker database ready.")
 
-        onboard_dir = ROOT / "onboard"
+        onboard_dir = APP_DIR / "onboard"
         run(
             [uv, "run", "--package", "onboard", "alembic", "upgrade", "heads"],
             cwd=onboard_dir,
@@ -198,6 +201,35 @@ def main() -> int:
     except OSError as error:
         print(f"Startup error: {error}", file=sys.stderr)
         return 1
+
+
+def start_stack() -> int:
+    try:
+        docker = require_command("docker", "Install Docker, then run this script again.")
+        command = [docker, "compose", "-f", str(COMPOSE_FILE), "up", "--build"]
+        if ENV_FILE.exists():
+            command[2:2] = ["--env-file", str(ENV_FILE)]
+        return subprocess.run(command, cwd=ROOT, env=os.environ.copy(), check=False).returncode
+    except KeyboardInterrupt:
+        print("\nStack stopped.")
+        return 130
+    except StartError as error:
+        print(f"Startup error: {error}", file=sys.stderr)
+        return 1
+    except OSError as error:
+        print(f"Startup error: {error}", file=sys.stderr)
+        return 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--onboard-only",
+        action="store_true",
+        help="run only Onboard locally with reload; Earth and Web are not started",
+    )
+    args = parser.parse_args()
+    return start_onboard() if args.onboard_only else start_stack()
 
 
 if __name__ == "__main__":

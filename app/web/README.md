@@ -34,4 +34,4 @@ Server data goes through [TanStack Query](https://tanstack.com/query): caching, 
 | `src/test/` | Test setup and named fakes (`FakeHealthServer`) |
 | `nginx.conf` | Production proxy: same `/api/*` paths as the dev server |
 
-How to run the whole stack: see the root [readme.md](../readme.md#running-locally).
+How to run the whole stack: see the root [readme.md](../../readme.md#running-locally).

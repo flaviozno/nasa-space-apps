@@ -1,5 +1,5 @@
-# uv workspace for the Python services. Run `uv sync` here once; each service
-# runs from its own folder (see readme.md, "Running locally").
+# uv workspace for the Python services. Run `uv sync` in `app/` once; each
+# service runs from its own folder (see the root readme, "Running locally").
 [project]
 name = "health-hub-workspace"
 version = "0.1.0"
