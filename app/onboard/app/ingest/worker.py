@@ -101,7 +101,7 @@ class WearableIngestWorker:
                 readings=total,
             )
             return total
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             self._store.record_error(self._session_id, self._clock.now_ms(), type(error).__name__)
             log_json(
                 logger,

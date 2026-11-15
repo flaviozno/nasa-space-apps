@@ -17,15 +17,14 @@ from pydantic import Field
 from pydantic.alias_generators import to_camel
 
 from app.config import OnboardSettings
+from app.crew.actions import build_action_plan
 from app.crew.fixtures import (
-    alerts_for,
     baseline_for,
     crew_members,
     load_contract,
     require_crew_member,
     require_metric,
 )
-from app.crew.actions import build_action_plan
 from app.crew.schemas import (
     ActionPlanOut,
     AlertOut,
@@ -47,6 +46,7 @@ from app.observations.catalog import load_catalog, validate_value
 from app.observations.catalog import require_metric as require_catalog_metric
 from app.observations.outbox import enqueue_observations_event
 from app.observations.repository import (
+    alerts_for_crew,
     insert_observations,
     insert_questionnaire_response,
     latest_per_metric,
@@ -176,15 +176,37 @@ def read_trend(
 
 
 @router.get("/{crew_id}/alerts", response_model=list[AlertOut], summary="Local alerts of one member")
-def read_alerts(crew_id: str, request: Request) -> list[AlertOut]:
-    """Alerts raised by onboard rules.
+def read_alerts(crew_id: str, request: Request, connection: DatabaseConnection) -> list[AlertOut]:
+    """Alerts raised by the onboard ingest rules, newest first.
 
-    Fixture data for now: the `alerts` table belongs to the ingest branch
-    (Miguel); this endpoint reads it once that migration lands.
-
-    Example: `GET /v1/crew/crew-3/alerts` → one ELEVATED_HEART_RATE fixture alert.
+    Reads the ingest branch `alerts` table (raised when a wearable reading
+    crossed |z| >= 3 of the crew member's baseline). The `message` is generated
+    on read from the metric catalog, so every card stays explainable.
     """
-    return alerts_for(_contract(request), crew_id)
+    catalog = _catalog(request)
+    require_crew_member(_contract(request), crew_id)
+    rows = alerts_for_crew(connection, crew_id)
+    alerts: list[AlertOut] = []
+    for row in rows:
+        definition = catalog.get(row["metric"], {})
+        label = definition.get("label", row["metric"])
+        unit = definition.get("unit", "")
+        alerts.append(
+            AlertOut(
+                alert_id=row["alert_id"],
+                crew_id=row["crew_id"],
+                sample_id=row["sample_id"],
+                metric=row["metric"],
+                value=row["value"],
+                z_score=row["z_score"],
+                message=(
+                    f"{label} crossed |z| >= 3 of the baseline: "
+                    f"{row['value']} {unit} (z {row['z_score']:+.1f})."
+                ),
+                created_at=row["created_at_ms"],
+            )
+        )
+    return alerts
 
 
 @router.get("/{crew_id}/mission-readiness", response_model=MissionReadinessOut, summary="Explainable local mission readiness")

@@ -14,7 +14,6 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from app.crew.schemas import (
-    AlertOut,
     BaselineOut,
     BaselineValueOut,
     CrewMemberOut,
@@ -163,23 +162,3 @@ def trend_for(contract: dict, member: dict, metric_id: str, window_minutes: int,
         ]
     return MetricTrendOut(crew_id=member["crewId"], metric=metric_id, unit=definition["unit"], points=points)
 
-
-def alerts_for(contract: dict, crew_id: str) -> list[AlertOut]:
-    """One fixture alert for crew-3 (ELEVATED_HEART_RATE); everyone else is quiet."""
-    member = require_crew_member(contract, crew_id)
-    if crew_id != "crew-3":
-        return []
-    value, z_score = _stub_value(member, "heart_rate")
-    return [
-        AlertOut(
-            alert_id=stable_id("alert", crew_id, "heart_rate"),
-            crew_id=crew_id,
-            rule_id="single_reading_zscore",
-            rule_version="1",
-            metric="heart_rate",
-            value=value,
-            z_score=z_score,
-            message="ELEVATED_HEART_RATE scenario: heart rate crossed |z| >= 3 of the baseline.",
-            created_at=now_ms() - 120_000,
-        )
-    ]

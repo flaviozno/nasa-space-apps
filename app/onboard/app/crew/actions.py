@@ -16,7 +16,6 @@ from app.crew.schemas import (
 )
 from app.readiness import ReadinessDecision, ReadinessStatus
 
-
 DISCLAIMER = (
     "Operational decision support only. This plan does not diagnose, prescribe, "
     "or replace the mission's approved medical procedures."
