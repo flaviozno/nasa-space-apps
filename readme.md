@@ -91,8 +91,10 @@ python -m unittest discover -s app/contracts/tests
 
 ## Documentation
 
-- [Plan and ownership](docs/plan.md)
-- [Telemetry architecture](docs/telemetry-architecture.md)
+- [Product insights and MVP scope](docs/insights.md) — why the Astronaut Health Hub exists, the onboard action loop, NASA-data boundaries, and known MVP gaps.
+- [Telemetry architecture](docs/telemetry-architecture.md) — the intended end-to-end telemetry and synchronization design.
+- [Plan and ownership](docs/plan.md) — implementation scope, delivery flow, and team ownership.
+- [Infrastructure](infra/) — Docker Compose stack, local service topology, and the telemetry diagrams.
 - [Emulator](app/emu/README.md)
 - [Onboard migrations](app/onboard/migrations/README.md)
 - [Frontend](app/web/README.md)
