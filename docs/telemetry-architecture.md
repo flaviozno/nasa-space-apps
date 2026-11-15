@@ -98,6 +98,8 @@ The ingestion transaction inserts the sample and its processing job atomically, 
 
 #### Local worker and alerts
 
+The future architecture may also evaluate an explainable Mission Readiness rule locally: personal baseline deviation, a recent crew check-in, and a separately stored mission-context reference can produce an operational review recommendation. This is an alert with bounded evidence and existing priority/delivery guarantees, not a new channel, clinical score, diagnosis, or personal radiation-dose calculation. The HTTP/PostgreSQL MVP implementation is documented in `readme.md` and deliberately uses historical DosTel context only.
+
 A local worker evaluates versioned rules, emits onboard alerts, and creates encoded telemetry events. It can generate:
 
 - **FULL** snapshots at least every 300 seconds;
