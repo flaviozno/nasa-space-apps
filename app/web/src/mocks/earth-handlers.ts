@@ -1,5 +1,5 @@
-// MSW handlers for the Earth view: the onboard sync status/link (shape from Guilherme's
-// feat/outbox-sync branch) and the PROVISIONAL Earth /v1/views/* endpoints.
+// MSW handlers for the Earth view: the onboard sync status/link and the Earth /v1/views/*
+// endpoints, in the shapes of onboard/app/sync and earth/app/views (see earth-contract.ts).
 //
 // A small time-based simulation stands in for the outbox, so the demo's scene 4 can be
 // rehearsed without the backend:
@@ -10,7 +10,7 @@
 
 import { http, HttpResponse } from 'msw'
 import { EARTH_API, ONBOARD_API } from '@/lib/api'
-import type { EarthAlert, EarthCrewMember, SyncStatus } from '@/lib/earth-contract'
+import type { EarthAlert, EarthCrewMember, EarthStatus, Freshness, SyncStatus } from '@/lib/earth-contract'
 import type { CrewMember, CrewSummary } from '@/lib/onboard-types'
 import onboardFixtures from './fixtures/onboard.json'
 
@@ -18,15 +18,23 @@ const PRODUCED_PER_SECOND = 4 // 4 crew × 1 reading/s ≈ 240 events/min
 const DRAIN_PER_SECOND = 40
 const ALERT_AFTER_CUT_MS = 8_000
 const EARTH_METRICS = ['heart_rate', 'spo2', 'body_temp'] as const
+/** Earth's own threshold (earth config `stale_after_ms`). */
+const EARTH_STALE_AFTER_MS = 10 * 60_000
+/** Typical outbox → Earth delay while the link is up. */
+const NORMAL_DELIVERY_MS = 3_000
 
 const fixtures = onboardFixtures as unknown as {
   crew: CrewMember[]
   members: Record<string, { metrics: CrewSummary; alerts: { alertId: string; metric?: string | null; value?: number | null; zScore?: number | null; message: string }[] }>
 }
 
-interface MockAlert extends Omit<EarthAlert, 'receivedAtMs'> {
+/** An alert as the simulation stores it; age and delay are derived when served. */
+interface MockAlert extends Omit<EarthAlert, 'receivedAtMs' | 'dataAgeMs' | 'deliveryDelayMs'> {
   receivedAtMs: number | null
 }
+
+const freshnessOf = (ageMs: number | null): Freshness =>
+  ageMs === null ? 'MISSING' : ageMs > EARTH_STALE_AFTER_MS ? 'STALE' : 'FRESH'
 
 interface Simulation {
   linkEnabled: boolean
@@ -55,12 +63,14 @@ function initialSimulation(now = Date.now()): Simulation {
           {
             eventId: `evt-${crew3Alert.alertId}`,
             crewId: 'crew-3',
+            alertId: crew3Alert.alertId,
+            ruleId: 'single_reading_zscore',
             metric: crew3Alert.metric ?? null,
             value: crew3Alert.value ?? null,
             zScore: crew3Alert.zScore ?? null,
             message: crew3Alert.message,
             createdAtOnboardMs: now - 4 * 60_000,
-            receivedAtMs: now - 4 * 60_000 + 3_000,
+            receivedAtMs: now - 4 * 60_000 + NORMAL_DELIVERY_MS,
           },
         ]
       : [],
@@ -96,6 +106,8 @@ function advance(now = Date.now()) {
       sim.alerts.push({
         eventId: 'evt-mock-crew-1-low-spo2',
         crewId: 'crew-1',
+        alertId: 'alert-mock-crew-1-low-spo2',
+        ruleId: 'single_reading_zscore',
         metric: 'spo2',
         value: 89,
         zScore: -8.2,
@@ -122,21 +134,46 @@ function syncStatus(now: number): SyncStatus {
   }
 }
 
+function deliveredAlerts(now: number): EarthAlert[] {
+  return sim.alerts
+    .filter((a): a is MockAlert & { receivedAtMs: number } => a.receivedAtMs !== null)
+    .map((a) => ({ ...a, dataAgeMs: now - a.createdAtOnboardMs, deliveryDelayMs: a.receivedAtMs - a.createdAtOnboardMs }))
+    .sort((a, b) => b.createdAtOnboardMs - a.createdAtOnboardMs)
+}
+
+function earthStatus(now: number): EarthStatus {
+  return {
+    generatedAtMs: now,
+    lastReceivedAtMs: sim.lastAckAtMs,
+    newestDataAgeMs: now - dataUpToMs(now),
+    observationEvents: sim.eventsReceived,
+    alertEvents: deliveredAlerts(now).length,
+    conflicts: 0,
+    averageDeliveryDelayMs: NORMAL_DELIVERY_MS,
+  }
+}
+
 function earthCrew(now: number): EarthCrewMember[] {
   const upTo = dataUpToMs(now)
+  const ageMs = now - upTo
+  const delivered = deliveredAlerts(now)
   return fixtures.crew.map((member) => {
     const summary = fixtures.members[member.crewId]?.metrics.metrics ?? []
-    const alertForMember = sim.alerts.find((a) => a.crewId === member.crewId && a.receivedAtMs !== null && a.metric)
+    const memberAlerts = delivered.filter((a) => a.crewId === member.crewId)
+    const alertForMember = memberAlerts.find((a) => a.metric)
     return {
       crewId: member.crewId,
       name: member.name,
       role: member.role,
-      lastReceivedAtMs: sim.lastAckAtMs,
+      freshness: freshnessOf(ageMs),
+      lastMeasuredAtMs: upTo,
+      dataAgeMs: ageMs,
+      alertCount: memberAlerts.length,
       metrics: EARTH_METRICS.flatMap((metric) => {
         const reading = summary.find((m) => m.metric === metric)
         if (!reading) return []
         const value = alertForMember?.metric === metric && alertForMember.value !== null ? alertForMember.value : (reading.value ?? null)
-        return [{ metric, value, unit: reading.unit, takenAt: upTo, receivedAt: sim.lastAckAtMs }]
+        return [{ metric, value, unit: reading.unit, takenAtMs: upTo, dataAgeMs: ageMs, freshness: freshnessOf(ageMs) }]
       }),
     }
   })
@@ -163,7 +200,7 @@ export const earthHandlers = [
   http.get(`${EARTH_API}/v1/views/status`, () => {
     const now = Date.now()
     advance(now)
-    return HttpResponse.json({ lastReceivedAtMs: sim.lastAckAtMs, eventsReceived: sim.eventsReceived })
+    return HttpResponse.json(earthStatus(now))
   }),
 
   http.get(`${EARTH_API}/v1/views/crew`, () => {
@@ -173,8 +210,8 @@ export const earthHandlers = [
   }),
 
   http.get(`${EARTH_API}/v1/views/alerts`, () => {
-    advance()
-    const delivered = sim.alerts.filter((a): a is EarthAlert => a.receivedAtMs !== null)
-    return HttpResponse.json([...delivered].sort((a, b) => b.createdAtOnboardMs - a.createdAtOnboardMs))
+    const now = Date.now()
+    advance(now)
+    return HttpResponse.json(deliveredAlerts(now))
   }),
 ]

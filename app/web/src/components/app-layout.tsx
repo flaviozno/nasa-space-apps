@@ -1,4 +1,4 @@
-import { EarthIcon, UsersRoundIcon } from 'lucide-react'
+import { EarthIcon, RadiationIcon, UsersRoundIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Link, Outlet, useLocation } from 'react-router'
 import { DisplayModeControl } from '@/components/display-mode-control'
@@ -19,6 +19,7 @@ function PrimaryNav() {
   // would only mark `/`, so the selected state vanished after profile choice.
   const crewActive = location.pathname === '/' || location.pathname.startsWith('/crew/')
   const earthActive = location.pathname === '/earth' || location.pathname.startsWith('/earth/')
+  const radiationActive = location.pathname === '/radiation'
 
   return (
     <nav aria-label="Primary navigation" className="isolate flex items-center rounded-full border border-white/8 bg-black/15 p-1 backdrop-blur-md">
@@ -31,6 +32,11 @@ function PrimaryNav() {
         <EarthIcon className="size-4" aria-hidden="true" />
         Earth
         {earthActive && <motion.span layoutId="active-nav" className="absolute inset-0 -z-10 rounded-full bg-white/10 shadow-sm" transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }} />}
+      </Link>
+      <Link to="/radiation" aria-current={radiationActive ? 'page' : undefined} className={navClass(radiationActive)}>
+        <RadiationIcon className="size-4" aria-hidden="true" />
+        Radiation
+        {radiationActive && <motion.span layoutId="active-nav" className="absolute inset-0 -z-10 rounded-full bg-white/10 shadow-sm" transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }} />}
       </Link>
     </nav>
   )

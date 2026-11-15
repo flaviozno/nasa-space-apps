@@ -1,7 +1,6 @@
 import { CheckIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { toast } from 'sonner'
 import { QuestionnaireSaved } from '@/components/questionnaire-saved'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { ValueStepper } from '@/components/value-stepper'
@@ -87,10 +86,8 @@ export function CrewManualPage() {
 
   const save = () => {
     if (selectedMetrics.length === 0 || bpError) return
-    submit.mutate(
-      { entries: selectedMetrics.map((id) => ({ metric: id, value: valueOf(id) })) },
-      { onSuccess: () => toast.success('Measurements saved') },
-    )
+    // The page swaps to the "Measurements saved" screen on success; no toast on top of it.
+    submit.mutate({ entries: selectedMetrics.map((id) => ({ metric: id, value: valueOf(id) })) })
   }
 
   return (

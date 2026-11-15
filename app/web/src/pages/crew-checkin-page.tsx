@@ -2,7 +2,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2Icon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { toast } from 'sonner'
 import { QuestionnaireClosed } from '@/components/questionnaire-closed'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { ScalePicker } from '@/components/scale-picker'
@@ -54,7 +53,6 @@ export function CrewCheckinPage() {
     const payload = toCheckinPayload(answers)
     if (!payload) return
     submit.mutate(payload, {
-      onSuccess: () => toast.success('Check-in saved'),
       // 409: someone already checked in today (another tablet, a retry) — show the closed state.
       onError: (error) => {
         if (error instanceof ApiError && error.status === 409) {

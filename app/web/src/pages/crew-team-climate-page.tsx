@@ -1,7 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { toast } from 'sonner'
 import { QuestionnaireClosed } from '@/components/questionnaire-closed'
 import { QuestionnaireSaved } from '@/components/questionnaire-saved'
 import { LoadingBlock, QueryError } from '@/components/query-state'
@@ -30,7 +29,6 @@ export function CrewTeamClimatePage() {
     submit.mutate(
       { score },
       {
-        onSuccess: () => toast.success('Team climate saved'),
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             queryClient.invalidateQueries({ queryKey: onboardKeys.questionnaireStatus(member.crewId) })

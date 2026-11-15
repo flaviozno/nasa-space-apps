@@ -6,14 +6,28 @@ import { useNow } from '@/hooks/use-now'
 import type { EarthAlert, EarthCrewMember, EarthStatus, SyncStatus } from '@/lib/earth-contract'
 import { useEarthAlerts, useEarthCrew, useEarthStatus, useSetLink, useSyncStatus } from '@/lib/earth-queries'
 import { describeAlert } from '@/lib/alert-text'
-import { displayUnit, formatValue, metricDisplay } from '@/lib/metric-catalog'
+import { displayUnit, formatValue, metricDisplay, PRIMARY_VITALS } from '@/lib/metric-catalog'
 import { formatGmtClock } from '@/lib/questionnaire-status'
 import { formatAge } from '@/lib/time'
 import { bigButton } from '@/lib/touch-styles'
 import { cn } from '@/lib/utils'
 
-/** Crew data older than this is marked STALE: batches normally arrive every minute. */
-const STALE_AFTER_MS = 2 * 60_000
+/**
+ * Earth is "behind" when nothing arrived for this long: batches normally arrive every few
+ * seconds. Per-member STALE comes from Earth itself (`freshness`, 10 min threshold).
+ */
+const BEHIND_AFTER_MS = 2 * 60_000
+
+/** Vitals shown on each crew card; the rest of the synced metrics are counted, not listed. */
+const CARD_METRICS = 3
+
+/** "no delay", "5 s delay", "9 min delay". */
+function formatDelay(delayMs: number): string {
+  const seconds = Math.round(delayMs / 1000)
+  if (seconds < 1) return 'no delay'
+  if (seconds < 60) return `${seconds} s delay`
+  return `${Math.round(seconds / 60)} min delay`
+}
 
 /**
  * `/earth` — flight surgeon console (owner: Wallace). Shows what has reached Earth, so when the
@@ -65,12 +79,7 @@ export function EarthViewPage() {
         {crew.isSuccess && (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {crew.data.map((member) => (
-              <EarthCrewCard
-                key={member.crewId}
-                member={member}
-                alert={alerts.data?.find((a) => a.crewId === member.crewId)}
-                now={now}
-              />
+              <EarthCrewCard key={member.crewId} member={member} alert={alerts.data?.find((a) => a.crewId === member.crewId)} now={now} />
             ))}
           </div>
         )}
@@ -137,12 +146,14 @@ function LinkStatusBand({ sync, earth, now }: { sync: SyncStatus; earth: EarthSt
         <div className="space-y-2">
           <p className="text-sm font-semibold tracking-widest text-muted-foreground">LAST RECEPTION ON EARTH</p>
           <p className="font-mono text-4xl font-semibold tabular-nums">{earth.lastReceivedAtMs === null ? '—' : formatGmtClock(earth.lastReceivedAtMs)}</p>
-          <p className={cn('text-base', behindMs !== null && behindMs > STALE_AFTER_MS ? 'font-semibold text-status-warn' : 'text-muted-foreground')}>
+          <p className={cn('text-base', behindMs !== null && behindMs > BEHIND_AFTER_MS ? 'font-semibold text-status-warn' : 'text-muted-foreground')}>
             {earth.lastReceivedAtMs === null
               ? 'Nothing received yet'
-              : behindMs !== null && behindMs > STALE_AFTER_MS
+              : behindMs !== null && behindMs > BEHIND_AFTER_MS
                 ? `${formatAge(earth.lastReceivedAtMs, now)} — Earth data is behind`
-                : `Up to date · ${earth.eventsReceived.toLocaleString('en-US')} events received`}
+                : `Up to date · ${(earth.observationEvents + earth.alertEvents).toLocaleString('en-US')} events received${
+                    earth.averageDeliveryDelayMs === null ? '' : ` · average ${formatDelay(earth.averageDeliveryDelayMs)}`
+                  }`}
           </p>
         </div>
       </div>
@@ -173,21 +184,27 @@ function LinkStatusBand({ sync, earth, now }: { sync: SyncStatus; earth: EarthSt
 }
 
 function EarthCrewCard({ member, alert, now }: { member: EarthCrewMember; alert: EarthAlert | undefined; now: number }) {
-  const newest = member.metrics.reduce<number | null>((latest, m) => (latest === null || m.takenAt > latest ? m.takenAt : latest), null)
-  const stale = newest !== null && now - newest > STALE_AFTER_MS
-  const chip = alert
+  const hasAlert = member.alertCount > 0 || alert !== undefined
+  const stale = member.freshness === 'STALE'
+  const missing = member.freshness === 'MISSING'
+  const chip = hasAlert
     ? { label: 'Alert', className: 'bg-status-alert/20 text-status-alert' }
-    : stale
-      ? { label: 'Data delayed', className: 'bg-status-warn/20 text-status-warn' }
-      : { label: 'Nominal', className: 'bg-status-ok/15 text-status-ok' }
+    : missing
+      ? { label: 'No data yet', className: 'bg-muted text-muted-foreground' }
+      : stale
+        ? { label: 'Data delayed', className: 'bg-status-warn/20 text-status-warn' }
+        : { label: 'Nominal', className: 'bg-status-ok/15 text-status-ok' }
+  // Vitals first, in the Crew Hub order; questionnaire scores and the rest are only counted.
+  const vitals = PRIMARY_VITALS.flatMap((id) => member.metrics.filter((m) => m.metric === id)).slice(0, CARD_METRICS)
+  const others = member.metrics.length - vitals.length
 
   return (
     <article
       aria-label={member.name}
       className={cn(
         'flex flex-col gap-4 rounded-3xl border-2 bg-card p-5 transition-opacity duration-500',
-        alert ? 'border-status-alert/60' : stale ? 'border-status-warn/40' : 'border-border',
-        stale && !alert && 'opacity-75',
+        hasAlert ? 'border-status-alert/60' : stale ? 'border-status-warn/40' : 'border-border',
+        (stale || missing) && !hasAlert && 'opacity-75',
       )}
     >
       <div className="flex items-start gap-3">
@@ -199,21 +216,32 @@ function EarthCrewCard({ member, alert, now }: { member: EarthCrewMember; alert:
         </div>
       </div>
 
-      <dl className="grid grid-cols-3 gap-2">
-        {member.metrics.map((m) => {
-          const flagged = alert?.metric === m.metric
-          return (
-            <div key={m.metric} className="space-y-0.5">
-              <dt className="text-sm text-muted-foreground">{metricDisplay(m.metric).label}</dt>
-              <dd className={cn('font-mono text-3xl font-semibold tabular-nums', flagged && 'text-status-alert')}>{formatValue(m.metric, m.value)}</dd>
-              <dd className="text-sm text-muted-foreground">{displayUnit(m.unit)}</dd>
-            </div>
-          )
-        })}
-      </dl>
+      {vitals.length > 0 && (
+        <dl className="grid grid-cols-3 gap-2">
+          {vitals.map((m) => {
+            const flagged = alert?.metric === m.metric
+            const old = m.freshness !== 'FRESH'
+            return (
+              <div key={m.metric} className="space-y-0.5" title={old ? `Taken ${formatAge(m.takenAtMs, now)}` : undefined}>
+                <dt className="text-sm text-muted-foreground">{metricDisplay(m.metric).label}</dt>
+                <dd className={cn('font-mono text-3xl font-semibold tabular-nums', flagged ? 'text-status-alert' : old && 'text-muted-foreground')}>
+                  {formatValue(m.metric, m.value)}
+                </dd>
+                <dd className="text-sm text-muted-foreground">
+                  {displayUnit(m.unit)}
+                  {old && <span className="ml-1 font-semibold text-status-warn">· {m.freshness === 'STALE' ? 'old' : 'none'}</span>}
+                </dd>
+              </div>
+            )
+          })}
+        </dl>
+      )}
+      {others > 0 && <p className="text-sm text-muted-foreground">+{others} more {others === 1 ? 'metric' : 'metrics'} received</p>}
 
       <p className="mt-auto flex flex-wrap items-center gap-2 border-t pt-3 text-base text-muted-foreground">
-        {newest === null ? 'No data yet' : `Data from ${formatGmtClock(newest)} · ${formatAge(newest, now)}`}
+        {member.lastMeasuredAtMs === null
+          ? 'No data yet'
+          : `Data from ${formatGmtClock(member.lastMeasuredAtMs)} · ${formatAge(member.lastMeasuredAtMs, now)}`}
         {stale && (
           <span className="animate-pulse rounded-full bg-status-warn/20 px-2.5 py-0.5 text-sm font-bold tracking-wider text-status-warn">
             STALE
@@ -226,7 +254,7 @@ function EarthCrewCard({ member, alert, now }: { member: EarthCrewMember; alert:
 
 function EarthAlertRow({ alert, crew }: { alert: EarthAlert; crew: EarthCrewMember[] }) {
   const name = crew.find((member) => member.crewId === alert.crewId)?.name ?? alert.crewId
-  const delayMinutes = Math.round((alert.receivedAtMs - alert.createdAtOnboardMs) / 60_000)
+  const delayed = alert.deliveryDelayMs >= 60_000
   const text = describeAlert(alert, 'the')
   const readiness = alert.recommendationStatus
 
@@ -244,7 +272,7 @@ function EarthAlertRow({ alert, crew }: { alert: EarthAlert; crew: EarthCrewMemb
           <>
             <p className="text-base font-semibold text-status-alert">{readiness.replaceAll('_', ' ')}</p>
             <p className="text-base text-muted-foreground">{alert.message}</p>
-            {alert.evidence && <p className="text-sm text-muted-foreground">Evidence: {alert.evidence.map((item) => `${item.label} ${item.value} ${item.unit}`).join(' Â· ')}</p>}
+            {alert.evidence && <p className="text-sm text-muted-foreground">Evidence: {alert.evidence.map((item) => `${item.label} ${item.value} ${item.unit}`).join(' · ')}</p>}
             {alert.disclaimer && <p className="text-sm text-muted-foreground">{alert.disclaimer}</p>}
           </>
         )}
@@ -267,10 +295,10 @@ function EarthAlertRow({ alert, crew }: { alert: EarthAlert; crew: EarthCrewMemb
         <span
           className={cn(
             'rounded-full px-3 py-1 text-sm font-semibold',
-            delayMinutes >= 1 ? 'bg-status-warn/20 text-status-warn' : 'bg-status-ok/15 text-status-ok',
+            delayed ? 'bg-status-warn/20 text-status-warn' : 'bg-status-ok/15 text-status-ok',
           )}
         >
-          {delayMinutes >= 1 ? `${delayMinutes} min delay` : 'no delay'}
+          {formatDelay(alert.deliveryDelayMs)}
         </span>
       </div>
     </li>

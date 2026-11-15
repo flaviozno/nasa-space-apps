@@ -2,7 +2,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { toast } from 'sonner'
 import { OptionPicker } from '@/components/option-picker'
 import { QuestionnaireClosed } from '@/components/questionnaire-closed'
 import { QuestionnaireSaved } from '@/components/questionnaire-saved'
@@ -45,7 +44,6 @@ export function CrewPhq4Page() {
     submit.mutate(
       { answers: answers as number[] },
       {
-        onSuccess: () => toast.success('Wellbeing questionnaire saved'),
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             queryClient.invalidateQueries({ queryKey: onboardKeys.questionnaireStatus(member.crewId) })
