@@ -168,6 +168,50 @@ def test_unknown_crew_and_metric_return_404(clean_tables: Engine) -> None:
     assert trend_response.status_code == 404
 
 
+def test_alerts_read_the_real_ingest_table(clean_tables: Engine) -> None:
+    """Seed one ingest alert the way Miguel's worker would, then read it as the hub does."""
+    with clean_tables.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO ingest_sessions (session_id, scenario, next_until_acquired_at_ms, updated_at_ms)"
+                " VALUES ('sess-1', 'NORMAL', :ts, :ts)"
+            ),
+            {"ts": BASE},
+        )
+        connection.execute(
+            text(
+                "INSERT INTO wearable_samples (sample_id, session_id, crew_id, device_id, boot_id,"
+                " sequence_number, acquired_at_ms, payload, received_at_onboard_ms)"
+                " VALUES ('smp-1', 'sess-1', 'crew-1', 'wearable-01', 'boot-1', 1, :ts, '{}', :ts)"
+            ),
+            {"ts": BASE},
+        )
+        connection.execute(
+            text(
+                "INSERT INTO alerts (alert_id, crew_id, sample_id, metric, value, z_score, created_at_ms)"
+                " VALUES ('alert-1', 'crew-1', 'smp-1', 'heart_rate', 126, 5, :ts)"
+            ),
+            {"ts": BASE},
+        )
+
+    with api(clean_tables) as test_client:
+        response = test_client.get("/v1/crew/crew-1/alerts")
+        quiet = test_client.get("/v1/crew/crew-4/alerts")
+
+    assert response.status_code == 200
+    alerts = response.json()
+    assert len(alerts) == 1
+    alert = alerts[0]
+    assert alert["alertId"] == "alert-1"
+    assert alert["sampleId"] == "smp-1"
+    assert alert["metric"] == "heart_rate"
+    assert alert["value"] == 126
+    assert alert["zScore"] == 5
+    assert "bpm" in alert["message"] and "126.0" in alert["message"]  # explainable, from the catalog
+    assert quiet.status_code == 200
+    assert quiet.json() == []
+
+
 def test_manual_entries_persist_and_enqueue_earth_event(clean_tables: Engine) -> None:
     taken_at = BASE
     payload = {"entries": [{"metric": "body_mass", "value": 74.2, "takenAt": taken_at}]}

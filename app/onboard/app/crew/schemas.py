@@ -152,19 +152,19 @@ class QuestionnaireResponseOut(CamelModel):
 
 
 class AlertOut(CamelModel):
-    """A local alert raised by onboard rules (stored by ingest; read here).
+    """A local alert raised by onboard ingest rules (read from the ingest `alerts` table).
 
-    The final field set follows the ingest branch migration (Miguel's 002);
-    these stub fields cover what the Crew Hub renders.
+    `message` is generated on read from the catalog label, so the Crew Hub card
+    stays explainable without storing prose. `sampleId` links the alert to the
+    wearable sample that triggered it.
     """
 
     alert_id: str
     crew_id: str
-    rule_id: str
-    rule_version: str
-    metric: MetricId | None = None
-    value: float | None = None
-    z_score: float | None = None
+    sample_id: str
+    metric: MetricId
+    value: float
+    z_score: float
     message: str
     created_at: EpochMs
 

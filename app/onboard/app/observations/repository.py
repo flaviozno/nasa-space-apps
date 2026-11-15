@@ -145,3 +145,25 @@ def insert_questionnaire_response(connection: Connection, response: dict) -> Non
     (source_ref); this table only records who answered what questionnaire, when.
     """
     connection.execute(INSERT_RESPONSE_SQL, response)
+
+
+ALERTS_SQL = text(
+    """
+    SELECT alert_id, crew_id, sample_id, metric, value, z_score, created_at_ms
+    FROM alerts
+    WHERE crew_id = :crew_id
+    ORDER BY created_at_ms DESC, alert_id DESC
+    LIMIT :limit
+    """
+)
+
+
+def alerts_for_crew(connection: Connection, crew_id: str, *, limit: int = 50) -> list:
+    """Newest ingest alerts for one crew member, newest first.
+
+    Read-side of the ingest branch `alerts` table (Miguel); the Crew API never
+    writes here — alerts are raised by the ingest rules only.
+
+    Example: alerts_for_crew(connection, "crew-3")[0]["metric"] == "heart_rate".
+    """
+    return connection.execute(ALERTS_SQL, {"crew_id": crew_id, "limit": limit}).mappings().fetchall()

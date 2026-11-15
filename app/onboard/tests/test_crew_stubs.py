@@ -39,17 +39,6 @@ def test_baseline_lists_every_contract_metric() -> None:
     assert heart_rate == {"metric": "heart_rate", "unit": "bpm", "median": 76, "spread": 10}
 
 
-def test_alerts_are_empty_except_the_fixture_member() -> None:
-    with client() as test_client:
-        quiet = test_client.get("/v1/crew/crew-1/alerts")
-        alerting = test_client.get("/v1/crew/crew-3/alerts")
-    assert quiet.json() == []
-    alerts = alerting.json()
-    assert len(alerts) == 1
-    assert alerts[0]["metric"] == "heart_rate"
-    assert alerts[0]["ruleId"] == "single_reading_zscore"
-
-
 def test_openapi_exposes_the_crew_api_paths() -> None:
     app = create_app(OnboardSettings(database_url=UNREACHABLE_DB, sync_worker_enabled=False))
     paths = app.openapi()["paths"]

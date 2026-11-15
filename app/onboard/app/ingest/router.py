@@ -1,7 +1,6 @@
 """Status endpoint for the onboard-to-emulator ingestion worker."""
 
-from fastapi import APIRouter
-from fastapi import Request
+from fastapi import APIRouter, Request
 
 from app.config import OnboardSettings
 
