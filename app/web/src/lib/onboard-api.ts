@@ -5,6 +5,7 @@ import { ONBOARD_API } from '@/lib/api'
 import { requestJson } from '@/lib/http'
 import type {
   Alert,
+  ActionPlan,
   Baseline,
   CrewMember,
   CrewSummary,
@@ -51,6 +52,8 @@ export const onboardApi = {
   getAlerts: (crewId: string) => request<Alert[]>(`${crewPath(crewId)}/alerts`),
 
   getMissionReadiness: (crewId: string) => request<MissionReadiness>(`${crewPath(crewId)}/mission-readiness`),
+
+  getActionPlan: (crewId: string) => request<ActionPlan>(`${crewPath(crewId)}/action-plan`),
 
   /** PROVISIONAL endpoint (not in the onboard API yet); see src/lib/questionnaire-status.ts. */
   getQuestionnaireStatus: (crewId: string) =>

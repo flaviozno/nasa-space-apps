@@ -53,6 +53,22 @@ def test_summary_on_an_empty_database_is_all_no_data(clean_tables: Engine) -> No
     assert metrics["heart_rate"]["unit"] == "bpm"
 
 
+def test_action_plan_turns_missing_local_context_into_collection_steps(clean_tables: Engine) -> None:
+    with api(clean_tables) as test_client:
+        response = test_client.get("/v1/crew/crew-1/action-plan")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["priority"] == "RECHECK"
+    assert body["title"] == "Complete a local health check"
+    assert [step["actionType"] for step in body["steps"]] == [
+        "VERIFY_MEASUREMENT",
+        "COMPLETE_CHECKIN",
+        "FOLLOW_APPROVED_PROTOCOL",
+    ]
+    assert "does not diagnose" in body["disclaimer"]
+
+
 def test_summary_reports_ok_for_a_fresh_normal_value(clean_tables: Engine) -> None:
     now_ms = int(time.time() * 1000)
     with api(clean_tables) as test_client:

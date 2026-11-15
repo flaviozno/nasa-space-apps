@@ -8,6 +8,7 @@ import { http, HttpResponse } from 'msw'
 import { ONBOARD_API } from '@/lib/api'
 import type {
   Alert,
+  ActionPlan,
   Baseline,
   CrewMember,
   CrewSummary,
@@ -151,6 +152,41 @@ export const handlers = [
       ] : [],
       disclaimer: 'Historical NASA environmental reference; not a personal radiation dose or medical diagnosis.',
     })
+  }),
+
+  http.get(`${crew}/:crewId/action-plan`, ({ params }) => {
+    const crewId = String(params.crewId)
+    if (!fixtures.members[crewId]) return notFound(`unknown crewId: ${crewId}`)
+    const review = crewId === 'crew-3'
+    const plan: ActionPlan = review
+      ? {
+          crewId,
+          priority: 'ACT_NOW',
+          title: 'Pause before a critical task',
+          detail: 'Local signals need a short review before the next safety-critical activity.',
+          evaluatedAt: Date.now(),
+          steps: [
+            { id: 'pause-task', title: 'Pause the critical task', detail: 'Tell the nearby crew member or task lead that a local health review is in progress.', actionType: 'PAUSE_TASK' },
+            { id: 'verify-measurement', title: 'Confirm the heart-rate reading', detail: 'Check sensor contact, remain at rest for the repeat measurement, and compare the new reading with your personal baseline.', actionType: 'VERIFY_MEASUREMENT' },
+            { id: 'record-context', title: 'Record current symptoms and fatigue', detail: 'Complete the local check-in so the review has a current self-report alongside the device reading.', actionType: 'COMPLETE_CHECKIN' },
+            { id: 'approved-protocol', title: 'Use the approved onboard procedure', detail: 'Follow the mission procedure applicable to the confirmed finding; do not wait for a ground link to begin it.', actionType: 'FOLLOW_APPROVED_PROTOCOL' },
+          ],
+          disclaimer: 'Operational decision support only. This plan does not diagnose, prescribe, or replace the mission\'s approved medical procedures.',
+        }
+      : {
+          crewId,
+          priority: 'RECHECK',
+          title: 'Complete a local health check',
+          detail: 'A current check-in or measurement is missing, so the system cannot make a stronger readiness conclusion.',
+          evaluatedAt: Date.now(),
+          steps: [
+            { id: 'verify-measurement', title: 'Restore a usable heart-rate reading', detail: 'Check wearable contact and battery, then repeat the measurement. Do not act on missing, invalid, or stale data.', actionType: 'VERIFY_MEASUREMENT' },
+            { id: 'complete-checkin', title: 'Complete the current health check-in', detail: 'Record fatigue, sleepiness, mood, and symptoms so local context is complete.', actionType: 'COMPLETE_CHECKIN' },
+            { id: 'observe-change', title: 'Monitor for a meaningful change', detail: 'If the repeat reading remains different from your baseline or symptoms change, use the approved onboard procedure.', actionType: 'FOLLOW_APPROVED_PROTOCOL' },
+          ],
+          disclaimer: 'Operational decision support only. This plan does not diagnose, prescribe, or replace the mission\'s approved medical procedures.',
+        }
+    return HttpResponse.json(plan)
   }),
 
   http.post(`${crew}/:crewId/manual-entries`, async ({ params, request }) => {

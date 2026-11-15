@@ -21,6 +21,7 @@ export const onboardKeys = {
     [...onboardKeys.member(crewId), 'trend', metric, options] as const,
   alerts: (crewId: string) => [...onboardKeys.member(crewId), 'alerts'] as const,
   readiness: (crewId: string) => [...onboardKeys.member(crewId), 'mission-readiness'] as const,
+  actionPlan: (crewId: string) => [...onboardKeys.member(crewId), 'action-plan'] as const,
   questionnaireStatus: (crewId: string) => [...onboardKeys.member(crewId), 'questionnaire-status'] as const,
 }
 
@@ -81,6 +82,15 @@ export function useMissionReadiness(crewId: string) {
   return useQuery({
     queryKey: onboardKeys.readiness(crewId),
     queryFn: () => onboardApi.getMissionReadiness(crewId),
+    refetchInterval: ALERT_REFRESH_MS,
+  })
+}
+
+/** Local next-step guidance computed by Onboard; it must remain usable without Earth. */
+export function useActionPlan(crewId: string) {
+  return useQuery({
+    queryKey: onboardKeys.actionPlan(crewId),
+    queryFn: () => onboardApi.getActionPlan(crewId),
     refetchInterval: ALERT_REFRESH_MS,
   })
 }

@@ -40,6 +40,17 @@ describe('Crew Hub overview', () => {
     expect(summary).toHaveTextContent('Connected')
   })
 
+  it('puts a local, non-clinical action plan before the operational summary', async () => {
+    renderAt('/crew/crew-3')
+    const plan = await screen.findByRole('region', { name: 'What to do now' })
+    expect(plan).toHaveTextContent('ACT NOW')
+    expect(plan).toHaveTextContent('Pause before a critical task')
+    expect(plan).toHaveTextContent('Confirm the heart-rate reading')
+    expect(plan).toHaveTextContent('Use the approved onboard procedure')
+    expect(plan).toHaveTextContent('does not diagnose, prescribe')
+    expect(within(plan).getByRole('link', { name: 'Open health check-in' })).toHaveAttribute('href', '/crew/crew-3/checkin')
+  })
+
   it('switches the trend when another vital is tapped', async () => {
     renderAt('/crew/crew-1')
     await screen.findByRole('region', { name: 'Current levels' })

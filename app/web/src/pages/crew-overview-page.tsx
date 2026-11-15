@@ -2,6 +2,7 @@ import { BellRingIcon, ChevronRightIcon, ClipboardCheckIcon, Clock3Icon, RadioTo
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { AlertBanner } from '@/components/alert-banner'
+import { ActionPlanCard } from '@/components/action-plan-card'
 import { MissionReadinessCard } from '@/components/mission-readiness-card'
 import { LoadingBlock, QueryError } from '@/components/query-state'
 import { TrendChart } from '@/components/trend-chart'
@@ -11,7 +12,7 @@ import { useCrewHubMember } from '@/lib/crew-hub-context'
 import { useSyncStatus } from '@/lib/earth-queries'
 import { displayUnit, formatValue, metricDisplay, PRIMARY_VITALS } from '@/lib/metric-catalog'
 import { STATUS_STYLES } from '@/lib/metric-status'
-import { useCrewAlerts, useCrewMetrics, useMissionReadiness, useQuestionnaireStatus } from '@/lib/onboard-queries'
+import { useActionPlan, useCrewAlerts, useCrewMetrics, useMissionReadiness, useQuestionnaireStatus } from '@/lib/onboard-queries'
 import { isAvailable } from '@/lib/questionnaire-status'
 import type { CrewSummary, MetricSummary, MissionReadiness } from '@/lib/onboard-types'
 import { formatAge } from '@/lib/time'
@@ -23,6 +24,7 @@ export function CrewOverviewPage() {
   const metrics = useCrewMetrics(member.crewId)
   const alerts = useCrewAlerts(member.crewId)
   const readiness = useMissionReadiness(member.crewId)
+  const actionPlan = useActionPlan(member.crewId)
   const status = useQuestionnaireStatus(member.crewId)
   const sync = useSyncStatus()
   const now = useNow()
@@ -55,6 +57,8 @@ export function CrewOverviewPage() {
 
   return (
     <div className="space-y-4">
+      {actionPlan.isSuccess && <ActionPlanCard crewId={member.crewId} plan={actionPlan.data} />}
+      {actionPlan.isError && <QueryError error={actionPlan.error} title="Could not load your local action plan" onRetry={() => actionPlan.refetch()} />}
       <OperationalSummary
         metrics={metrics.data}
         readiness={readiness.data}

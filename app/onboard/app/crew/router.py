@@ -25,7 +25,9 @@ from app.crew.fixtures import (
     require_crew_member,
     require_metric,
 )
+from app.crew.actions import build_action_plan
 from app.crew.schemas import (
+    ActionPlanOut,
     AlertOut,
     BaselineOut,
     CrewMemberOut,
@@ -217,6 +219,22 @@ def read_mission_readiness(
         ],
         disclaimer=DISCLAIMER,
     )
+
+
+@router.get("/{crew_id}/action-plan", response_model=ActionPlanOut, summary="Local next actions")
+def read_action_plan(crew_id: str, request: Request, connection: DatabaseConnection) -> ActionPlanOut:
+    """Return a bounded, offline-capable action plan for the astronaut.
+
+    The plan is calculated only from onboard observations, the personal
+    baseline, and mission context already stored locally. It has no clinical
+    threshold or external dependency, and adds no data to the database.
+    """
+    contract = _contract(request)
+    member = require_crew_member(contract, crew_id)
+    now = _now_ms(request)
+    decision = evaluate_for_crew(connection, crew_id, member["baselines"].get("heart_rate"), now)
+    summary = summarize(contract, _catalog(request), member, latest_per_metric(connection, crew_id), now)
+    return build_action_plan(crew_id, decision, summary, now)
 
 
 def _manual_source_ref(crew_id: str, metric: str, taken_at: int) -> str:

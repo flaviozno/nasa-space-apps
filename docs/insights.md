@@ -1,241 +1,180 @@
-# Product Insights — Monitoring in Senior Living Facilities
+# Product Insights — Astronaut Health Hub
 
-> A hypothesis for applying the health telemetry architecture to everyday care. This document explores a product opportunity; it does not replace the current technical scope or represent a validated clinical solution.
+> Product framing for the NASA Space Apps Challenge MVP. This document describes
+> the implemented scope and its limits; it does not claim clinical validation,
+> flight qualification, diagnosis, or treatment capability.
 
-## 1. Core idea
+## 1. Product thesis
 
-Use data collection, local processing, and synchronization to help a care team organize follow-ups for people living in a senior care facility.
+Long-duration missions expose crews to radiation, altered gravity, isolation
+and confinement, distance from Earth, and hostile or closed environments.
+Those hazards can interact, while medical support and communications may be
+delayed. The product must therefore help an astronaut understand a change and
+take a bounded operational next step **onboard**, before Earth receives a copy.
 
-The proposal turns a reading or observation into an understandable follow-up item, assigns it to a responsible professional, and tracks it until closure.
+**Astronaut Health Hub** is an offline-capable health telemetry demonstrator
+for a fictional crew. It brings together simulated wearable measurements,
+self-reported check-ins, manual measurements, personal baselines, explainable
+local rules, and eventual synchronization with Earth.
 
-**Question the product should answer:**
+The central product question is:
 
-> Who has a pending follow-up, what information created it, and who is responsible for the case?
+> What does this astronaut need to do next, based on current local evidence,
+> without waiting for a connection to Earth?
 
-## 2. Problem to investigate
+NASA groups the relevant mission conditions into five human-spaceflight
+hazards: radiation, isolation and confinement, distance from Earth, gravity
+fields, and hostile/closed environments.
 
-Our hypothesis is that some follow-up information is spread across manual records, devices, conversations, and shift handovers. This may make it difficult to know whether an observation has already been checked or still requires action.
+- NASA Human Research Program, [Five Hazards of Human Spaceflight](https://www.nasa.gov/hrp/hazards/)
+- NASA Human Research Program, [Risks of Human Spaceflight](https://www.nasa.gov/hrp/risks/)
 
-Before developing for real use, we need to confirm how each institution works today. We do not assume it lacks an electronic record, management system, or its own protocols.
+## 2. The MVP loop: collect → assess → act → synchronize
 
-| Situation to investigate | Possible product contribution |
+```text
+Wearable / self-report / manual input
+                ↓
+       Onboard observations store
+                ↓
+  Personal baseline + freshness + rules
+                ↓
+  Local action plan for the astronaut
+                ↓
+ Durable outbox → Earth copy when the link is available
+```
+
+The onboard service is the operational source of truth. Earth is intentionally
+a delayed, idempotent copy for the flight-surgeon view; loss of the Earth link
+does not stop local collection, assessment, or action guidance.
+
+## 3. What the MVP implements
+
+### 3.1 Collect
+
+All inputs are normalized as an `observation`: crew member, metric, value,
+unit, source, source reference, and collection time.
+
+| Input path | Current MVP coverage |
 | --- | --- |
-| A reading is recorded without an explicit follow-up | Create a follow-up item linked to that record |
-| Uncertainty about who will perform the check | Allow a professional to take ownership of the case |
-| Shift handover with fragmented information | Show pending items, owners, and recent observations |
-| A sensor stops sending data | Separate a collection failure from a change in the person's condition |
-| Internet is unavailable | Keep records locally and synchronize later |
+| Wearable emulator | Heart rate, SpO₂, body temperature, device battery, and a radiation-context channel |
+| Manual input | Body mass, blood pressure, water intake, and grip strength |
+| Daily check-in | Mood, stress, fatigue, sleepiness, and six symptom scores |
+| Weekly questionnaires | PHQ-4 total and team-climate score |
 
-These are interview and pilot hypotheses, not problems already proven in this market.
+`null` represents an invalid measurement, never a zero. The summary also
+distinguishes `OK`, `DEVIATION`, `STALE`, `INVALID`, and `NO_DATA` so missing
+or old data cannot look normal.
 
-## 3. Audience and expected benefit
+### 3.2 Assess
 
-**Initial users:** authorized care-team professionals and facility coordinators.
+The service compares an observation with the astronaut's fixed pre-flight
+baseline using an explainable z-score. Charts show current readings, trends,
+age, and baseline deviation. A local Mission Readiness rule combines only
+three explicit signals:
 
-**Potential buyer:** the institution operating the senior living facility.
+1. heart-rate deviation from the astronaut's own baseline;
+2. a fresh fatigue self-report; and
+3. historical ISS DosTel radiation context.
 
-**Expected benefit:** organize follow-up work and reduce uncertainty about pending tasks and responsibilities.
+The result is `READY`, `MONITOR`, or `REVIEW_BEFORE_CRITICAL_TASK`. Missing
+evidence produces `MONITOR`, not a reassuring conclusion.
 
-Family access is not part of the first version. Its usefulness, permissions, and impact on the team's work must be evaluated separately.
+### 3.3 Act
 
-## 4. Everyday usage example
+The Crew Hub starts with **What to do now**, a local action plan computed from
+the current readiness decision and measurement quality. It is operational
+decision support, not clinical triage.
 
-1. A monitored person has a reading received from an integrated device or entered manually.
-2. The system validates the source, timestamp, and data quality.
-3. A rule previously configured by the team creates a follow-up item.
-4. The screen shows the reason, the reading used, and the age of the data.
-5. A professional takes ownership of the case.
-6. They check the person according to the institution's procedures and record an observation.
-7. The case is closed with the responsible person, time, and outcome recorded.
-
-The system organizes this workflow. It does not diagnose, prescribe, or replace the team's assessment.
-
-### Example case
-
-| Information | Demonstration example |
+| State | Onboard guidance |
 | --- | --- |
-| Person | Demonstration resident 03 |
-| Reason | Reading meets the condition of a configured experimental rule |
-| Source | Simulated device 03 |
-| Quality | Valid reading in the test scenario |
-| Collection time | 2 minutes ago |
-| Status | Awaiting verification |
-| Owner | Not assigned yet |
-| Interface action | Take ownership |
-
-Do not define clinical thresholds based on this example. In the prototype, rules and readings are synthetic and identified as experimental.
-
-## 5. Insights that guide the product
-
-### 5.1 A reading should lead to an understandable action
-
-An isolated chart may require interpretation and fail to clarify the next step. The opportunity is to present data together with the reason for the follow-up and the available operational action.
-
-**MVP application:** every case shows evidence, its reason, and a button to take ownership of the verification.
-
-### 5.2 Missing data does not mean the person is well
-
-A device may be out of battery, out of range, or disconnected. The absence of a reading must not look like a normal condition.
-
-**MVP application:** distinguish valid, invalid, and stale readings. A collection failure creates a technical case separate from a follow-up item associated with a reading.
-
-### 5.3 Receiving an alert does not mean it was checked
-
-Technical delivery confirmation does not prove that someone became aware of an alert or performed a check.
-
-**MVP application:** keep three separate records:
-
-| Record | Meaning |
-| --- | --- |
-| Persistence confirmation | The server stored the event |
-| Team acknowledgement | A professional took ownership of the case |
-| Closure | The professional recorded the verification outcome |
-
-### 5.4 Context and quality matter
-
-An old reading or one with inadequate sensor contact cannot be presented as if it reflected the current state. Manual records must also indicate who reported the data.
-
-**MVP application:** show collection time, source, quality, and author identification for manual entry.
-
-### 5.5 Too many alerts can reduce usefulness
-
-The hypothesis is that overly sensitive rules create work without benefit. The number of alerts should not be treated as a success metric.
-
-**MVP application:** start with one experimental rule; allow staff to record when a case had no operational value and review results with the team.
-
-### 5.6 Action history may be more useful than additional metrics
-
-Knowing who checked an item and what was recorded can support continuity of care, especially between shifts.
-
-**MVP application:** maintain a simple timeline and avoid adding metrics without an identified need.
-
-## 6. Reusing the existing architecture
-
-| Telemetry project element | Everyday application |
-| --- | --- |
-| Simulated wearable on Vercel | Source of synthetic readings for the demonstration |
-| Onboard service | Facility ingestion and processing service |
-| Local database and Outbox | Durable record and synchronization of pending events |
-| Ground service | Central follow-up service |
-| Experimental rules | Generation of explainable follow-up items |
-| IDs and deduplication | Prevent duplicate readings and cases during retransmission |
-| Application ACK | Prove technical persistence |
-| Event history | Evidence for the case timeline |
-
-### Important limitation of the current demonstration
-
-While the services run on a VPS, unavailability between the facility and the VPS prevents access to remote processing. The demonstration can simulate a service-to-service interruption, but it does not prove offline operation at the institution.
-
-For true local continuity, the ingestion, persistence, and interface required by the care team must be available on equipment at the facility. This evolution should enter scope only if the pilot confirms the need.
-
-The ability to regenerate synthetic data also does not prove that a physical device can store and retransmit readings.
-
-## 7. Minimum scope for a product prototype
-
-### Features
-
-1. Minimal registration of demonstration people and association with simulated devices.
-2. Reading ingestion and history.
-3. Display of source, time, and quality.
-4. One experimental rule to create follow-up items.
-5. Case list with statuses and owners.
-6. Recording of acknowledgement, observation, and closure.
-7. Communication-failure simulation and duplicate-free retransmission.
-
-### Case states
-
-- **Awaiting verification:** the follow-up item was created and has no owner.
-- **Under verification:** a professional has taken ownership.
-- **Closed:** observation and outcome have been recorded.
-
-Technical retransmission of the same event must not reopen a closed case or create another one. A new observation that meets the rule needs an explicit grouping policy to avoid repeated cases for the same episode.
-
-### Initial interface
-
-| Screen | Main content |
-| --- | --- |
-| Pending items | People, reasons, data age, status, and owner |
-| Monitored person | Recent readings, quality, and case history |
-| Case | Evidence, owner, and verification record |
-
-A simple interface is sufficient. Advanced charts, maps, and aggregated health indexes are not needed to validate the workflow.
-
-## 8. What is outside the first version
-
-- Automatic diagnosis and treatment recommendations.
-- Prediction of falls, heart attacks, or clinical deterioration.
-- Integration with any smartwatch without verifying data access.
-- A complete electronic health record.
-- Medication, billing, or staffing management.
-- Family application and external notifications.
-- Artificial intelligence for symptom interpretation.
-- Guarantees of emergency response.
-
-In a real operation, the service cannot be presented as a substitute for the institution's emergency channels and procedures.
-
-## 9. How to demonstrate it in a pitch
-
-Use fictional data and people in a short session:
-
-1. Show three people receiving synthetic readings.
-2. Trigger a scenario that creates an explainable follow-up item.
-3. Take ownership of the case as a demonstration professional.
-4. Record the result and close the verification.
-5. Simulate an interruption in synchronization between services.
-6. Restore the link and show history arriving without duplicates.
-
-**Core pitch message:**
-
-> A platform that brings readings together and organizes follow-ups, showing what is pending, why, and who is responsible.
-
-Explain that the operational proposal is being validated. Do not claim that the demonstration prevents clinical events or produces health outcomes that have not been studied.
-
-## 10. How to validate before expanding
-
-### Initial conversations
-
-Interview facility professionals and coordinators to understand:
-
-- How are readings and observations recorded today?
-- Who decides when a verification is needed?
-- How does the team identify the owner and hand over pending work between shifts?
-- Which devices are used and how can their data be accessed?
-- Which system already exists, and which tasks would this tool duplicate?
-- Who would maintain and pay for the solution?
-
-### Workflow pilot
-
-Start with a synthetic demonstration and team review of the process. The use of real data requires appropriate planning for devices, rules, responsibilities, access, and privacy.
-
-| Validation metric | What to investigate |
-| --- | --- |
-| Time to acknowledgement | How long it takes for a follow-up item to be taken by someone |
-| Unassigned follow-up items | Whether assignment helps organize work |
-| Time to closure | How the workflow is completed, considering priority and context |
-| Cases with no value | Whether rules create noise or rework |
-| Record completeness | Whether closure contains useful information for the team |
-| Effort per case | Whether the product reduces or adds manual work |
-
-These metrics evaluate the process. They do not demonstrate clinical benefit by themselves. Define targets only after observing a real baseline.
-
-## 11. Commercial hypothesis
-
-One possible model is a subscription per facility, with a tier based on the number of monitored people. Pricing should be tied to validated operational value, not only to the number of stored readings.
-
-Before setting a price, verify the buyer, budget, integration cost, support required, and willingness to pay. A pilot may reveal that integration with the existing system matters more than an independent product.
-
-## 12. Suggested next step
-
-Keep the current technical MVP to prove ingestion, processing, persistence, and synchronization. In parallel, present a simple pending-items screen and one demonstration case to a care team.
-
-The decision to evolve should depend on a concrete answer:
-
-> Does the team understand the workflow and recognize a relevant task it would help them perform better?
-
-If the answer is positive, implement the cycle of taking ownership and closing cases before adding new sensors or infrastructure.
-
-## Context reference
-
-Remote monitoring in home care already exists in initiatives such as NHS virtual wards. This reference illustrates an application category; it does not validate this specific product or establish equivalence with a senior living facility context.
-
-- NHS — Virtual wards: https://digital.nhs.uk/data-and-information/information-governance/guidance/virtual-wards
+| `ACT_NOW` | Pause a critical task, confirm the measurement, record symptoms/fatigue, and use the approved onboard procedure |
+| `RECHECK` | Restore or verify a usable measurement, complete the health check-in, and monitor for meaningful change |
+| `ROUTINE` | Continue the planned routine and record a change when it appears |
+
+The plan remains available with no Earth link and never tells the astronaut to
+wait for ground authorization before following an approved onboard procedure.
+
+### 3.4 Synchronize
+
+Every persisted observation and operational recommendation is added to a
+durable outbox in the same transaction. When the link is off, local work
+continues and events queue; when it returns, the worker drains the queue.
+Earth accepts events idempotently, so a retry cannot create a second copy.
+
+The Earth view makes the delay visible: link state, queued events, last receipt
+time, delivered alerts, and data freshness.
+
+## 4. NASA-data provenance in this demonstration
+
+The MVP uses synthetic and historical demonstration data. Source provenance is
+kept distinct from the fictional mission timeline.
+
+| Source | MVP use | What it does **not** mean |
+| --- | --- | --- |
+| NASA Life Sciences Data Archive / NLSP actigraphy | Sleep reference in the emulator | A current astronaut sleep measurement |
+| NASA exercise-study checkpoints | Exercise heart-rate replay scenario | Continuous real flight telemetry |
+| NASA OSDR RadLab / ISS DosTel | Historical environmental dose-rate context | A crew member's individual dose or exposure estimate |
+| NASA HRP hazards and risks | Product rationale and metric selection | A clinically validated alert threshold |
+
+The radiation reference is displayed with its source and disclaimer. It is not
+stored as a crew-health observation and must not be presented as a personal
+radiation dose. The Canadian Space Agency's radiation-monitoring material is
+useful context for a future crew-worn dosimeter, not proof that this MVP has
+one. [CSA: Monitoring Radiation for Astronaut Health](https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp)
+
+## 5. Demonstration story
+
+The 30-second demo should show one complete, inspectable path rather than a
+tour of every screen:
+
+1. An astronaut opens the Crew Hub and sees personal baseline context.
+2. A simulated signal and current fatigue check-in produce a local readiness
+   review.
+3. **What to do now** shows the immediate, non-clinical next steps.
+4. The Earth link is cut; the onboard action still works and events queue.
+5. The link returns; Earth receives the same evidence once, with delivery
+   delay visible.
+
+**Pitch statement:**
+
+> Astronaut Health Hub turns local health signals and mission context into an
+> explainable next operational step, even when Earth is unavailable.
+
+## 6. Scope boundaries and known gaps
+
+The following boundaries are intentional for the hackathon MVP:
+
+- No diagnosis, prescription, treatment recommendation, or clinically
+  validated threshold.
+- No personal radiation-dose calculation; DosTel is historical environmental
+  context only.
+- No physical BLE device, real flight telemetry, or clinical hardware
+  integration; the wearable is an authenticated emulator.
+- No user authentication or production-grade medical-data governance; crew
+  selection is deliberately local/demo-only.
+- The emulator currently emits heart rate, SpO₂, and body temperature. Other
+  catalog metrics are self-reported or manually entered in this MVP.
+- The z-score rule is an experimental, explainable demo rule. It should not be
+  described as detecting fever, hypoxia, or another medical condition.
+
+Two implementation gaps should be described honestly and are the best next
+engineering steps:
+
+1. The Crew API's alert-list endpoint still uses a deterministic fixture for
+   the Crew Hub. Before claiming that a live ingest alert appears in that view,
+   replace the fixture with a query over the persisted `alerts` table and add
+   an end-to-end test.
+2. The action plan gives guidance but does not yet persist acknowledgement,
+   execution, or closure. A future version can record those states locally and
+   synchronize them to Earth without turning the system into a diagnostic tool.
+
+## 7. Why this is sufficient for the challenge MVP
+
+The challenge asks for software that gathers health indicators and enables
+astronauts to evaluate and act on their health status. The implemented MVP
+demonstrates that core loop with personal context, clear data quality states,
+bounded local actions, and delayed ground synchronization.
+
+The next priority is not adding more dashboards or unvalidated medical rules;
+it is closing the live-alert read path and making the evidence/data provenance
+easy for an evaluator to inspect.

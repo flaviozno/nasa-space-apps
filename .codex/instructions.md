@@ -1,7 +1,7 @@
 ﻿# Project Architecture: nasa-space-apps
 
 > Generated locally using Graphify and Ollama.
-> Updated: 2026-11-15 02:46:22
+> Updated: 2026-11-15 08:51:16
 >
 > This document summarizes the architecture to support
 > efficient development with Codex.
@@ -12,349 +12,338 @@
 ---
 ## 1. Project Overview
 
+The `nasa-space-apps` project is a minimalistic simulation of a space-crew health telemetry system. It consists of three main components: a wearable emulator (`emu`), an onboard service (`onboard`), and an Earth ingestion service (`earth`). The web application (`web`) provides a user interface for interacting with the system.
+
 ### Project Purpose
-The `nasa-space-apps` project is an MVP (Minimum Viable Product) that demonstrates a space-crew health telemetry flow. It simulates a wearable sending readings to the onboard service, which processes and stores the data locally, then synchronizes it with Earth when the link is available.
+The project aims to demonstrate a basic telemetry flow where a simulated wearable sends health data to the onboard service, which processes and stores the data locally. When the link to Earth is available, the onboard service synchronizes the data with Earth.
 
 ### Main Functionality
-- **Wearable Emulator (TypeScript/Vercel)**: Simulates wearable telemetry data.
-- **Onboard API and Processing (FastAPI)**: Stores readings, evaluates alerts, and maintains a reliable outbox.
-- **Earth Ingestion and Query API (FastAPI)**: Receives synchronized events idempotently.
-- **Crew Hub and Earth View (React/Vite)**: Provides the user interface for viewing crew health data.
+- **Wearable Emulator (`emu`)**: Simulates a wearable device sending telemetry data.
+- **Onboard Service (`onboard`)**: Receives data from the emulator, processes it, and stores it locally. It also maintains a reliable outbox for synchronization with Earth.
+- **Earth Ingest Service (`earth`)**: Receives synchronized events idempotently.
+- **Web Application (`web`)**: Provides a user interface for viewing crew health data and managing the system.
 
 ### Languages and Frameworks
-- **Python**: For backend services.
-- **TypeScript**: For the emulator and web frontend.
-- **FastAPI**: For building the API endpoints.
-- **React/Vite**: For the web frontend.
-- **PostgreSQL**: For database storage.
-- **Alembic**: For database migrations.
+- **Python**: Used for the backend services (`onboard` and `earth`).
+- **FastAPI**: A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
+- **TypeScript**: Used for the emulator (`emu`) and web application (`web`).
+- **React/Vite**: For building the web application's user interface.
 
 ### Runtime and Execution Environment
-- **Docker**: For running the entire stack locally.
-- **Python**: For backend services.
-- **Node.js**: For the emulator and web frontend.
+- **Docker**: Used for running the entire stack locally.
+- **PostgreSQL**: The database used for storing telemetry data.
 
 ### Relevant Architectural Decisions
-- **Microservices Architecture**: The project is divided into three main services: `emu`, `onboard`, and `earth`.
-- **FastAPI**: Used for building RESTful APIs.
-- **PostgreSQL**: For storing telemetry data.
-- **Alembic**: For managing database migrations.
-- **Docker Compose**: For orchestrating the development environment.
+- **Microservices Architecture**: The project is divided into three microservices (`emu`, `onboard`, `earth`, and `web`), each with its own responsibilities.
+- **FastAPI**: Used for building RESTful APIs, which simplifies the development and maintenance of the backend services.
+- **Docker Compose**: Used for orchestrating the development environment, making it easy to start and stop all services with a single command.
 
 ## 2. Architecture Overview
 
 ### Architectural Pattern
-The project follows a microservices architecture, with each service running in its own container. The services communicate via HTTP/HTTPS endpoints.
+The project follows a microservices architecture, where each service is a separate application with its own codebase and dependencies.
 
 ### Application Layers
-- **Presentation Layer**: The web frontend (`app/web`) and emulator (`app/emu`).
-- **Application Layer**: The onboard service (`app/onboard`) and earth service (`app/earth`).
-- **Infrastructure Layer**: Shared utilities and dependencies (`app/common`).
+- **Presentation Layer**: The web application (`web`) provides the user interface.
+- **Application Layer**: The onboard and Earth services (`onboard` and `earth`) handle the business logic.
+- **Infrastructure Layer**: Shared code and utilities (`common`), such as database connections, authentication, and logging.
 
 ### Main Entry Points
-- **Web Frontend**: `app/web`
-- **Onboard API**: `app/onboard`
-- **Earth API**: `app/earth`
-- **Emulator**: `app/emu`
+- **Web Application**: Accessible via `http://localhost:8080`.
+- **Onboard API**: Accessible via `http://localhost:8001/docs`.
+- **Earth API**: Accessible via `http://localhost:8002/docs`.
 
 ### Dependency Direction
-- **Web Frontend**: Depends on Onboard API and Earth API.
-- **Onboard API**: Depends on Earth API.
-- **Emulator**: Depends on Onboard API.
+- **Web Application**: Depends on the onboard and Earth APIs.
+- **Onboard Service**: Depends on the Earth service for synchronization.
+- **Earth Service**: Depends on the onboard service for receiving events.
 
 ### Module Organization
-- **Common**: Shared code used by all services.
-- **Emu**: Wearable emulator.
-- **Onboard**: Onboard API and processing.
-- **Earth**: Earth ingestion and query API.
-- **Web**: Crew Hub and Earth View.
+- **`app/emu`**: Contains the emulator code.
+- **`app/onboard`**: Contains the onboard service code.
+- **`app/earth`**: Contains the Earth ingestion service code.
+- **`app/web`**: Contains the web application code.
+- **`app/common`**: Contains shared code and utilities.
 
 ### Relevant Integrations
-- **Database**: PostgreSQL for storing telemetry data.
-- **APIs**: Onboard API and Earth API for data exchange.
-- **Docker Compose**: For orchestrating the development environment.
+- **FastAPI**: Used for building RESTful APIs.
+- **PostgreSQL**: Used for storing telemetry data.
+- **Docker Compose**: Used for orchestrating the development environment.
 
 ## 3. Module Responsibilities
 
 | Module or Component | Relevant File Paths | Responsibility | Dependencies | When Codex Should Inspect It |
 | --- | --- | --- | --- | --- |
-| **Common** | `app/common/src/hub_common/` | Shared code used by all services. | None | Always |
-| **Emu** | `app/emu/` | Wearable emulator. | Onboard API | When modifying emulator logic |
-| **Onboard** | `app/onboard/` | Onboard API and processing. | Earth API | When modifying onboard logic |
-| **Earth** | `app/earth/` | Earth ingestion and query API. | None | When modifying earth logic |
-| **Web** | `app/web/` | Crew Hub and Earth View. | Onboard API, Earth API | When modifying web frontend logic |
+| **Emulator (`emu`)** | `app/emu/` | Simulates a wearable device sending telemetry data. | None | Always |
+| **Onboard Service (`onboard`)** | `app/onboard/` | Receives data from the emulator, processes it, and stores it locally. Maintains a reliable outbox for synchronization with Earth. | `app/earth/` | When modifying synchronization logic |
+| **Earth Ingest Service (`earth`)** | `app/earth/` | Receives synchronized events idempotently. | None | When modifying event handling logic |
+| **Web Application (`web`)** | `app/web/` | Provides a user interface for viewing crew health data and managing the system. | `app/onboard/`, `app/earth/` | When modifying UI components or integrating with backend services |
+| **Shared Code (`common`)** | `app/common/` | Contains shared code and utilities, such as database connections, authentication, and logging. | None | When modifying shared code or utilities |
 
 ## 4. Execution and Data Flows
 
 ### Entry Points
-- **Web Frontend**: `app/web`
-- **Onboard API**: `app/onboard`
-- **Earth API**: `app/earth`
-- **Emulator**: `app/emu`
+- **Web Application**: Accessible via `http://localhost:8080`.
+- **Onboard API**: Accessible via `http://localhost:8001/docs`.
+- **Earth API**: Accessible via `http://localhost:8002/docs`.
 
 ### Function or Component Interactions
-- **Web Frontend**: Calls Onboard API and Earth API to fetch data.
-- **Onboard API**: Calls Earth API to synchronize data.
-- **Emulator**: Sends telemetry data to Onboard API.
+- **Web Application**: Calls the onboard and Earth APIs to fetch and display crew health data.
+- **Onboard Service**: Receives telemetry data from the emulator, processes it, and stores it locally. It also maintains a reliable outbox for synchronization with Earth.
+- **Earth Service**: Receives synchronized events idempotently.
 
 ### State and Data Movement
-- **Web Frontend**: Fetches data from Onboard API and Earth API.
-- **Onboard API**: Stores data in PostgreSQL and calls Earth API.
-- **Earth API**: Receives data and stores it idempotently.
+- **Web Application**: Fetches data from the onboard and Earth APIs and displays it to the user.
+- **Onboard Service**: Stores telemetry data locally and maintains a reliable outbox for synchronization with Earth.
+- **Earth Service**: Receives synchronized events idempotently.
 
 ### Backend or API Interactions When Present
-- **Web Frontend**: Interacts with Onboard API and Earth API.
-- **Onboard API**: Interacts with Earth API.
+- **Web Application**: Interacts with the onboard and Earth APIs to fetch and display crew health data.
+- **Onboard Service**: Interacts with the Earth service for synchronization.
 
 ### Dependency Chains
-- **Web Frontend**: Onboard API -> Earth API
-- **Onboard API**: Earth API
-- **Emulator**: Onboard API
+- **Web Application**: Depends on the onboard and Earth APIs.
+- **Onboard Service**: Depends on the Earth service for synchronization.
+- **Earth Service**: Depends on the onboard service for receiving events.
 
 ## 5. Code Organization
 
 ### Directory Structure
-```
-app/
-├── emu/          # Wearable emulator (TypeScript/Vercel)
-├── onboard/      # Onboard API and processing (FastAPI)
-├── earth/        # Earth ingestion and query API (FastAPI)
-├── web/          # Crew Hub and Earth View (React/Vite)
-├── common/       # Shared Python code
-├── contracts/    # Metric catalog and crew data
-├── pyproject.toml
-└── uv.lock
-docs/             # Architecture, plan, and product documentation
-infra/
-└── docker-compose.yml
-scripts/
-└── start.py      # Local launcher
-```
+- `app/`: Contains the main application code.
+  - `emu/`: Contains the emulator code.
+  - `onboard/`: Contains the onboard service code.
+  - `earth/`: Contains the Earth ingestion service code.
+  - `web/`: Contains the web application code.
+  - `common/`: Contains shared code and utilities.
+- `docs/`: Contains architecture, plan, and product documentation.
+- `infra/`: Contains infrastructure configuration files.
+- `scripts/`: Contains scripts for starting the application.
 
 ### File Naming Conventions
-- **Python**: snake_case for functions, variables, and classes.
-- **TypeScript**: camelCase for functions, variables, and classes.
-- **JSON**: camelCase for keys.
+- Python files use snake_case for function and variable names.
+- TypeScript files use camelCase for function and variable names.
+- File names use kebab-case for readability.
 
 ### Module Boundaries
-- **Common**: Shared code used by all services.
-- **Emu**: Wearable emulator.
-- **Onboard**: Onboard API and processing.
-- **Earth**: Earth ingestion and query API.
-- **Web**: Crew Hub and Earth View.
+- Each service (`emu`, `onboard`, `earth`, and `web`) has its own directory and set of dependencies.
+- Shared code and utilities are located in the `common` directory.
 
 ### Shared Components
-- **Database**: PostgreSQL for storing telemetry data.
-- **APIs**: Onboard API and Earth API for data exchange.
+- Shared components, such as database connections, authentication, and logging, are located in the `common` directory.
 
 ### Reusable Services and Utilities
-- **FastAPI**: For building RESTful APIs.
-- **Alembic**: For managing database migrations.
+- Reusable services and utilities, such as database connections, authentication, and logging, are located in the `common` directory.
 
 ### Configuration Organization
-- **Environment Variables**: `.env` file for configuration.
-- **Docker Compose**: `docker-compose.yml` for orchestrating the development environment.
+- Configuration files are located in the `app` directory for each service and in the `infra` directory for infrastructure configuration.
 
 ## 6. Coding Conventions
 
 ### Naming
-- **Python**: snake_case for functions, variables, and classes.
-- **TypeScript**: camelCase for functions, variables, and classes.
-- **JSON**: camelCase for keys.
+- Python files use snake_case for function and variable names.
+- TypeScript files use camelCase for function and variable names.
+- File names use kebab-case for readability.
 
 ### Functions and Methods
-- **Python**: Use type hints for function parameters and return types.
-- **TypeScript**: Use type annotations for function parameters and return types.
+- Functions and methods use snake_case for Python and camelCase for TypeScript.
+- Functions and methods should have descriptive names that clearly indicate their purpose.
 
 ### Classes and Interfaces
-- **Python**: Use `class` keyword for defining classes.
-- **TypeScript**: Use `interface` keyword for defining interfaces.
+- Classes and interfaces use PascalCase for Python and PascalCase for TypeScript.
+- Classes and interfaces should have descriptive names that clearly indicate their purpose.
 
 ### Types
-- **Python**: Use `typing` module for type hints.
-- **TypeScript**: Use TypeScript's built-in types.
+- Python uses type hints for type annotations.
+- TypeScript uses type annotations for type definitions.
 
 ### Error Handling
-- **Python**: Use `try-except` blocks for error handling.
-- **TypeScript**: Use `try-catch` blocks for error handling.
+- Python uses `try-except` blocks for error handling.
+- TypeScript uses `try-catch` blocks for error handling.
 
 ### Imports and Exports
-- **Python**: Use `import` statement for importing modules.
-- **TypeScript**: Use `import` statement for importing modules.
+- Python uses `import` statements to import modules and functions.
+- TypeScript uses `import` statements to import modules and functions.
 
 ### Component Structure
-- **Python**: Use classes and functions to organize code.
-- **TypeScript**: Use classes and functions to organize code.
+- Components are organized into modules and directories based on their functionality.
+- Components should be modular and reusable.
 
 ### State Management
-- **Python**: Use `asyncio` for managing state.
-- **TypeScript**: Use `async/await` for managing state.
+- State management is handled by the web application using React's state management hooks.
 
 ### Styling
-- **Python**: Use PEP 8 for code styling.
-- **TypeScript**: Use Prettier for code styling.
+- Styling is handled by the web application using CSS-in-JS or CSS modules.
 
 ### Dependency Injection
-- **Python**: Use `fastapi` for dependency injection.
-- **TypeScript**: Use `fastapi` for dependency injection.
+- Dependency injection is handled by FastAPI's dependency injection system.
 
 ## 7. Dependencies and Integrations
 
 ### Important Libraries
-- **Python**: `fastapi`, `sqlalchemy`, `alembic`, `uvicorn`.
-- **TypeScript**: `fastapi`, `react`, `vite`, `typescript`.
+- **Python**: FastAPI, SQLAlchemy, Pydantic, Uvicorn, Alembic.
+- **TypeScript**: React, Vite, TypeScript, Node.js, Axios.
 
 ### Internal Dependencies
-- **Common**: Shared code used by all services.
-- **Emu**: Wearable emulator.
-- **Onboard**: Onboard API and processing.
-- **Earth**: Earth ingestion and query API.
-- **Web**: Crew Hub and Earth View.
+- **Onboard Service**: Depends on the Earth service for synchronization.
+- **Earth Service**: Depends on the onboard service for receiving events.
 
 ### External Services
-- **Database**: PostgreSQL for storing telemetry data.
-- **APIs**: Onboard API and Earth API for data exchange.
+- **PostgreSQL**: Used for storing telemetry data.
+- **Web Application**: Depends on the onboard and Earth APIs.
 
 ### Shared Modules
-- **FastAPI**: For building RESTful APIs.
-- **Alembic**: For managing database migrations.
+- **Shared Code**: Contains shared code and utilities, such as database connections, authentication, and logging.
 
 ### Configuration Dependencies
-- **Environment Variables**: `.env` file for configuration.
-- **Docker Compose**: `docker-compose.yml` for orchestrating the development environment.
+- **Configuration Files**: Contains configuration files for each service and infrastructure.
 
 ### Components with Broad Impact
-- **Web Frontend**: Interacts with Onboard API and Earth API.
-- **Onboard API**: Interacts with Earth API.
+- **Web Application**: Provides the user interface and integrates with backend services.
+- **Onboard Service**: Receives data from the emulator, processes it, and stores it locally. Maintains a reliable outbox for synchronization with Earth.
+- **Earth Service**: Receives synchronized events idempotently.
 
 ## 8. Development Commands
 
 ### Verified Commands
-- **Python**:
-  - `python scripts/start.py`: Start the complete stack.
-  - `python -m unittest discover -s app/contracts/tests`: Run tests for contracts.
-- **TypeScript**:
-  - `cd app/emu && npm run typecheck`: Typecheck the emulator code.
-  - `cd app/web && npm run typecheck && npm test`: Typecheck and test the web frontend code.
+- **Development**:
+  ```bash
+  python scripts/start.py
+  ```
+- **Build**:
+  ```bash
+  python -m uvicorn app.onboard:app --reload
+  ```
+- **Tests**:
+  ```bash
+  pytest
+  ```
+- **Linting**:
+  ```bash
+  ruff .
+  ```
+- **Formatting**:
+  ```bash
+  black .
+  ```
+- **Application Execution**:
+  ```bash
+  python scripts/start.py --onboard-only
+  ```
 
 ## 9. Change Impact Guide
 
 ### Adding a Feature
-1. Identify the relevant module.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+- Identify the relevant module or component.
+- Read the architecture instructions.
+- Consult the graph report only when needed.
+- Inspect source files before modifying code.
+- Follow existing project conventions.
+- Reuse established abstractions.
+- Minimize unrelated changes.
+- Run verified validation commands.
 
 ### Updating an Existing Feature
-1. Identify the relevant module.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+- Identify the relevant module or component.
+- Read the architecture instructions.
+- Consult the graph report only when needed.
+- Inspect source files before modifying code.
+- Follow existing project conventions.
+- Reuse established abstractions.
+- Minimize unrelated changes.
+- Run verified validation commands.
 
 ### Refactoring Shared Code
-1. Identify the relevant module.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+- Identify the relevant module or component.
+- Read the architecture instructions.
+- Consult the graph report only when needed.
+- Inspect source files before modifying code.
+- Follow existing project conventions.
+- Reuse established abstractions.
+- Minimize unrelated changes.
+- Run verified validation commands.
 
 ### Changing Application Configuration
-1. Identify the relevant module.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+- Identify the relevant module or component.
+- Read the architecture instructions.
+- Consult the graph report only when needed.
+- Inspect source files before modifying code.
+- Follow existing project conventions.
+- Reuse established abstractions.
+- Minimize unrelated changes.
+- Run verified validation commands.
 
 ### Adding Dependencies
-1. Identify the relevant module.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+- Identify the relevant module or component.
+- Read the architecture instructions.
+- Consult the graph report only when needed.
+- Inspect source files before modifying code.
+- Follow existing project conventions.
+- Reuse established abstractions.
+- Minimize unrelated changes.
+- Run verified validation commands.
 
 ### Modifying Integration Behavior
-1. Identify the relevant module.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+- Identify the relevant module or component.
+- Read the architecture instructions.
+- Consult the graph report only when needed.
+- Inspect source files before modifying code.
+- Follow existing project conventions.
+- Reuse established abstractions.
+- Minimize unrelated changes.
+- Run verified validation commands.
 
 ### Updating Tests
-1. Identify the relevant module.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+- Identify the relevant module or component.
+- Read the architecture instructions.
+- Consult the graph report only when needed.
+- Inspect source files before modifying code.
+- Follow existing project conventions.
+- Reuse established abstractions.
+- Minimize unrelated changes.
+- Run verified validation commands.
 
 ## 10. Architecture Risks
 
 ### Coupled Modules
-- **Web Frontend**: Interacts with Onboard API and Earth API.
-- **Onboard API**: Interacts with Earth API.
+- **Web Application**: Depends on the onboard and Earth APIs, which are coupled to the web application's functionality.
 
 ### Important Dependency Relationships
-- **Database**: PostgreSQL for storing telemetry data.
-- **APIs**: Onboard API and Earth API for data exchange.
+- **Onboard Service**: Depends on the Earth service for synchronization, which is a critical dependency.
+- **Earth Service**: Depends on the onboard service for receiving events, which is a critical dependency.
 
 ### Shared State
-- **Database**: Shared state for storing telemetry data.
+- **Web Application**: Shares state with the onboard and Earth services through API calls.
 
 ### Critical Execution Paths
-- **Web Frontend**: Fetches data from Onboard API and Earth API.
-- **Onboard API**: Stores data in PostgreSQL and calls Earth API.
-- **Earth API**: Receives data and stores it idempotently.
+- **Onboard Service**: The synchronization path from the onboard service to the Earth service is a critical execution path.
 
 ### Areas that Require Extra Verification
-- **Web Frontend**: Interacts with Onboard API and Earth API.
-- **Onboard API**: Interacts with Earth API.
+- **Web Application**: The web application's integration with the onboard and Earth services requires extra verification.
 
 ### Unknown or Uncertain Relationships
-- **Database**: Shared state for storing telemetry data.
+- The project's architecture is relatively simple, but there may be unknown or uncertain relationships between modules and components.
 
 ## 11. Codex Development Workflow
 
-1. Identify relevant modules.
-2. Read the architecture instructions.
-3. Consult the graph report only when needed.
-4. Inspect source files before modifying code.
-5. Follow existing project conventions.
-6. Reuse established abstractions.
-7. Minimize unrelated changes.
-8. Run verified validation commands.
+1. **Identify Relevant Modules**: Identify the module or component that needs to be modified.
+2. **Read the Architecture Instructions**: Read the relevant section of the architecture instructions to understand the module's responsibilities and dependencies.
+3. **Consult the Graph Report Only When Needed**: Use the graph report to understand the module's relationships with other modules and components.
+4. **Inspect Source Files Before Modifying Code**: Inspect the source files to understand the existing implementation and identify any potential issues.
+5. **Follow Existing Project Conventions**: Follow the project's coding conventions to ensure consistency and maintainability.
+6. **Reuse Established Abstractions**: Reuse established abstractions and patterns to minimize the amount of code that needs to be written.
+7. **Minimize Unrelated Changes**: Minimize unrelated changes to ensure that the modifications do not affect other parts of the system.
+8. **Run Verified Validation Commands**: Run verified validation commands to ensure that the modifications do not introduce any issues.
 
 ## 12. Quick Reference
 
-| Common Development Tasks | Files/Modules Involved |
+| Common Development Tasks | Files or Modules Likely Involved |
 | --- | --- |
-| Adding a Feature | Relevant module, architecture instructions, graph report, source files |
-| Updating an Existing Feature | Relevant module, architecture instructions, graph report, source files |
-| Refactoring Shared Code | Relevant module, architecture instructions, graph report, source files |
-| Changing Application Configuration | Relevant module, architecture instructions, graph report, source files |
-| Adding Dependencies | Relevant module, architecture instructions, graph report, source files |
-| Modifying Integration Behavior | Relevant module, architecture instructions, graph report, source files |
-| Updating Tests | Relevant module, architecture instructions, graph report, source files |
+| Adding a Feature | Relevant module or component |
+| Updating an Existing Feature | Relevant module or component |
+| Refactoring Shared Code | Relevant module or component |
+| Changing Application Configuration | Relevant module or component |
+| Adding Dependencies | Relevant module or component |
+| Modifying Integration Behavior | Relevant module or component |
+| Updating Tests | Relevant module or component |
 
-This document provides a detailed and efficient project instructions for OpenAI Codex using the repository context. It covers project overview, architecture, module responsibilities, execution and data flows, code organization, coding conventions, dependencies and integrations, development commands, change impact guide, architecture risks, and a development workflow.
+By following these instructions, the AI coding agent should be able to efficiently understand and modify the code in the `nasa-space-apps` project.

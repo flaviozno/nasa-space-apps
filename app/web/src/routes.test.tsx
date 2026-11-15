@@ -22,6 +22,8 @@ describe('routes', () => {
   it('shows the selected astronaut on /crew/:crewId', async () => {
     renderAt('/crew/crew-2')
     expect(await screen.findByRole('heading', { name: 'Kenji Mori' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Crew' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Earth' })).not.toHaveAttribute('aria-current')
   })
 
   it('says so when the crew member does not exist', async () => {
@@ -32,6 +34,8 @@ describe('routes', () => {
   it('shows the Earth view on /earth', () => {
     renderAt('/earth')
     expect(screen.getByRole('heading', { name: 'Earth view' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Earth' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Crew' })).not.toHaveAttribute('aria-current')
   })
 
   it('shows backend status in the header', async () => {

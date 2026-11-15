@@ -192,3 +192,42 @@ class MissionReadinessOut(CamelModel):
     sufficient_context: bool
     evidence: list[ReadinessEvidenceOut]
     disclaimer: str
+
+
+class ActionPriority(str, Enum):
+    """Urgency of an onboard action plan; this is not clinical triage."""
+
+    act_now = "ACT_NOW"
+    recheck = "RECHECK"
+    routine = "ROUTINE"
+
+
+class ActionType(str, Enum):
+    """Supported actions are deliberately operational rather than clinical."""
+
+    pause_task = "PAUSE_TASK"
+    verify_measurement = "VERIFY_MEASUREMENT"
+    complete_checkin = "COMPLETE_CHECKIN"
+    follow_approved_protocol = "FOLLOW_APPROVED_PROTOCOL"
+    continue_routine = "CONTINUE_ROUTINE"
+
+
+class ActionStepOut(CamelModel):
+    """One ordered, locally actionable step in the plan."""
+
+    id: str
+    title: str
+    detail: str
+    action_type: ActionType
+
+
+class ActionPlanOut(CamelModel):
+    """Explainable local action guidance; never a diagnosis or treatment plan."""
+
+    crew_id: str
+    priority: ActionPriority
+    title: str
+    detail: str
+    evaluated_at: EpochMs
+    steps: list[ActionStepOut]
+    disclaimer: str

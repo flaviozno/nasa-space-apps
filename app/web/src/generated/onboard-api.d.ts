@@ -178,6 +178,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/crew/{crew_id}/action-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Local next actions
+         * @description Return a bounded, offline-capable action plan for the astronaut.
+         *
+         *     The plan is calculated only from onboard observations, the personal
+         *     baseline, and mission context already stored locally. It has no clinical
+         *     threshold or external dependency, and adds no data to the database.
+         */
+        get: operations["read_action_plan_v1_crew__crew_id__action_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/crew/{crew_id}/manual-entries": {
         parameters: {
             query?: never;
@@ -357,6 +381,53 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ActionPlanOut
+         * @description Explainable local action guidance; never a diagnosis or treatment plan.
+         */
+        ActionPlanOut: {
+            /** Crewid */
+            crewId: string;
+            priority: components["schemas"]["ActionPriority"];
+            /** Title */
+            title: string;
+            /** Detail */
+            detail: string;
+            /**
+             * Evaluatedat
+             * @description Unix timestamp in milliseconds
+             */
+            evaluatedAt: number;
+            /** Steps */
+            steps: components["schemas"]["ActionStepOut"][];
+            /** Disclaimer */
+            disclaimer: string;
+        };
+        /**
+         * ActionPriority
+         * @description Urgency of an onboard action plan; this is not clinical triage.
+         * @enum {string}
+         */
+        ActionPriority: "ACT_NOW" | "RECHECK" | "ROUTINE";
+        /**
+         * ActionStepOut
+         * @description One ordered, locally actionable step in the plan.
+         */
+        ActionStepOut: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Detail */
+            detail: string;
+            actionType: components["schemas"]["ActionType"];
+        };
+        /**
+         * ActionType
+         * @description Supported actions are deliberately operational rather than clinical.
+         * @enum {string}
+         */
+        ActionType: "PAUSE_TASK" | "VERIFY_MEASUREMENT" | "COMPLETE_CHECKIN" | "FOLLOW_APPROVED_PROTOCOL" | "CONTINUE_ROUTINE";
         /**
          * AlertOut
          * @description A local alert raised by onboard rules (stored by ingest; read here).
@@ -1035,6 +1106,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MissionReadinessOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_action_plan_v1_crew__crew_id__action_plan_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                crew_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionPlanOut"];
                 };
             };
             /** @description Validation Error */

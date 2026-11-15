@@ -1,12 +1,12 @@
 import { ActivityIcon, EarthIcon, UsersRoundIcon } from 'lucide-react'
 import { motion } from 'motion/react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router'
+import { Link, Outlet, useLocation } from 'react-router'
 import { DisplayModeControl } from '@/components/display-mode-control'
 import { ServiceStatus } from '@/components/service-status'
 import { EARTH_API, ONBOARD_API } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
-const navClass = ({ isActive }: { isActive: boolean }) =>
+const navClass = (isActive: boolean) =>
   cn(
     'relative flex min-h-11 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors sm:px-4',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70',
@@ -14,14 +14,24 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
   )
 
 function PrimaryNav() {
+  const location = useLocation()
+  // A selected astronaut is still in the Crew area. NavLink's exact match
+  // would only mark `/`, so the selected state vanished after profile choice.
+  const crewActive = location.pathname === '/' || location.pathname.startsWith('/crew/')
+  const earthActive = location.pathname === '/earth' || location.pathname.startsWith('/earth/')
+
   return (
-    <nav aria-label="Primary navigation" className="flex items-center rounded-full border border-white/8 bg-black/15 p-1 backdrop-blur-md">
-      <NavLink to="/" end className={navClass}>
-        {({ isActive }) => <><UsersRoundIcon className="size-4" aria-hidden="true" />Crew{isActive && <motion.span layoutId="active-nav" className="absolute inset-0 -z-10 rounded-full bg-white/10" transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }} />}</>}
-      </NavLink>
-      <NavLink to="/earth" className={navClass}>
-        {({ isActive }) => <><EarthIcon className="size-4" aria-hidden="true" />Earth{isActive && <motion.span layoutId="active-nav" className="absolute inset-0 -z-10 rounded-full bg-white/10" transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }} />}</>}
-      </NavLink>
+    <nav aria-label="Primary navigation" className="isolate flex items-center rounded-full border border-white/8 bg-black/15 p-1 backdrop-blur-md">
+      <Link to="/" aria-current={crewActive ? 'page' : undefined} className={navClass(crewActive)}>
+        <UsersRoundIcon className="size-4" aria-hidden="true" />
+        Crew
+        {crewActive && <motion.span layoutId="active-nav" className="absolute inset-0 -z-10 rounded-full bg-white/10 shadow-sm" transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }} />}
+      </Link>
+      <Link to="/earth" aria-current={earthActive ? 'page' : undefined} className={navClass(earthActive)}>
+        <EarthIcon className="size-4" aria-hidden="true" />
+        Earth
+        {earthActive && <motion.span layoutId="active-nav" className="absolute inset-0 -z-10 rounded-full bg-white/10 shadow-sm" transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }} />}
+      </Link>
     </nav>
   )
 }
