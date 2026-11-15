@@ -14,6 +14,13 @@ explainable next operational step — without requiring a live connection to
 Earth. When the link returns, the evidence synchronizes safely with the ground
 team.
 
+## Demo
+
+[![Watch the CORA presentation on YouTube](https://img.youtube.com/vi/1jxBwYdGDpM/maxresdefault.jpg)](https://www.youtube.com/watch?v=1jxBwYdGDpM)
+
+- [Watch the project presentation](https://www.youtube.com/watch?v=1jxBwYdGDpM)
+- [Try the deployed MVP](https://cora.guilhermerodovalho.com/)
+
 The project uses only synthetic or historical demonstration data. It is not a
 medical device, clinical monitor, or diagnostic system.
 
