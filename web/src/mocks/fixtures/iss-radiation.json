@@ -1,0 +1,1625 @@
+{
+ "_comment": "ISS DosTel radiation, NASA OSDR RadLab, 2022-04-01 23:00 to 2022-04-02 01:05 UTC. Copied from emu/src/reference/nasa-snapshots.ts (the wearable emulator's bundled snapshot). Environmental readings, not a personal dose.",
+ "samples": [
+  {
+   "sourceTimestamp": "2022-04-01T23:00:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.2161,
+   "latitudeDegrees": -43.161,
+   "longitudeDegrees": 131.3067,
+   "altitudeKilometers": 429.25,
+   "particleFluxPerCm2SrSecond": 0.5317
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:00:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.8155,
+   "latitudeDegrees": -43.161,
+   "longitudeDegrees": 131.3067,
+   "altitudeKilometers": 429.25,
+   "particleFluxPerCm2SrSecond": 0.4962
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:00:33Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.8351,
+   "latitudeDegrees": -42.0072,
+   "longitudeDegrees": 133.5934,
+   "altitudeKilometers": 428.71,
+   "particleFluxPerCm2SrSecond": 0.5036
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:00:35Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 11.0883,
+   "latitudeDegrees": -41.9357,
+   "longitudeDegrees": 133.7291,
+   "altitudeKilometers": 428.68,
+   "particleFluxPerCm2SrSecond": 0.5366
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:02:13Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 7.9495,
+   "latitudeDegrees": -38.223,
+   "longitudeDegrees": 140.0029,
+   "altitudeKilometers": 426.97,
+   "particleFluxPerCm2SrSecond": 0.4374
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:02:15Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 8.211,
+   "latitudeDegrees": -38.1433,
+   "longitudeDegrees": 140.1236,
+   "altitudeKilometers": 426.93,
+   "particleFluxPerCm2SrSecond": 0.4778
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:03:53Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 6.2288,
+   "latitudeDegrees": -34.0785,
+   "longitudeDegrees": 145.7131,
+   "altitudeKilometers": 425.13,
+   "particleFluxPerCm2SrSecond": 0.3363
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:03:55Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 6.0675,
+   "latitudeDegrees": -33.9926,
+   "longitudeDegrees": 145.8209,
+   "altitudeKilometers": 425.1,
+   "particleFluxPerCm2SrSecond": 0.3804
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:05:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.7253,
+   "latitudeDegrees": -31.1406,
+   "longitudeDegrees": 149.2046,
+   "altitudeKilometers": 423.89,
+   "particleFluxPerCm2SrSecond": 0.3012
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:05:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 5.2664,
+   "latitudeDegrees": -31.1406,
+   "longitudeDegrees": 149.2046,
+   "altitudeKilometers": 423.89,
+   "particleFluxPerCm2SrSecond": 0.2729
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:05:33Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 5.9356,
+   "latitudeDegrees": -29.6536,
+   "longitudeDegrees": 150.8384,
+   "altitudeKilometers": 423.28,
+   "particleFluxPerCm2SrSecond": 0.2794
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:05:47Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.4418,
+   "latitudeDegrees": -29.0155,
+   "longitudeDegrees": 151.5157,
+   "altitudeKilometers": 423.02,
+   "particleFluxPerCm2SrSecond": 0.2794
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:07:25Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 3.5547,
+   "latitudeDegrees": -24.4435,
+   "longitudeDegrees": 156.0219,
+   "altitudeKilometers": 421.26,
+   "particleFluxPerCm2SrSecond": 0.2022
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:07:27Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.5056,
+   "latitudeDegrees": -24.3484,
+   "longitudeDegrees": 156.11,
+   "altitudeKilometers": 421.23,
+   "particleFluxPerCm2SrSecond": 0.2343
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:09:05Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.9078,
+   "latitudeDegrees": -19.6211,
+   "longitudeDegrees": 160.2641,
+   "altitudeKilometers": 419.59,
+   "particleFluxPerCm2SrSecond": 0.1645
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:09:07Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.4582,
+   "latitudeDegrees": -19.5233,
+   "longitudeDegrees": 160.3459,
+   "altitudeKilometers": 419.56,
+   "particleFluxPerCm2SrSecond": 0.1746
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:10:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.5185,
+   "latitudeDegrees": -16.9164,
+   "longitudeDegrees": 162.4763,
+   "altitudeKilometers": 418.75,
+   "particleFluxPerCm2SrSecond": 0.1639
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:10:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 1.8027,
+   "latitudeDegrees": -16.9164,
+   "longitudeDegrees": 162.4763,
+   "altitudeKilometers": 418.75,
+   "particleFluxPerCm2SrSecond": 0.1156
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:10:45Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.4115,
+   "latitudeDegrees": -14.6813,
+   "longitudeDegrees": 164.2348,
+   "altitudeKilometers": 418.11,
+   "particleFluxPerCm2SrSecond": 0.1415
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:12:25Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 1.6595,
+   "latitudeDegrees": -9.6589,
+   "longitudeDegrees": 168.0125,
+   "altitudeKilometers": 416.86,
+   "particleFluxPerCm2SrSecond": 0.1094
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:12:27Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.6391,
+   "latitudeDegrees": -9.5578,
+   "longitudeDegrees": 168.0866,
+   "altitudeKilometers": 416.84,
+   "particleFluxPerCm2SrSecond": 0.1424
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:14:07Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.1685,
+   "latitudeDegrees": -4.4824,
+   "longitudeDegrees": 171.7404,
+   "altitudeKilometers": 415.88,
+   "particleFluxPerCm2SrSecond": 0.1268
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:15:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.9089,
+   "latitudeDegrees": -1.781,
+   "longitudeDegrees": 173.6506,
+   "altitudeKilometers": 415.5,
+   "particleFluxPerCm2SrSecond": 0.1299
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:15:47Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.6861,
+   "latitudeDegrees": 0.6171,
+   "longitudeDegrees": 175.3392,
+   "altitudeKilometers": 415.23,
+   "particleFluxPerCm2SrSecond": 0.1305
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:17:27Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.8722,
+   "latitudeDegrees": 5.7141,
+   "longitudeDegrees": 178.9462,
+   "altitudeKilometers": 414.91,
+   "particleFluxPerCm2SrSecond": 0.1323
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:19:07Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.3438,
+   "latitudeDegrees": 10.7822,
+   "longitudeDegrees": -177.3749,
+   "altitudeKilometers": 414.9,
+   "particleFluxPerCm2SrSecond": 0.1323
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:20:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.2115,
+   "latitudeDegrees": 13.4469,
+   "longitudeDegrees": -175.3732,
+   "altitudeKilometers": 415.02,
+   "particleFluxPerCm2SrSecond": 0.1437
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:20:47Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.0924,
+   "latitudeDegrees": 15.793,
+   "longitudeDegrees": -173.5571,
+   "altitudeKilometers": 415.19,
+   "particleFluxPerCm2SrSecond": 0.1443
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:22:27Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.1984,
+   "latitudeDegrees": 20.7151,
+   "longitudeDegrees": -169.5279,
+   "altitudeKilometers": 415.76,
+   "particleFluxPerCm2SrSecond": 0.1544
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:24:07Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.4472,
+   "latitudeDegrees": 25.5122,
+   "longitudeDegrees": -165.2063,
+   "altitudeKilometers": 416.55,
+   "particleFluxPerCm2SrSecond": 0.1571
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:25:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.8116,
+   "latitudeDegrees": 27.9894,
+   "longitudeDegrees": -162.7663,
+   "altitudeKilometers": 417.04,
+   "particleFluxPerCm2SrSecond": 0.1886
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:25:47Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.5599,
+   "latitudeDegrees": 30.1406,
+   "longitudeDegrees": -160.5003,
+   "altitudeKilometers": 417.52,
+   "particleFluxPerCm2SrSecond": 0.1884
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:27:27Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.3618,
+   "latitudeDegrees": 34.5468,
+   "longitudeDegrees": -155.3066,
+   "altitudeKilometers": 418.6,
+   "particleFluxPerCm2SrSecond": 0.2169
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:29:19Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.4586,
+   "latitudeDegrees": 39.1352,
+   "longitudeDegrees": -148.7706,
+   "altitudeKilometers": 419.88,
+   "particleFluxPerCm2SrSecond": 0.2665
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:30:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 6.0259,
+   "latitudeDegrees": 40.702,
+   "longitudeDegrees": -146.1573,
+   "altitudeKilometers": 420.35,
+   "particleFluxPerCm2SrSecond": 0.3474
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:30:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 7.2497,
+   "latitudeDegrees": 40.702,
+   "longitudeDegrees": -146.1573,
+   "altitudeKilometers": 420.35,
+   "particleFluxPerCm2SrSecond": 0.3584
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:30:59Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 5.8289,
+   "latitudeDegrees": 42.8308,
+   "longitudeDegrees": -142.1666,
+   "altitudeKilometers": 421.01,
+   "particleFluxPerCm2SrSecond": 0.3437
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:31:57Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 7.2497,
+   "latitudeDegrees": 44.7597,
+   "longitudeDegrees": -137.963,
+   "altitudeKilometers": 421.64,
+   "particleFluxPerCm2SrSecond": 0.3584
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:32:39Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 7.7902,
+   "latitudeDegrees": 46.0424,
+   "longitudeDegrees": -134.7384,
+   "altitudeKilometers": 422.08,
+   "particleFluxPerCm2SrSecond": 0.4319
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:32:47Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.2654,
+   "latitudeDegrees": 46.2749,
+   "longitudeDegrees": -134.1067,
+   "altitudeKilometers": 422.16,
+   "particleFluxPerCm2SrSecond": 0.4521
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:34:19Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 9.0707,
+   "latitudeDegrees": 48.6528,
+   "longitudeDegrees": -126.4452,
+   "altitudeKilometers": 423.01,
+   "particleFluxPerCm2SrSecond": 0.5036
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:34:27Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.2822,
+   "latitudeDegrees": 48.832,
+   "longitudeDegrees": -125.7453,
+   "altitudeKilometers": 423.08,
+   "particleFluxPerCm2SrSecond": 0.5036
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:35:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.5471,
+   "latitudeDegrees": 49.5208,
+   "longitudeDegrees": -122.8043,
+   "altitudeKilometers": 423.35,
+   "particleFluxPerCm2SrSecond": 0.5469
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:35:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.687,
+   "latitudeDegrees": 49.5208,
+   "longitudeDegrees": -122.8043,
+   "altitudeKilometers": 423.35,
+   "particleFluxPerCm2SrSecond": 0.5036
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:35:59Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.2318,
+   "latitudeDegrees": 50.54,
+   "longitudeDegrees": -117.3466,
+   "altitudeKilometers": 423.79,
+   "particleFluxPerCm2SrSecond": 0.544
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:36:07Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 12.5134,
+   "latitudeDegrees": 50.6562,
+   "longitudeDegrees": -116.5889,
+   "altitudeKilometers": 423.84,
+   "particleFluxPerCm2SrSecond": 0.555
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:37:39Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 12.1469,
+   "latitudeDegrees": 51.5954,
+   "longitudeDegrees": -107.6418,
+   "altitudeKilometers": 424.36,
+   "particleFluxPerCm2SrSecond": 0.5881
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:37:47Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.3714,
+   "latitudeDegrees": 51.6414,
+   "longitudeDegrees": -106.8486,
+   "altitudeKilometers": 424.4,
+   "particleFluxPerCm2SrSecond": 0.555
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:39:31Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 12.1785,
+   "latitudeDegrees": 51.7061,
+   "longitudeDegrees": -96.4716,
+   "altitudeKilometers": 424.74,
+   "particleFluxPerCm2SrSecond": 0.5844
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:39:39Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.6586,
+   "latitudeDegrees": 51.67,
+   "longitudeDegrees": -95.676,
+   "altitudeKilometers": 424.76,
+   "particleFluxPerCm2SrSecond": 0.5403
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:40:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 12.2237,
+   "latitudeDegrees": 51.5473,
+   "longitudeDegrees": -93.5946,
+   "altitudeKilometers": 424.8,
+   "particleFluxPerCm2SrSecond": 0.5936
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:40:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.4569,
+   "latitudeDegrees": 51.5473,
+   "longitudeDegrees": -93.5946,
+   "altitudeKilometers": 424.8,
+   "particleFluxPerCm2SrSecond": 0.5456
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:41:11Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 12.2689,
+   "latitudeDegrees": 50.8412,
+   "longitudeDegrees": -86.6782,
+   "altitudeKilometers": 424.85,
+   "particleFluxPerCm2SrSecond": 0.6028
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:41:19Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.351,
+   "latitudeDegrees": 50.7341,
+   "longitudeDegrees": -85.9142,
+   "altitudeKilometers": 424.85,
+   "particleFluxPerCm2SrSecond": 0.5403
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:42:51Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 11.6813,
+   "latitudeDegrees": 49.126,
+   "longitudeDegrees": -77.4301,
+   "altitudeKilometers": 424.74,
+   "particleFluxPerCm2SrSecond": 0.5808
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:42:59Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.8516,
+   "latitudeDegrees": 48.9549,
+   "longitudeDegrees": -76.7218,
+   "altitudeKilometers": 424.72,
+   "particleFluxPerCm2SrSecond": 0.5146
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:44:31Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.253,
+   "latitudeDegrees": 46.6632,
+   "longitudeDegrees": -68.9581,
+   "altitudeKilometers": 424.44,
+   "particleFluxPerCm2SrSecond": 0.5514
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:44:39Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.2507,
+   "latitudeDegrees": 46.4374,
+   "longitudeDegrees": -68.3173,
+   "altitudeKilometers": 424.41,
+   "particleFluxPerCm2SrSecond": 0.4503
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:45:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.2761,
+   "latitudeDegrees": 45.8263,
+   "longitudeDegrees": -66.6619,
+   "altitudeKilometers": 424.32,
+   "particleFluxPerCm2SrSecond": 0.5324
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:45:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.6987,
+   "latitudeDegrees": 45.8263,
+   "longitudeDegrees": -66.6619,
+   "altitudeKilometers": 424.32,
+   "particleFluxPerCm2SrSecond": 0.4333
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:46:11Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 8.894,
+   "latitudeDegrees": 43.5739,
+   "longitudeDegrees": -61.3487,
+   "altitudeKilometers": 423.98,
+   "particleFluxPerCm2SrSecond": 0.465
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:46:19Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.0694,
+   "latitudeDegrees": 43.3034,
+   "longitudeDegrees": -60.777,
+   "altitudeKilometers": 423.93,
+   "particleFluxPerCm2SrSecond": 0.3455
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:47:51Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 6.6046,
+   "latitudeDegrees": 39.9777,
+   "longitudeDegrees": -54.5783,
+   "altitudeKilometers": 423.4,
+   "particleFluxPerCm2SrSecond": 0.3786
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:48:11Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 6.6084,
+   "latitudeDegrees": 39.2072,
+   "longitudeDegrees": -53.3179,
+   "altitudeKilometers": 423.27,
+   "particleFluxPerCm2SrSecond": 0.2702
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:49:43Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.6059,
+   "latitudeDegrees": 35.4775,
+   "longitudeDegrees": -47.8834,
+   "altitudeKilometers": 422.67,
+   "particleFluxPerCm2SrSecond": 0.2738
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:49:51Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 4.1474,
+   "latitudeDegrees": 35.1402,
+   "longitudeDegrees": -47.4372,
+   "altitudeKilometers": 422.62,
+   "particleFluxPerCm2SrSecond": 0.1884
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:50:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.8257,
+   "latitudeDegrees": 34.7585,
+   "longitudeDegrees": -46.9399,
+   "altitudeKilometers": 422.56,
+   "particleFluxPerCm2SrSecond": 0.2911
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:50:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 4.3499,
+   "latitudeDegrees": 34.7585,
+   "longitudeDegrees": -46.9399,
+   "altitudeKilometers": 422.56,
+   "particleFluxPerCm2SrSecond": 0.2006
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:51:23Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.0531,
+   "latitudeDegrees": 31.1338,
+   "longitudeDegrees": -42.5742,
+   "altitudeKilometers": 422.01,
+   "particleFluxPerCm2SrSecond": 0.2104
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:51:31Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.2939,
+   "latitudeDegrees": 30.7754,
+   "longitudeDegrees": -42.1731,
+   "altitudeKilometers": 421.96,
+   "particleFluxPerCm2SrSecond": 0.1434
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:53:03Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.0975,
+   "latitudeDegrees": 26.5556,
+   "longitudeDegrees": -37.7765,
+   "altitudeKilometers": 421.41,
+   "particleFluxPerCm2SrSecond": 0.17
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:53:11Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.2782,
+   "latitudeDegrees": 26.181,
+   "longitudeDegrees": -37.4116,
+   "altitudeKilometers": 421.36,
+   "particleFluxPerCm2SrSecond": 0.1204
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:54:43Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.1207,
+   "latitudeDegrees": 21.7988,
+   "longitudeDegrees": -33.3845,
+   "altitudeKilometers": 420.9,
+   "particleFluxPerCm2SrSecond": 0.1452
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:54:51Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.2435,
+   "latitudeDegrees": 21.412,
+   "longitudeDegrees": -33.0478,
+   "altitudeKilometers": 420.87,
+   "particleFluxPerCm2SrSecond": 0.1126
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:55:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.4854,
+   "latitudeDegrees": 20.9758,
+   "longitudeDegrees": -32.6713,
+   "altitudeKilometers": 420.83,
+   "particleFluxPerCm2SrSecond": 0.1507
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:55:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.1645,
+   "latitudeDegrees": 20.9758,
+   "longitudeDegrees": -32.6713,
+   "altitudeKilometers": 420.83,
+   "particleFluxPerCm2SrSecond": 0.1138
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:56:23Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.238,
+   "latitudeDegrees": 16.9087,
+   "longitudeDegrees": -29.304,
+   "altitudeKilometers": 420.55,
+   "particleFluxPerCm2SrSecond": 0.1369
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:56:31Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 1.9926,
+   "latitudeDegrees": 16.5129,
+   "longitudeDegrees": -28.9885,
+   "altitudeKilometers": 420.53,
+   "particleFluxPerCm2SrSecond": 0.1089
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:58:03Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.9576,
+   "latitudeDegrees": 11.9229,
+   "longitudeDegrees": -25.4519,
+   "altitudeKilometers": 420.4,
+   "particleFluxPerCm2SrSecond": 0.1452
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:58:23Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.2548,
+   "latitudeDegrees": 10.9172,
+   "longitudeDegrees": -24.7023,
+   "altitudeKilometers": 420.39,
+   "particleFluxPerCm2SrSecond": 0.1185
+  },
+  {
+   "sourceTimestamp": "2022-04-01T23:59:55Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.0501,
+   "latitudeDegrees": 6.2647,
+   "longitudeDegrees": -21.3176,
+   "altitudeKilometers": 420.5,
+   "particleFluxPerCm2SrSecond": 0.1342
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:00:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.3759,
+   "latitudeDegrees": 6.0109,
+   "longitudeDegrees": -21.136,
+   "altitudeKilometers": 420.51,
+   "particleFluxPerCm2SrSecond": 0.1381
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:00:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.0971,
+   "latitudeDegrees": 6.0109,
+   "longitudeDegrees": -21.136,
+   "altitudeKilometers": 420.51,
+   "particleFluxPerCm2SrSecond": 0.1167
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:00:03Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 1.6574,
+   "latitudeDegrees": 5.8586,
+   "longitudeDegrees": -21.0271,
+   "altitudeKilometers": 420.51,
+   "particleFluxPerCm2SrSecond": 0.1075
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:01:43Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.3791,
+   "latitudeDegrees": 0.7705,
+   "longitudeDegrees": -17.4256,
+   "altitudeKilometers": 420.88,
+   "particleFluxPerCm2SrSecond": 0.1241
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:03:15Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.4066,
+   "latitudeDegrees": -3.914,
+   "longitudeDegrees": -14.1226,
+   "altitudeKilometers": 421.43,
+   "particleFluxPerCm2SrSecond": 0.1397
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:03:23Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.2332,
+   "latitudeDegrees": -4.3208,
+   "longitudeDegrees": -13.8342,
+   "altitudeKilometers": 421.49,
+   "particleFluxPerCm2SrSecond": 0.1259
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:04:55Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.063,
+   "latitudeDegrees": -8.9851,
+   "longitudeDegrees": -10.4849,
+   "altitudeKilometers": 422.27,
+   "particleFluxPerCm2SrSecond": 0.1608
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:05:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.4639,
+   "latitudeDegrees": -9.2376,
+   "longitudeDegrees": -10.3006,
+   "altitudeKilometers": 422.31,
+   "particleFluxPerCm2SrSecond": 0.1602
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:05:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.6452,
+   "latitudeDegrees": -9.2376,
+   "longitudeDegrees": -10.3006,
+   "altitudeKilometers": 422.31,
+   "particleFluxPerCm2SrSecond": 0.1502
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:05:03Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.7625,
+   "latitudeDegrees": -9.3891,
+   "longitudeDegrees": -10.1899,
+   "altitudeKilometers": 422.34,
+   "particleFluxPerCm2SrSecond": 0.1544
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:06:35Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.9221,
+   "latitudeDegrees": -14.0081,
+   "longitudeDegrees": -6.7343,
+   "altitudeKilometers": 423.31,
+   "particleFluxPerCm2SrSecond": 0.1801
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:06:43Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.9084,
+   "latitudeDegrees": -14.407,
+   "longitudeDegrees": -6.4273,
+   "altitudeKilometers": 423.41,
+   "particleFluxPerCm2SrSecond": 0.1682
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:08:15Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.846,
+   "latitudeDegrees": -18.9533,
+   "longitudeDegrees": -2.801,
+   "altitudeKilometers": 424.54,
+   "particleFluxPerCm2SrSecond": 0.2095
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:08:35Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 5.1789,
+   "latitudeDegrees": -19.9301,
+   "longitudeDegrees": -1.9858,
+   "altitudeKilometers": 424.8,
+   "particleFluxPerCm2SrSecond": 0.1911
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:10:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.0793,
+   "latitudeDegrees": -24.025,
+   "longitudeDegrees": 1.6101,
+   "altitudeKilometers": 425.96,
+   "particleFluxPerCm2SrSecond": 0.2506
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:10:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.3055,
+   "latitudeDegrees": -24.025,
+   "longitudeDegrees": 1.6101,
+   "altitudeKilometers": 425.96,
+   "particleFluxPerCm2SrSecond": 0.3189
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:10:08Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.7843,
+   "latitudeDegrees": -24.4051,
+   "longitudeDegrees": 1.9607,
+   "altitudeKilometers": 426.07,
+   "particleFluxPerCm2SrSecond": 0.2408
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:10:15Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 8.0214,
+   "latitudeDegrees": -24.7368,
+   "longitudeDegrees": 2.2694,
+   "altitudeKilometers": 426.17,
+   "particleFluxPerCm2SrSecond": 0.3051
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:11:48Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 5.768,
+   "latitudeDegrees": -29.0638,
+   "longitudeDegrees": 6.5527,
+   "altitudeKilometers": 427.5,
+   "particleFluxPerCm2SrSecond": 0.3069
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:11:55Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 12.0108,
+   "latitudeDegrees": -29.3827,
+   "longitudeDegrees": 6.8901,
+   "altitudeKilometers": 427.6,
+   "particleFluxPerCm2SrSecond": 0.3896
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:13:28Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 6.5997,
+   "latitudeDegrees": -33.5146,
+   "longitudeDegrees": 11.6035,
+   "altitudeKilometers": 428.93,
+   "particleFluxPerCm2SrSecond": 0.329
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:15:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 6.8213,
+   "latitudeDegrees": -37.3726,
+   "longitudeDegrees": 16.7502,
+   "altitudeKilometers": 430.2,
+   "particleFluxPerCm2SrSecond": 0.3651
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:15:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 7.3669,
+   "latitudeDegrees": -37.3726,
+   "longitudeDegrees": 16.7502,
+   "altitudeKilometers": 430.2,
+   "particleFluxPerCm2SrSecond": 0.3579
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:15:08Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 6.2199,
+   "latitudeDegrees": -37.6954,
+   "longitudeDegrees": 17.2235,
+   "altitudeKilometers": 430.3,
+   "particleFluxPerCm2SrSecond": 0.3639
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:15:15Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 6.6647,
+   "latitudeDegrees": -37.976,
+   "longitudeDegrees": 17.6412,
+   "altitudeKilometers": 430.39,
+   "particleFluxPerCm2SrSecond": 0.3345
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:16:48Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 7.6444,
+   "latitudeDegrees": -41.5288,
+   "longitudeDegrees": 23.5276,
+   "altitudeKilometers": 431.54,
+   "particleFluxPerCm2SrSecond": 0.4025
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:16:55Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 7.9882,
+   "latitudeDegrees": -41.7817,
+   "longitudeDegrees": 23.9973,
+   "altitudeKilometers": 431.62,
+   "particleFluxPerCm2SrSecond": 0.3786
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:18:28Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 8.0086,
+   "latitudeDegrees": -44.9202,
+   "longitudeDegrees": 30.6201,
+   "altitudeKilometers": 432.59,
+   "particleFluxPerCm2SrSecond": 0.4301
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:18:48Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 9.4616,
+   "latitudeDegrees": -45.5359,
+   "longitudeDegrees": 32.1402,
+   "altitudeKilometers": 432.77,
+   "particleFluxPerCm2SrSecond": 0.4301
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:20:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 9.5731,
+   "latitudeDegrees": -47.5548,
+   "longitudeDegrees": 37.8991,
+   "altitudeKilometers": 433.35,
+   "particleFluxPerCm2SrSecond": 0.4653
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:20:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.3984,
+   "latitudeDegrees": -47.5548,
+   "longitudeDegrees": 37.8991,
+   "altitudeKilometers": 433.35,
+   "particleFluxPerCm2SrSecond": 0.4656
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:20:21Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.4804,
+   "latitudeDegrees": -48.0809,
+   "longitudeDegrees": 39.6627,
+   "altitudeKilometers": 433.49,
+   "particleFluxPerCm2SrSecond": 0.4631
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:20:28Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.5314,
+   "latitudeDegrees": -48.2495,
+   "longitudeDegrees": 40.2588,
+   "altitudeKilometers": 433.53,
+   "particleFluxPerCm2SrSecond": 0.4668
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:22:01Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.4337,
+   "latitudeDegrees": -50.1492,
+   "longitudeDegrees": 48.5483,
+   "altitudeKilometers": 433.97,
+   "particleFluxPerCm2SrSecond": 0.5072
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:22:08Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.2023,
+   "latitudeDegrees": -50.2652,
+   "longitudeDegrees": 49.198,
+   "altitudeKilometers": 433.99,
+   "particleFluxPerCm2SrSecond": 0.4999
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:23:41Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.3085,
+   "latitudeDegrees": -51.415,
+   "longitudeDegrees": 58.1001,
+   "altitudeKilometers": 434.13,
+   "particleFluxPerCm2SrSecond": 0.5477
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:23:48Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.7803,
+   "latitudeDegrees": -51.4712,
+   "longitudeDegrees": 58.7866,
+   "altitudeKilometers": 434.13,
+   "particleFluxPerCm2SrSecond": 0.5293
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:25:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.4768,
+   "latitudeDegrees": -51.7923,
+   "longitudeDegrees": 65.9218,
+   "altitudeKilometers": 434.02,
+   "particleFluxPerCm2SrSecond": 0.5661
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:25:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.1218,
+   "latitudeDegrees": -51.7923,
+   "longitudeDegrees": 65.9218,
+   "altitudeKilometers": 434.02,
+   "particleFluxPerCm2SrSecond": 0.5395
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:25:21Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.8819,
+   "latitudeDegrees": -51.797,
+   "longitudeDegrees": 68.0151,
+   "altitudeKilometers": 433.96,
+   "particleFluxPerCm2SrSecond": 0.5661
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:25:28Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.6808,
+   "latitudeDegrees": -51.7896,
+   "longitudeDegrees": 68.7127,
+   "altitudeKilometers": 433.93,
+   "particleFluxPerCm2SrSecond": 0.5403
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:27:01Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 10.2399,
+   "latitudeDegrees": -51.2686,
+   "longitudeDegrees": 77.8978,
+   "altitudeKilometers": 433.44,
+   "particleFluxPerCm2SrSecond": 0.5844
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:27:08Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.9292,
+   "latitudeDegrees": -51.1981,
+   "longitudeDegrees": 78.5779,
+   "altitudeKilometers": 433.39,
+   "particleFluxPerCm2SrSecond": 0.5477
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:28:41Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 11.0776,
+   "latitudeDegrees": -49.8658,
+   "longitudeDegrees": 87.3617,
+   "altitudeKilometers": 432.59,
+   "particleFluxPerCm2SrSecond": 0.5918
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:29:01Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 12.6164,
+   "latitudeDegrees": -49.4874,
+   "longitudeDegrees": 89.1769,
+   "altitudeKilometers": 432.39,
+   "particleFluxPerCm2SrSecond": 0.555
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:30:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 11.2705,
+   "latitudeDegrees": -48.1958,
+   "longitudeDegrees": 94.3515,
+   "altitudeKilometers": 431.71,
+   "particleFluxPerCm2SrSecond": 0.5836
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:30:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 11.4866,
+   "latitudeDegrees": -48.1958,
+   "longitudeDegrees": 94.3515,
+   "altitudeKilometers": 431.71,
+   "particleFluxPerCm2SrSecond": 0.5391
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:30:34Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 11.1806,
+   "latitudeDegrees": -47.3398,
+   "longitudeDegrees": 97.2034,
+   "altitudeKilometers": 431.28,
+   "particleFluxPerCm2SrSecond": 0.5771
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:30:41Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.8557,
+   "latitudeDegrees": -47.154,
+   "longitudeDegrees": 97.7784,
+   "altitudeKilometers": 431.19,
+   "particleFluxPerCm2SrSecond": 0.5403
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:32:14Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 11.5784,
+   "latitudeDegrees": -44.401,
+   "longitudeDegrees": 105.0146,
+   "altitudeKilometers": 429.84,
+   "particleFluxPerCm2SrSecond": 0.5808
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:32:21Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 10.9876,
+   "latitudeDegrees": -44.1739,
+   "longitudeDegrees": 105.5291,
+   "altitudeKilometers": 429.74,
+   "particleFluxPerCm2SrSecond": 0.5219
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:33:54Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 9.5594,
+   "latitudeDegrees": -40.9271,
+   "longitudeDegrees": 111.9783,
+   "altitudeKilometers": 428.21,
+   "particleFluxPerCm2SrSecond": 0.5293
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:34:01Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 8.8838,
+   "latitudeDegrees": -40.6668,
+   "longitudeDegrees": 112.4357,
+   "altitudeKilometers": 428.09,
+   "particleFluxPerCm2SrSecond": 0.4374
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:35:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 8.6689,
+   "latitudeDegrees": -38.3946,
+   "longitudeDegrees": 116.1444,
+   "altitudeKilometers": 427.04,
+   "particleFluxPerCm2SrSecond": 0.4548
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:35:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 7.0412,
+   "latitudeDegrees": -38.3946,
+   "longitudeDegrees": 116.1444,
+   "altitudeKilometers": 427.04,
+   "particleFluxPerCm2SrSecond": 0.3593
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:35:34Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 8.5876,
+   "latitudeDegrees": -37.0266,
+   "longitudeDegrees": 118.1687,
+   "altitudeKilometers": 426.43,
+   "particleFluxPerCm2SrSecond": 0.4705
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:35:41Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 6.4408,
+   "latitudeDegrees": -36.7401,
+   "longitudeDegrees": 118.5757,
+   "altitudeKilometers": 426.3,
+   "particleFluxPerCm2SrSecond": 0.3694
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:37:14Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 7.9528,
+   "latitudeDegrees": -32.7914,
+   "longitudeDegrees": 123.6932,
+   "altitudeKilometers": 424.58,
+   "particleFluxPerCm2SrSecond": 0.3749
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:37:21Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 5.942,
+   "latitudeDegrees": -32.4844,
+   "longitudeDegrees": 124.058,
+   "altitudeKilometers": 424.45,
+   "particleFluxPerCm2SrSecond": 0.2812
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:39:07Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.9081,
+   "latitudeDegrees": -27.6959,
+   "longitudeDegrees": 129.2787,
+   "altitudeKilometers": 422.49,
+   "particleFluxPerCm2SrSecond": 0.2904
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:39:14Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 4.5201,
+   "latitudeDegrees": -27.3714,
+   "longitudeDegrees": 129.6052,
+   "altitudeKilometers": 422.37,
+   "particleFluxPerCm2SrSecond": 0.2187
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:40:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.8522,
+   "latitudeDegrees": -25.2166,
+   "longitudeDegrees": 131.701,
+   "altitudeKilometers": 421.54,
+   "particleFluxPerCm2SrSecond": 0.2352
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:40:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 3.7468,
+   "latitudeDegrees": -25.2166,
+   "longitudeDegrees": 131.701,
+   "altitudeKilometers": 421.54,
+   "particleFluxPerCm2SrSecond": 0.1944
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:40:47Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.9771,
+   "latitudeDegrees": -22.9788,
+   "longitudeDegrees": 133.7605,
+   "altitudeKilometers": 420.73,
+   "particleFluxPerCm2SrSecond": 0.2316
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:40:54Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.9734,
+   "latitudeDegrees": -22.6427,
+   "longitudeDegrees": 134.0608,
+   "altitudeKilometers": 420.61,
+   "particleFluxPerCm2SrSecond": 0.17
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:42:27Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.6714,
+   "latitudeDegrees": -18.1164,
+   "longitudeDegrees": 137.9105,
+   "altitudeKilometers": 419.11,
+   "particleFluxPerCm2SrSecond": 0.1838
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:42:34Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.3849,
+   "latitudeDegrees": -17.7716,
+   "longitudeDegrees": 138.1908,
+   "altitudeKilometers": 419.0,
+   "particleFluxPerCm2SrSecond": 0.1434
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:44:07Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.2939,
+   "latitudeDegrees": -13.1477,
+   "longitudeDegrees": 141.814,
+   "altitudeKilometers": 417.69,
+   "particleFluxPerCm2SrSecond": 0.1571
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:44:14Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.5782,
+   "latitudeDegrees": -12.7969,
+   "longitudeDegrees": 142.08,
+   "altitudeKilometers": 417.6,
+   "particleFluxPerCm2SrSecond": 0.1176
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:45:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.1521,
+   "latitudeDegrees": -10.4829,
+   "longitudeDegrees": 143.8092,
+   "altitudeKilometers": 417.04,
+   "particleFluxPerCm2SrSecond": 0.1485
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:45:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.5137,
+   "latitudeDegrees": -10.4829,
+   "longitudeDegrees": 143.8092,
+   "altitudeKilometers": 417.04,
+   "particleFluxPerCm2SrSecond": 0.1262
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:47:27Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.9011,
+   "latitudeDegrees": -3.0211,
+   "longitudeDegrees": 149.1785,
+   "altitudeKilometers": 415.65,
+   "particleFluxPerCm2SrSecond": 0.1332
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:47:34Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 1.7832,
+   "latitudeDegrees": -2.6643,
+   "longitudeDegrees": 149.4306,
+   "altitudeKilometers": 415.6,
+   "particleFluxPerCm2SrSecond": 0.1043
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:49:20Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.8581,
+   "latitudeDegrees": 2.7433,
+   "longitudeDegrees": 153.2411,
+   "altitudeKilometers": 415.05,
+   "particleFluxPerCm2SrSecond": 0.1305
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:49:27Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 1.8063,
+   "latitudeDegrees": 3.1003,
+   "longitudeDegrees": 153.4933,
+   "altitudeKilometers": 415.02,
+   "particleFluxPerCm2SrSecond": 0.1002
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:50:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.8352,
+   "latitudeDegrees": 4.7818,
+   "longitudeDegrees": 154.685,
+   "altitudeKilometers": 414.93,
+   "particleFluxPerCm2SrSecond": 0.1302
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:50:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 1.873,
+   "latitudeDegrees": 4.7818,
+   "longitudeDegrees": 154.685,
+   "altitudeKilometers": 414.93,
+   "particleFluxPerCm2SrSecond": 0.1061
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:51:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.7017,
+   "latitudeDegrees": 7.8316,
+   "longitudeDegrees": 156.8702,
+   "altitudeKilometers": 414.85,
+   "particleFluxPerCm2SrSecond": 0.1342
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:51:07Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.0412,
+   "latitudeDegrees": 8.1866,
+   "longitudeDegrees": 157.1272,
+   "altitudeKilometers": 414.85,
+   "particleFluxPerCm2SrSecond": 0.1139
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:52:40Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.9458,
+   "latitudeDegrees": 12.8794,
+   "longitudeDegrees": 160.5987,
+   "altitudeKilometers": 414.97,
+   "particleFluxPerCm2SrSecond": 0.1259
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:52:47Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.4167,
+   "latitudeDegrees": 13.2305,
+   "longitudeDegrees": 160.8651,
+   "altitudeKilometers": 414.99,
+   "particleFluxPerCm2SrSecond": 0.1149
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:54:20Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.4123,
+   "latitudeDegrees": 17.8574,
+   "longitudeDegrees": 164.4953,
+   "altitudeKilometers": 415.38,
+   "particleFluxPerCm2SrSecond": 0.1406
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:54:27Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.0398,
+   "latitudeDegrees": 18.2024,
+   "longitudeDegrees": 164.7763,
+   "altitudeKilometers": 415.42,
+   "particleFluxPerCm2SrSecond": 0.1094
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:55:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.2369,
+   "latitudeDegrees": 19.8217,
+   "longitudeDegrees": 166.1178,
+   "altitudeKilometers": 415.62,
+   "particleFluxPerCm2SrSecond": 0.1469
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:55:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.171,
+   "latitudeDegrees": 19.8217,
+   "longitudeDegrees": 166.1178,
+   "altitudeKilometers": 415.62,
+   "particleFluxPerCm2SrSecond": 0.1152
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:56:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 1.8257,
+   "latitudeDegrees": 22.7322,
+   "longitudeDegrees": 168.636,
+   "altitudeKilometers": 416.04,
+   "particleFluxPerCm2SrSecond": 0.1406
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:56:07Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.0564,
+   "latitudeDegrees": 23.0686,
+   "longitudeDegrees": 168.9371,
+   "altitudeKilometers": 416.1,
+   "particleFluxPerCm2SrSecond": 0.1213
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:57:40Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.4457,
+   "latitudeDegrees": 27.4648,
+   "longitudeDegrees": 173.106,
+   "altitudeKilometers": 416.92,
+   "particleFluxPerCm2SrSecond": 0.1581
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:57:47Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 2.6669,
+   "latitudeDegrees": 27.7895,
+   "longitudeDegrees": 173.4337,
+   "altitudeKilometers": 416.98,
+   "particleFluxPerCm2SrSecond": 0.147
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:59:33Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.5766,
+   "latitudeDegrees": 32.5815,
+   "longitudeDegrees": 178.6754,
+   "altitudeKilometers": 418.08,
+   "particleFluxPerCm2SrSecond": 0.1691
+  },
+  {
+   "sourceTimestamp": "2022-04-02T00:59:40Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 3.1017,
+   "latitudeDegrees": 32.8886,
+   "longitudeDegrees": 179.0417,
+   "altitudeKilometers": 418.16,
+   "particleFluxPerCm2SrSecond": 0.1682
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:00:00Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 2.9803,
+   "latitudeDegrees": 33.7591,
+   "longitudeDegrees": -179.8964,
+   "altitudeKilometers": 418.38,
+   "particleFluxPerCm2SrSecond": 0.1921
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:00:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 3.2127,
+   "latitudeDegrees": 33.7591,
+   "longitudeDegrees": -179.8964,
+   "altitudeKilometers": 418.38,
+   "particleFluxPerCm2SrSecond": 0.177
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:01:13Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 3.384,
+   "latitudeDegrees": 36.839,
+   "longitudeDegrees": -175.8167,
+   "altitudeKilometers": 419.2,
+   "particleFluxPerCm2SrSecond": 0.215
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:01:20Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 3.9405,
+   "latitudeDegrees": 37.1256,
+   "longitudeDegrees": -175.4076,
+   "altitudeKilometers": 419.28,
+   "particleFluxPerCm2SrSecond": 0.2196
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:02:53Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 4.3607,
+   "latitudeDegrees": 40.7649,
+   "longitudeDegrees": -169.6441,
+   "altitudeKilometers": 420.35,
+   "particleFluxPerCm2SrSecond": 0.2591
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:03:00Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 4.7467,
+   "latitudeDegrees": 41.0251,
+   "longitudeDegrees": -169.1842,
+   "altitudeKilometers": 420.43,
+   "particleFluxPerCm2SrSecond": 0.2426
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:04:33Z",
+   "instrumentId": "DosTel2",
+   "absorbedDoseRateMicroGyPerHour": 5.0093,
+   "latitudeDegrees": 44.2674,
+   "longitudeDegrees": -162.6977,
+   "altitudeKilometers": 421.46,
+   "particleFluxPerCm2SrSecond": 0.2977
+  },
+  {
+   "sourceTimestamp": "2022-04-02T01:04:40Z",
+   "instrumentId": "DosTel1",
+   "absorbedDoseRateMicroGyPerHour": 6.5721,
+   "latitudeDegrees": 44.494,
+   "longitudeDegrees": -162.1801,
+   "altitudeKilometers": 421.53,
+   "particleFluxPerCm2SrSecond": 0.3253
+  }
+ ]
+}

@@ -26,6 +26,7 @@ export function AppLayout() {
         <nav className="flex gap-2">
           <NavLink to="/" end className={navClass}>Crew</NavLink>
           <NavLink to="/earth" className={navClass}>Earth view</NavLink>
+          <NavLink to="/radiation" className={navClass}>Radiation</NavLink>
         </nav>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           <DisplayModeControl />

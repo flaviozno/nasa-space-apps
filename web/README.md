@@ -15,7 +15,7 @@ Owner: Wallace. React + Vite + TypeScript + shadcn/ui. UI text in English.
 
 | Path | Contents |
 | --- | --- |
-| `src/routes.tsx` | Routes: `/` (crew picker), `/crew/:crewId` (Crew Hub), `/earth` (Earth view) |
+| `src/routes.tsx` | Routes: `/` (crew picker), `/crew/:crewId` (Crew Hub), `/earth` (Earth view), `/radiation` (station radiation map) |
 | `src/lib/api.ts` | API base paths and fetch helpers |
 | `src/generated/onboard-api.d.ts` | Types generated from the onboard OpenAPI — do not edit; run `npm run gen:api` |
 | `src/lib/onboard-types.ts` | Short names for those types (`CrewMember`, `CrewSummary`, `MetricTrend`, …) |
@@ -26,6 +26,9 @@ Owner: Wallace. React + Vite + TypeScript + shadcn/ui. UI text in English.
 | `src/lib/earth-contract.ts` | Earth view data shapes: `SyncStatus` from Guilherme's `feat/outbox-sync`, and the **provisional** `/v1/views/*` shapes (Earth does not implement them yet) |
 | `src/lib/earth-api.ts`, `src/lib/earth-queries.ts` | Earth view calls and hooks (5 s polling) |
 | `src/mocks/earth-handlers.ts` | Time-based outbox simulation for `dev:mock`: cut the link and the queue grows, restore it and it drains |
+| `src/lib/radiation-contract.ts` | **Provisional** `GET /v1/environment/radiation` shape (no backend route yet); field names mirror the emulator's `RadiationEvidence` |
+| `src/lib/radiation.ts`, `src/components/radiation-map.tsx` | Dose summary, 15° heat grid, orbit track and color scale; offline world map (d3-geo + world-atlas, no tiles) |
+| `src/mocks/radiation-handlers.ts` | Replays the real ISS DosTel readings from `fixtures/iss-radiation.json` (copied from `emu/`) in a loop, so the station marker moves |
 | `src/test/mock-server.ts` | The MSW mocks as a Node server for tests (`startMockServer()`) |
 
 ### Data fetching

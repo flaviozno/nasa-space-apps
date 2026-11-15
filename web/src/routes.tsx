@@ -9,6 +9,7 @@ import { CrewSelectPage } from '@/pages/crew-select-page'
 import { CrewTeamClimatePage } from '@/pages/crew-team-climate-page'
 import { CrewWeeklyPage } from '@/pages/crew-weekly-page'
 import { EarthViewPage } from '@/pages/earth-view-page'
+import { RadiationPage } from '@/pages/radiation-page'
 
 // Shared by the browser router (main.tsx) and the memory router in tests.
 export const routes: RouteObject[] = [
@@ -29,6 +30,7 @@ export const routes: RouteObject[] = [
         ],
       },
       { path: '/earth', element: <EarthViewPage /> },
+      { path: '/radiation', element: <RadiationPage /> },
     ],
   },
 ]
